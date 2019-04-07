@@ -1,18 +1,28 @@
 import React, { Component } from "react";
 import { View, Text, Alert } from "react-native";
-import { Button } from "react-native-elements";
+import { ButtonGroup } from "react-native-elements";
 import firebase from "firebase";
 class Home extends Component {
+  constructor() {
+    super();
+    this.state = {
+      selectedIndex: 0
+    };
+    this.updateIndex = this.updateIndex.bind(this);
+  }
+  updateIndex(selectedIndex) {
+    this.setState({ selectedIndex });
+  }
   render() {
+    const buttons = ["Fuera de trabajo", "En Carrea", "En Descanso"];
+    const { selectedIndex } = this.state;
+
     return (
-      <View>
-        <Button
-          onPress={() => {
-            firebase.auth().signOut();
-          }}
-          title="wenas"
-        />
-      </View>
+      <ButtonGroup
+        onPress={this.updateIndex}
+        selectedIndex={selectedIndex}
+        buttons={buttons}
+      />
     );
   }
 }
