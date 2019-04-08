@@ -22,7 +22,8 @@ class Home extends Component {
       });
     }
     Location.startLocationUpdatesAsync("sinewave location", {
-      accuracy: Location.Accuracy.Balanced
+      accuracy: 6,
+      distanceInterval: 10
     });
   };
   static getcurrentuser = () => {
@@ -68,6 +69,7 @@ TaskManager.defineTask(
       // check `error.message` for more details.
       return;
     } else {
+      console.log(locations);
       locations[0].user = Home.getcurrentuser();
       fetch(
         "https://us-central1-taxiapp-sinewave.cloudfunctions.net/location/",
