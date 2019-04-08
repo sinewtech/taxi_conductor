@@ -7,6 +7,7 @@ import {
 } from "react-navigation";
 import Home from "./Views/Home";
 import firebase from "firebase";
+
 firebase.initializeApp({
   apiKey: "AIzaSyBkCxRqmYLXkznasnf-MRTROWVJcORIGcw",
   authDomain: "taxiapp-sinewave.firebaseapp.com",
@@ -15,12 +16,15 @@ firebase.initializeApp({
   storageBucket: "taxiapp-sinewave.appspot.com",
   messagingSenderId: "503391985374"
 });
+
 class App extends Component {
   render() {
     return <MyApp />;
   }
 }
-const AppStack = createStackNavigator({ Home: Home });
+const AppStack = createStackNavigator({
+  Home: { screen: Home, navigationOptions: { headerTitle: "Inicio" } }
+});
 const AuthStack = createStackNavigator({
   LogIn: {
     screen: LogIn,
