@@ -4,6 +4,9 @@ import { ButtonGroup, Button } from "react-native-elements";
 import { TaskManager, Constants, Location, Permissions } from "expo";
 import firebase from "firebase";
 class Home extends Component {
+  componentWillUnmount() {
+    Location.stopLocationUpdatesAsync("sinewave location");
+  }
   componentDidMount() {
     if (Platform.OS === "android" && !Constants.isDevice) {
       this.setState({
