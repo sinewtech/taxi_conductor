@@ -1,5 +1,6 @@
 import React, { Component } from "react";
-import { LogIn, Waiting } from "./Views/Auth";
+import { LogIn } from "./Views/LogIn";
+import Waiting from "./Components/Waiting";
 import {
   createStackNavigator,
   createSwitchNavigator,
@@ -7,6 +8,7 @@ import {
 } from "react-navigation";
 import Home from "./Views/Home";
 import firebase from "firebase";
+import SignIn from "./Views/SignIn";
 
 firebase.initializeApp({
   apiKey: "AIzaSyBkCxRqmYLXkznasnf-MRTROWVJcORIGcw",
@@ -28,6 +30,12 @@ const AppStack = createStackNavigator({
 const AuthStack = createStackNavigator({
   LogIn: {
     screen: LogIn,
+    navigationOptions: {
+      header: null
+    }
+  },
+  SignIn: {
+    screen: SignIn,
     navigationOptions: {
       header: null
     }

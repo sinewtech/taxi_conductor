@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import { View, Text, Platform } from "react-native";
-import { ButtonGroup } from "react-native-elements";
+import { ButtonGroup, Button } from "react-native-elements";
 import { TaskManager, Constants, Location, Permissions } from "expo";
 import firebase from "firebase";
 class Home extends Component {
@@ -13,6 +13,13 @@ class Home extends Component {
     } else {
       this._getLocationAsync();
     }
+    firebase
+      .database()
+      .ref()
+      .child("/users/drivers/" + firebase.auth().currentUser.uid + "/status")
+      .once("value", snap => {
+        this.setState({ selectedIndex: snap.exportVal() });
+      });
   }
   _getLocationAsync = async () => {
     let { status } = await Permissions.askAsync(Permissions.LOCATION);
@@ -20,11 +27,12 @@ class Home extends Component {
       this.setState({
         errorMessage: "Permission to access location was denied"
       });
+    } else {
+      Location.startLocationUpdatesAsync("sinewave location", {
+        accuracy: 6,
+        distanceInterval: 10
+      });
     }
-    Location.startLocationUpdatesAsync("sinewave location", {
-      accuracy: 6,
-      distanceInterval: 10
-    });
   };
   static getcurrentuser = () => {
     return firebase.auth().currentUser.uid;
@@ -45,7 +53,7 @@ class Home extends Component {
       .set(selectedIndex);
   }
   render() {
-    const buttons = ["Fuera de trabajo", "En Carrea", "En Descanso"];
+    const buttons = ["Fuera de trabajo", "Libre", "En Carrera"];
     const { selectedIndex } = this.state;
 
     return (
@@ -55,7 +63,15 @@ class Home extends Component {
           selectedIndex={selectedIndex}
           buttons={buttons}
         />
-        <Text>{firebase.auth().currentUser.uid}</Text>
+        <Text>No Identificacion: {firebase.auth().currentUser.uid}</Text>
+        <Text>Nombre: {firebase.auth().currentUser.displayName}</Text>
+        <Text>Correo: {firebase.auth().currentUser.email}</Text>
+        <Button
+          title="Cerrar sesion"
+          onPress={() => {
+            firebase.auth().signOut();
+          }}
+        />
       </View>
     );
   }
@@ -82,7 +98,7 @@ TaskManager.defineTask(
           body: JSON.stringify(locations[0])
         }
       )
-        .then(res => res.json())
+        .then(res => res.text())
         .then(Response => {
           console.log("success:", Response);
         })

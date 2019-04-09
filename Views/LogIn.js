@@ -4,7 +4,6 @@ import {
   View,
   StyleSheet,
   Dimensions,
-  ActivityIndicator,
   Text,
   TouchableOpacity,
   KeyboardAvoidingView
@@ -82,7 +81,7 @@ export class LogIn extends React.Component {
         </View>
         <TouchableOpacity
           onPress={() => {
-            this.props.navigation.navigate("Signin");
+            this.props.navigation.navigate("SignIn");
           }}
           style={{ marginTop: 5 }}
         >
@@ -91,36 +90,6 @@ export class LogIn extends React.Component {
           </Text>
         </TouchableOpacity>
       </KeyboardAvoidingView>
-    );
-  }
-}
-
-export class Waiting extends React.Component {
-  componentDidMount() {
-    firebase.auth().onAuthStateChanged(user => {
-      firebase
-        .database()
-        .ref("/users/drivers/" + user.uid)
-        .once("value", snap => {
-          if (snap.exists) {
-            this.props.navigation.navigate(user ? "App" : "Auth");
-          }
-        });
-    });
-  }
-  render() {
-    return (
-      <View
-        style={{
-          backgroundColor: "#FF9800",
-          justifyContent: "center",
-          alignItems: "center",
-          height: Dimensions.get("window").height,
-          width: Dimensions.get("window").width
-        }}
-      >
-        <ActivityIndicator size="large" color="white" />
-      </View>
     );
   }
 }
