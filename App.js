@@ -39,7 +39,8 @@ const AuthStack = createStackNavigator({
     navigationOptions: {
       header: null
     }
-  }
+  },
+  initialRouteName: "SignIn"
 });
 
 const MyApp = createAppContainer(

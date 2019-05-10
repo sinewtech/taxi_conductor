@@ -3,9 +3,11 @@ import {
   View,
   KeyboardAvoidingView,
   StyleSheet,
-  Dimensions
+  Dimensions,
+  TouchableOpacity,
+  Text
 } from "react-native";
-import { Input, Button, Icon } from "react-native-elements";
+import { Input, Button, Icon, Image } from "react-native-elements";
 class SignIn extends Component {
   render() {
     return (
@@ -63,39 +65,50 @@ class SignIn extends Component {
               onChangeText={text => this.setState({ username: text })}
             />
           </KeyboardAvoidingView>
-          <Button
-            icon={<Icon name="camera" size={24} color="black" />}
-            buttonStyle={{
-              backgroundColor: "white",
-              borderRadius: 5,
-              marginBottom: 15,
-              padding: 5
+          <View
+            style={{
+              flex: 1,
+              flexDirection: "row",
+              width: "100%"
             }}
-            titleStyle={{ color: "black" }}
-            title="Foto de perfil"
-          />
-          <Button
-            icon={<Icon name="camera" size={24} color="black" />}
-            buttonStyle={{
-              backgroundColor: "white",
-              borderRadius: 5,
-              marginBottom: 15,
-              padding: 5
-            }}
-            titleStyle={{ color: "black" }}
-            title="Foto de perfil (auto)"
-          />
-          <Button
-            icon={<Icon name="camera" size={24} color="black" />}
-            buttonStyle={{
-              backgroundColor: "white",
-              borderRadius: 5,
-              marginBottom: 15,
-              padding: 5
-            }}
-            titleStyle={{ color: "black" }}
-            title="Foto de costado (auto)"
-          />
+          >
+            <TouchableOpacity>
+              <Image
+                source={{ uri: "" }}
+                style={{ width: 200, height: 200 }}
+                PlaceholderContent={
+                  <View style={{ backgroundColor: "gray" }}>
+                    <Icon name="camera" size={50} />
+                    <Text>Foto de perfil</Text>
+                  </View>
+                }
+              />
+            </TouchableOpacity>
+            <TouchableOpacity>
+              <Image
+                source={{ uri: "" }}
+                style={{ width: 200, height: 200 }}
+                PlaceholderContent={
+                  <View style={{ backgroundColor: "gray" }}>
+                    <Icon name="camera" size={50} />
+                    <Text>Foto de perfil</Text>
+                  </View>
+                }
+              />
+            </TouchableOpacity>
+            <TouchableOpacity>
+              <Image
+                source={{ uri: "" }}
+                style={{ width: 200, height: 200 }}
+                PlaceholderContent={
+                  <View style={{ backgroundColor: "gray" }}>
+                    <Icon name="camera" size={50} />
+                    <Text>Foto de perfil</Text>
+                  </View>
+                }
+              />
+            </TouchableOpacity>
+          </View>
         </View>
         <View style={styles.buttonRow}>
           <Button title="Registrate" onPress={this.handleSignIn} />
