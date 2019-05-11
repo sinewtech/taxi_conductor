@@ -7,8 +7,24 @@ import {
   TouchableOpacity,
   Text
 } from "react-native";
+import firebase from "firebase";
+import "@firebase/firestore";
 import { Input, Button, Icon, Image } from "react-native-elements";
+
 class SignIn extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { username: "", password: "", placa: "" };
+  }
+  handleSignIn = () => {
+    firebase
+      .auth()
+      .createUserWithEmailAndPassword(this.state.username, this.state.password)
+      .then(value => {
+        console.log(value);
+      })
+      .catch(error => console.error(error));
+  };
   render() {
     return (
       <View style={styles.SignUpView}>
@@ -62,7 +78,7 @@ class SignIn extends Component {
               autoCapitalize="none"
               autoComplete="email"
               keyboardType="email-address"
-              onChangeText={text => this.setState({ username: text })}
+              onChangeText={text => this.setState({ placa: text })}
             />
           </KeyboardAvoidingView>
           <View

@@ -1,8 +1,56 @@
 import React, { Component } from "react";
 import { View, Text, Platform } from "react-native";
 import { ButtonGroup, Button } from "react-native-elements";
-import { TaskManager, Constants, Location, Permissions } from "expo";
-import firebase from "firebase";
+import {
+  TaskManager,
+  Constants,
+  Location,
+  Permissions,
+  Notifications
+} from "expo";
+import firebase from "@firebase/app";
+import "@firebase/firestore";
+
+firebase.initializeApp({
+  apiKey: "AIzaSyBkCxRqmYLXkznasnf-MRTROWVJcORIGcw",
+  authDomain: "taxiapp-sinewave.firebaseapp.com",
+  databaseURL: "https://taxiapp-sinewave.firebaseio.com",
+  projectId: "taxiapp-sinewave",
+  storageBucket: "taxiapp-sinewave.appspot.com",
+  messagingSenderId: "503391985374"
+});
+let db = firebase.firestore();
+async function registerForPushNotificationsAsync() {
+  const { status: existingStatus } = await Permissions.getAsync(
+    Permissions.NOTIFICATIONS
+  );
+  let finalStatus = existingStatus;
+
+  // only ask if permissions have not already been determined, because
+  // iOS won't necessarily prompt the user a second time.
+  if (existingStatus !== "granted") {
+    // Android remote notification permissions are granted during the app
+    // install, so this will only ask on iOS
+    const { status } = await Permissions.askAsync(Permissions.NOTIFICATIONS);
+    finalStatus = status;
+  }
+
+  if (finalStatus !== "granted") {
+    return null;
+  }
+
+  // Get the token that uniquely identifies this device
+  //console.log("Asking for push token...");
+  let token = "_";
+
+  try {
+    token = await Notifications.getExpoPushTokenAsync();
+  } catch (e) {
+    console.error(e);
+  }
+
+  return token;
+}
 class Home extends Component {
   componentWillUnmount() {
     Location.stopLocationUpdatesAsync("sinewave location");
@@ -17,12 +65,65 @@ class Home extends Component {
       this._getLocationAsync();
     }
     firebase
-      .database()
-      .ref()
-      .child("/users/drivers/" + firebase.auth().currentUser.uid + "/status")
-      .once("value", snap => {
+      .firestore()
+      .collection("drivers")
+      .doc(firebase.auth().currentUser.uid)
+      .get()
+      .then(snap => {
         this.setState({ selectedIndex: snap.exportVal() });
       });
+  }
+  registerPush() {
+    registerForPushNotificationsAsync()
+      .then(pushToken => {
+        console.log(pushToken);
+        if (pushToken) {
+          console.log("entre :V");
+          db.collection("drivers")
+            .doc(this.state.userUID)
+            .get()
+            .then(DocumentSnapshot => {
+              let pushTokens = [];
+              if (DocumentSnapshot.exists) {
+                let deviceJson = DocumentSnapshot.data()["pushDevices"];
+                for (var token in deviceJson) {
+                  if (deviceJson[token] === pushToken) {
+                    console.log("Pushtoken ya existe para usuario.");
+                    return;
+                  } else {
+                    pushTokens.push(deviceJson[token]);
+                  }
+                }
+              } else {
+                pushTokens.push(pushToken);
+              }
+              db.collection("drivers")
+                .doc(this.state.userUID)
+                .set({
+                  email: this.state.user.email,
+                  username: "test",
+                  pushDevices: pushTokens
+                });
+            })
+            .catch(e => {
+              console.log(e);
+            });
+        } else {
+          console.error("Pushtoken nulo");
+        }
+      })
+      .catch(e => console.error(e));
+
+    this._notificationSubscription = Notifications.addListener(
+      this._handleNotification.bind(this)
+    );
+
+    this.backHandler = BackHandler.addEventListener("hardwareBackPress", () => {
+      this.deactivate(); // works best when the goBack is async
+      return true;
+    });
+
+    this._getLocationAsync = this._getLocationAsync.bind(this);
   }
   _getLocationAsync = async () => {
     let { status } = await Permissions.askAsync(Permissions.LOCATION);
@@ -30,12 +131,10 @@ class Home extends Component {
       this.setState({
         errorMessage: "Permission to access location was denied"
       });
-    } else {
-      Location.startLocationUpdatesAsync("sinewave location", {
-        accuracy: 6,
-        distanceInterval: 10
-      });
     }
+
+    let location = await Location.getCurrentPositionAsync({});
+    this.setState({ location });
   };
   static getcurrentuser = () => {
     return firebase.auth().currentUser.uid;
@@ -45,6 +144,24 @@ class Home extends Component {
     this.state = {
       selectedIndex: 0
     };
+    let save = user => {
+      this.setState({ user });
+
+      if (user) {
+        this.setState({ userUID: user.uid });
+      }
+    };
+    let register = () => this.registerPush();
+
+    firebase.auth().onAuthStateChanged(user => {
+      if (user) {
+        console.log("aqui toy :v");
+        save(user);
+        register();
+      } else {
+        save(null);
+      }
+    });
     this.updateIndex = this.updateIndex.bind(this);
   }
   updateIndex(selectedIndex) {
