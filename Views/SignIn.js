@@ -16,10 +16,10 @@ class SignIn extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      username: "C2",
-      mail: "d.mendoza99@unitec.edu",
-      password: "Rockero99",
-      placa: "PDK3323",
+      username: "",
+      mail: "",
+      password: "",
+      placa: "",
       carro: "",
       perfil: "",
       perfilcarro: ""
