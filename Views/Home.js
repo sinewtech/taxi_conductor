@@ -1,12 +1,12 @@
 import React, { Component } from "react";
-import { View, Text, Platform } from "react-native";
 import { ButtonGroup, Button } from "react-native-elements";
+import { Text, View, BackHandler, Platform } from "react-native";
 import {
+  Permissions,
+  Notifications,
   TaskManager,
   Constants,
-  Location,
-  Permissions,
-  Notifications
+  Location
 } from "expo";
 import firebase from "@firebase/app";
 import "@firebase/firestore";
@@ -55,6 +55,7 @@ class Home extends Component {
   componentWillUnmount() {
     Location.stopLocationUpdatesAsync("sinewave location");
   }
+
   componentDidMount() {
     if (Platform.OS === "android" && !Constants.isDevice) {
       this.setState({
@@ -65,26 +66,42 @@ class Home extends Component {
       this._getLocationAsync();
     }
     firebase
-      .firestore()
-      .collection("drivers")
-      .doc(firebase.auth().currentUser.uid)
-      .get()
-      .then(snap => {
+      .database()
+      .ref()
+      .child("users/drivers/" + firebase.auth().currentUser.uid + "/status")
+      .once("value", snap => {
         this.setState({ selectedIndex: snap.exportVal() });
       });
+    let save = user => {
+      this.setState({ user });
+
+      if (user) {
+        this.setState({ userUID: user.uid });
+      }
+    };
+
+    firebase.auth().onAuthStateChanged(user => {
+      console.log("cambio :v");
+      if (user) {
+        save(user);
+        this.registerPush();
+      } else {
+        save(null);
+      }
+    });
   }
-  registerPush() {
+
+  registerPush = () => {
     registerForPushNotificationsAsync()
       .then(pushToken => {
-        console.log(pushToken);
         if (pushToken) {
-          console.log("entre :V");
           db.collection("drivers")
             .doc(this.state.userUID)
             .get()
             .then(DocumentSnapshot => {
               let pushTokens = [];
-              if (DocumentSnapshot.exists) {
+              if (DocumentSnapshot.data()["pushDevices"]) {
+                console.log("existe");
                 let deviceJson = DocumentSnapshot.data()["pushDevices"];
                 for (var token in deviceJson) {
                   if (deviceJson[token] === pushToken) {
@@ -99,9 +116,7 @@ class Home extends Component {
               }
               db.collection("drivers")
                 .doc(this.state.userUID)
-                .set({
-                  email: this.state.user.email,
-                  username: "test",
+                .update({
                   pushDevices: pushTokens
                 });
             })
@@ -114,17 +129,16 @@ class Home extends Component {
       })
       .catch(e => console.error(e));
 
-    this._notificationSubscription = Notifications.addListener(
-      this._handleNotification.bind(this)
-    );
+    // this._notificationSubscription = Notifications.addListener(
+    //   this._handleNotification.bind(this)
+    // );
 
     this.backHandler = BackHandler.addEventListener("hardwareBackPress", () => {
       this.deactivate(); // works best when the goBack is async
       return true;
     });
+  };
 
-    this._getLocationAsync = this._getLocationAsync.bind(this);
-  }
   _getLocationAsync = async () => {
     let { status } = await Permissions.askAsync(Permissions.LOCATION);
     if (status !== "granted") {
@@ -136,42 +150,27 @@ class Home extends Component {
     let location = await Location.getCurrentPositionAsync({});
     this.setState({ location });
   };
+
   static getcurrentuser = () => {
     return firebase.auth().currentUser.uid;
   };
+
   constructor() {
     super();
     this.state = {
       selectedIndex: 0
     };
-    let save = user => {
-      this.setState({ user });
-
-      if (user) {
-        this.setState({ userUID: user.uid });
-      }
-    };
-    let register = () => this.registerPush();
-
-    firebase.auth().onAuthStateChanged(user => {
-      if (user) {
-        console.log("aqui toy :v");
-        save(user);
-        register();
-      } else {
-        save(null);
-      }
-    });
-    this.updateIndex = this.updateIndex.bind(this);
   }
-  updateIndex(selectedIndex) {
+
+  updateIndex = selectedIndex => {
     this.setState({ selectedIndex });
     firebase
       .database()
       .ref()
       .child("users/drivers/" + firebase.auth().currentUser.uid + "/status")
       .set(selectedIndex);
-  }
+  };
+
   render() {
     const buttons = ["Fuera de trabajo", "Libre", "En Carrera"];
     const { selectedIndex } = this.state;
