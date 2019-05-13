@@ -180,28 +180,22 @@ class SignIn extends Component {
               onChangeText={text => this.setState({ placa: text })}
             />
           </KeyboardAvoidingView>
-          <View>
+          <View style={styles.imageSelectRow}>
             <TouchableOpacity
               onPress={() => {
                 this._pickImage(0);
               }}
-              style={{ marginTop: 5 }}
+              style={styles.imageTouchable}
             >
               <Image
                 source={{ uri: this.state.perfilcarro }}
-                style={{ width: 100, height: 100 }}
+                style={styles.image}
                 PlaceholderContent={
                   <View
-                    style={{
-                      backgroundColor: "gray",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      width: 100,
-                      height: 100
-                    }}
+                    style={styles.imageSelectView}
                   >
-                    <Icon name="camera" size={50} />
-                    <Text>Foto de perfil de carro</Text>
+                    <Icon name="camera" size={50} style={styles.imageSelectIcon}/>
+                    <Text style={styles.imageSelectText}>Foto de perfil de carro</Text>
                   </View>
                 }
               />
@@ -210,23 +204,17 @@ class SignIn extends Component {
               onPress={() => {
                 this._pickImage(1);
               }}
-              style={{ marginTop: 5 }}
+              style={styles.imageTouchable}
             >
               <Image
                 source={{ uri: this.state.carro }}
-                style={{ width: 100, height: 100 }}
+                style={styles.image}
                 PlaceholderContent={
                   <View
-                    style={{
-                      backgroundColor: "gray",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      width: 100,
-                      height: 100
-                    }}
+                    style={styles.imageSelectView}
                   >
-                    <Icon name="camera" size={50} />
-                    <Text>Foto lateral del carro</Text>
+                    <Icon name="camera" size={50} style={styles.imageSelectIcon}/>
+                    <Text style={styles.imageSelectText}>Foto lateral del carro</Text>
                   </View>
                 }
               />
@@ -235,23 +223,17 @@ class SignIn extends Component {
               onPress={() => {
                 this._pickImage(2);
               }}
-              style={{ marginTop: 5 }}
+              style={styles.imageTouchable}
             >
               <Image
                 source={{ uri: this.state.perfil }}
-                style={{ width: 100, height: 100 }}
+                style={styles.image}
                 PlaceholderContent={
                   <View
-                    style={{
-                      backgroundColor: "gray",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      width: 100,
-                      height: 100
-                    }}
+                    style={styles.imageSelectView}
                   >
-                    <Icon name="camera" size={50} />
-                    <Text>Foto de perfil</Text>
+                    <Icon name="camera" size={50} style={styles.imageSelectIcon}/>
+                    <Text style={styles.imageSelectText}>Foto de perfil</Text>
                   </View>
                 }
               />
@@ -287,6 +269,44 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-evenly",
     width: "100%"
+  },
+
+  imageSelectRow: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center"
+  },
+
+  imageTouchable: {
+    margin: 5,
+    borderRadius: 5
+  },
+
+  imageSelectView: {
+    backgroundColor: "white",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 10,
+    width: 100,
+    height: 100,
+    textAlign: "center",
+    borderRadius: 5,
+    overflow: "hidden",
+    elevation: 2
+  },
+
+  imageSelectText: {
+    textAlign: "center",
+    color: "gray"
+  },
+
+  imageSelectIcon: {
+    color: "gray"
+  },
+
+  image: {
+    width: 100,
+    height: 100
   }
 });
 
