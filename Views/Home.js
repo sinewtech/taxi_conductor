@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { ButtonGroup, Button } from "react-native-elements";
+import { ButtonGroup, Button, Icon, Avatar } from "react-native-elements";
 import { Text, View, BackHandler, Platform } from "react-native";
 import {
   Permissions,
@@ -73,8 +73,6 @@ class Home extends Component {
         this.setState({ selectedIndex: snap.exportVal() });
       });
     let save = user => {
-      this.setState({ user });
-
       if (user) {
         this.setState({ userUID: user.uid });
       }
@@ -83,6 +81,16 @@ class Home extends Component {
     firebase.auth().onAuthStateChanged(user => {
       console.log("cambio :v");
       if (user) {
+        console.log(user.uid);
+        firebase
+          .firestore()
+          .collection("drivers")
+          .doc(user.uid)
+          .get()
+          .then(value => {
+            let data = value.data();
+            this.setState({ user: data });
+          });
         save(user);
         this.registerPush();
       } else {
@@ -158,7 +166,8 @@ class Home extends Component {
   constructor() {
     super();
     this.state = {
-      selectedIndex: 0
+      selectedIndex: 0,
+      user: {}
     };
   }
 
@@ -182,15 +191,41 @@ class Home extends Component {
           selectedIndex={selectedIndex}
           buttons={buttons}
         />
-        <Text>No Identificacion: {firebase.auth().currentUser.uid}</Text>
-        <Text>Nombre: {firebase.auth().currentUser.displayName}</Text>
-        <Text>Correo: {firebase.auth().currentUser.email}</Text>
-        <Button
-          title="Cerrar sesion"
-          onPress={() => {
-            firebase.auth().signOut();
-          }}
-        />
+        <View style={{ flex: 1, flexDirection: "row" }}>
+          <View style={{ paddingRight: 12 }}>
+            <Avatar
+              rounded
+              source={{ uri: this.state.user.profile }}
+              style={{ width: 100, height: 100 }}
+              activeOpacity={0.7}
+              PlaceholderContent={
+                <View
+                  style={{
+                    backgroundColor: "gray",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    width: 100,
+                    height: 100
+                  }}
+                >
+                  <Icon name="camera" size={50} />
+                  <Text>Foto de perfil de carro</Text>
+                </View>
+              }
+            />
+          </View>
+          <View style={{ paddingLeft: 12 }}>
+            <Text>Codigo: {this.state.user.username}</Text>
+            <Text>Nombre: {firebase.auth().currentUser.displayName}</Text>
+            <Text>Correo: {firebase.auth().currentUser.email}</Text>
+            <Button
+              title="Cerrar sesion"
+              onPress={() => {
+                firebase.auth().signOut();
+              }}
+            />
+          </View>
+        </View>
       </View>
     );
   }
