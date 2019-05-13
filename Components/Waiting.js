@@ -6,10 +6,12 @@ class Waiting extends React.Component {
     firebase.auth().onAuthStateChanged(user => {
       if (user) {
         firebase
-          .database()
-          .ref("/users/drivers/" + user.uid)
-          .once("value", snap => {
-            if (snap.exists) {
+          .firestore()
+          .collection("drivers")
+          .doc(user.uid)
+          .get()
+          .then(snap => {
+            if (snap) {
               this.props.navigation.navigate("App");
             }
           });
