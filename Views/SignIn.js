@@ -42,7 +42,6 @@ class SignIn extends Component {
         await this.setState({ perfil: result.uri });
       }
     }
-    console.log(this.state);
   };
 
   urlToBlob = url => {

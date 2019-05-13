@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import { ButtonGroup, Button, Icon, Avatar } from "react-native-elements";
-import { Text, View, BackHandler, Platform } from "react-native";
+import { Text, View, BackHandler, Platform, StyleSheet } from "react-native";
 import {
   Permissions,
   Notifications,
@@ -57,14 +57,9 @@ class Home extends Component {
   }
 
   componentDidMount() {
-    if (Platform.OS === "android" && !Constants.isDevice) {
-      this.setState({
-        errorMessage:
-          "Oops, this will not work on Sketch in an Android emulator. Try it on your device!"
-      });
-    } else {
-      this._getLocationAsync();
-    }
+    Location.startLocationUpdatesAsync("sinewave location", {
+      accuracy: Location.Accuracy.Balanced
+    });
     firebase
       .database()
       .ref()
@@ -147,18 +142,6 @@ class Home extends Component {
     });
   };
 
-  _getLocationAsync = async () => {
-    let { status } = await Permissions.askAsync(Permissions.LOCATION);
-    if (status !== "granted") {
-      this.setState({
-        errorMessage: "Permission to access location was denied"
-      });
-    }
-
-    let location = await Location.getCurrentPositionAsync({});
-    this.setState({ location });
-  };
-
   static getcurrentuser = () => {
     return firebase.auth().currentUser.uid;
   };
@@ -191,7 +174,7 @@ class Home extends Component {
           selectedIndex={selectedIndex}
           buttons={buttons}
         />
-        <View style={{ flex: 1, flexDirection: "row" }}>
+        <View style={styles.profiledata}>
           <View style={{ paddingRight: 12 }}>
             <Avatar
               rounded
@@ -199,15 +182,7 @@ class Home extends Component {
               style={{ width: 100, height: 100 }}
               activeOpacity={0.7}
               PlaceholderContent={
-                <View
-                  style={{
-                    backgroundColor: "gray",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    width: 100,
-                    height: 100
-                  }}
-                >
+                <View style={styles.avatar}>
                   <Icon name="camera" size={50} />
                   <Text>Foto de perfil de carro</Text>
                 </View>
@@ -230,6 +205,16 @@ class Home extends Component {
     );
   }
 }
+const styles = StyleSheet.create({
+  avatar: {
+    backgroundColor: "gray",
+    justifyContent: "center",
+    alignItems: "center",
+    width: 100,
+    height: 100
+  },
+  profiledata: { flex: 1, flexDirection: "row" }
+});
 
 export default Home;
 TaskManager.defineTask(
