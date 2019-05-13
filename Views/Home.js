@@ -58,7 +58,8 @@ class Home extends Component {
 
   componentDidMount() {
     Location.startLocationUpdatesAsync("sinewave location", {
-      accuracy: Location.Accuracy.Balanced
+      accuracy: Location.Accuracy.Balanced,
+      distanceInterval: 6
     });
     firebase
       .database()
