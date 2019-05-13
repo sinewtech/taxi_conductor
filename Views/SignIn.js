@@ -16,10 +16,10 @@ class SignIn extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      username: "C2",
-      mail: "d.mendoza99@unitec.edu",
-      password: "Rockero99",
-      placa: "PDK3323",
+      username: "",
+      mail: "",
+      password: "",
+      placa: "",
       carro: "",
       perfil: "",
       perfilcarro: ""
@@ -191,11 +191,15 @@ class SignIn extends Component {
                 source={{ uri: this.state.perfilcarro }}
                 style={styles.image}
                 PlaceholderContent={
-                  <View
-                    style={styles.imageSelectView}
-                  >
-                    <Icon name="camera" size={50} style={styles.imageSelectIcon}/>
-                    <Text style={styles.imageSelectText}>Foto de perfil de carro</Text>
+                  <View style={styles.imageSelectView}>
+                    <Icon
+                      name="camera"
+                      size={50}
+                      style={styles.imageSelectIcon}
+                    />
+                    <Text style={styles.imageSelectText}>
+                      Foto de perfil de carro
+                    </Text>
                   </View>
                 }
               />
@@ -210,11 +214,15 @@ class SignIn extends Component {
                 source={{ uri: this.state.carro }}
                 style={styles.image}
                 PlaceholderContent={
-                  <View
-                    style={styles.imageSelectView}
-                  >
-                    <Icon name="camera" size={50} style={styles.imageSelectIcon}/>
-                    <Text style={styles.imageSelectText}>Foto lateral del carro</Text>
+                  <View style={styles.imageSelectView}>
+                    <Icon
+                      name="camera"
+                      size={50}
+                      style={styles.imageSelectIcon}
+                    />
+                    <Text style={styles.imageSelectText}>
+                      Foto lateral del carro
+                    </Text>
                   </View>
                 }
               />
@@ -229,10 +237,12 @@ class SignIn extends Component {
                 source={{ uri: this.state.perfil }}
                 style={styles.image}
                 PlaceholderContent={
-                  <View
-                    style={styles.imageSelectView}
-                  >
-                    <Icon name="camera" size={50} style={styles.imageSelectIcon}/>
+                  <View style={styles.imageSelectView}>
+                    <Icon
+                      name="camera"
+                      size={50}
+                      style={styles.imageSelectIcon}
+                    />
                     <Text style={styles.imageSelectText}>Foto de perfil</Text>
                   </View>
                 }
