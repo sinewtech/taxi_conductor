@@ -11,7 +11,7 @@ class Waiting extends React.Component {
           .doc(user.uid)
           .get()
           .then(snap => {
-            if (snap) {
+            if (snap.exists) {
               this.props.navigation.navigate("App");
             }
           });

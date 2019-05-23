@@ -1,13 +1,13 @@
 import React, { Component } from "react";
 import { LogIn } from "./Views/LogIn";
 import Waiting from "./Components/Waiting";
+import { StatusBar } from "react-native";
 import {
   createStackNavigator,
   createSwitchNavigator,
   createAppContainer
 } from "react-navigation";
 import Home from "./Views/Home";
-import firebase from "firebase";
 import SignIn from "./Views/SignIn";
 
 class App extends Component {
@@ -16,7 +16,12 @@ class App extends Component {
   }
 }
 const AppStack = createStackNavigator({
-  Home: { screen: Home, navigationOptions: { headerTitle: "Inicio" } }
+  Home: {
+    screen: Home,
+    navigationOptions: {
+      header: null
+    }
+  }
 });
 const AuthStack = createStackNavigator({
   LogIn: {

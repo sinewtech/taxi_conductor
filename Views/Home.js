@@ -1,16 +1,21 @@
 import React, { Component } from "react";
 import { ButtonGroup, Button, Icon, Avatar } from "react-native-elements";
-import { Text, View, BackHandler, Platform, StyleSheet } from "react-native";
+import { Text, View, BackHandler, StatusBar, StyleSheet } from "react-native";
 import {
   Permissions,
   Notifications,
   TaskManager,
-  Constants,
+  MapView,
   Location
 } from "expo";
 import firebase from "@firebase/app";
 import "@firebase/firestore";
-
+const INITIAL_REGION = {
+  latitude: 14.0723,
+  longitude: -87.1921,
+  latitudeDelta: 0.1,
+  longitudeDelta: 0.1
+};
 firebase.initializeApp({
   apiKey: "AIzaSyBkCxRqmYLXkznasnf-MRTROWVJcORIGcw",
   authDomain: "taxiapp-sinewave.firebaseapp.com",
@@ -64,7 +69,7 @@ class Home extends Component {
     firebase
       .database()
       .ref()
-      .child("users/drivers/" + firebase.auth().currentUser.uid + "/status")
+      .child("locations/" + firebase.auth().currentUser.uid + "/status")
       .once("value", snap => {
         this.setState({ selectedIndex: snap.exportVal() });
       });
@@ -160,7 +165,7 @@ class Home extends Component {
     firebase
       .database()
       .ref()
-      .child("users/drivers/" + firebase.auth().currentUser.uid + "/status")
+      .child("locations/" + firebase.auth().currentUser.uid + "/status")
       .set(selectedIndex);
   };
 
@@ -169,38 +174,34 @@ class Home extends Component {
     const { selectedIndex } = this.state;
 
     return (
-      <View>
-        <ButtonGroup
-          onPress={this.updateIndex}
-          selectedIndex={selectedIndex}
-          buttons={buttons}
-        />
-        <View style={styles.profiledata}>
-          <View style={{ paddingRight: 12 }}>
-            <Avatar
-              rounded
-              source={{ uri: this.state.user.profile }}
-              style={{ width: 100, height: 100 }}
-              activeOpacity={0.7}
-              PlaceholderContent={
-                <View style={styles.avatar}>
-                  <Icon name="camera" size={50} />
-                  <Text>Foto de perfil de carro</Text>
-                </View>
-              }
-            />
+      <View style={{ flex: 1, marginTop: StatusBar.currentHeight }}>
+        <MapView style={{ flex: 1 }} initialRegion={INITIAL_REGION} />
+        <View style={styles.datacontainer}>
+          <View style={styles.profiledata}>
+            <View style={{ paddingRight: 12 }}>
+              <Avatar
+                rounded
+                source={{ uri: this.state.user.profile }}
+                style={{ width: 100, height: 100 }}
+                activeOpacity={0.7}
+              />
+            </View>
+            <View style={{ paddingLeft: 12 }}>
+              <Text>{this.state.user.username}</Text>
+              <Text>{this.state.user.name}</Text>
+              <Button
+                title="Cerrar sesion"
+                onPress={() => {
+                  firebase.auth().signOut();
+                }}
+              />
+            </View>
           </View>
-          <View style={{ paddingLeft: 12 }}>
-            <Text>Codigo: {this.state.user.username}</Text>
-            <Text>Nombre: {firebase.auth().currentUser.displayName}</Text>
-            <Text>Correo: {firebase.auth().currentUser.email}</Text>
-            <Button
-              title="Cerrar sesion"
-              onPress={() => {
-                firebase.auth().signOut();
-              }}
-            />
-          </View>
+          <ButtonGroup
+            onPress={this.updateIndex}
+            selectedIndex={selectedIndex}
+            buttons={buttons}
+          />
         </View>
       </View>
     );
@@ -214,7 +215,15 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100
   },
-  profiledata: { flex: 1, flexDirection: "row" }
+  profiledata: { flexDirection: "row" },
+  datacontainer: {
+    width: "100%",
+    backgroundColor: "white",
+    borderRadius: 25,
+    position: "absolute",
+    top: 0
+  },
+  mapcontainer: { flex: 1 }
 });
 
 export default Home;

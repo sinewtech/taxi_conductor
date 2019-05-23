@@ -5,7 +5,8 @@ import {
   StyleSheet,
   Dimensions,
   TouchableOpacity,
-  Text
+  Text,
+  StatusBar
 } from "react-native";
 import firebase from "firebase";
 import "@firebase/firestore";
@@ -261,7 +262,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#FF9800",
     justifyContent: "center",
     alignItems: "center",
-    height: Dimensions.get("window").height
+    height: Dimensions.get("window").height,
+    marginTop: StatusBar.currentHeight
   },
   credentialsView: {
     width: Dimensions.get("window").width * 0.8
