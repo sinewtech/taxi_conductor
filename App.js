@@ -1,7 +1,6 @@
 import React, { Component } from "react";
 import { LogIn } from "./Views/LogIn";
 import Waiting from "./Components/Waiting";
-import { StatusBar } from "react-native";
 import {
   createStackNavigator,
   createSwitchNavigator,
@@ -9,7 +8,6 @@ import {
 } from "react-navigation";
 import Home from "./Views/Home";
 import SignIn from "./Views/SignIn";
-
 class App extends Component {
   render() {
     return <MyApp />;

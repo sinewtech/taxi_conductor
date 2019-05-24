@@ -9,6 +9,16 @@ import {
   Location
 } from "expo";
 import firebase from "@firebase/app";
+if (!firebase.apps.length) {
+  firebase.initializeApp({
+    apiKey: "AIzaSyBkCxRqmYLXkznasnf-MRTROWVJcORIGcw",
+    authDomain: "taxiapp-sinewave.firebaseapp.com",
+    databaseURL: "https://taxiapp-sinewave.firebaseio.com",
+    projectId: "taxiapp-sinewave",
+    storageBucket: "taxiapp-sinewave.appspot.com",
+    messagingSenderId: "503391985374"
+  });
+}
 import "@firebase/firestore";
 const INITIAL_REGION = {
   latitude: 14.0723,
@@ -16,14 +26,7 @@ const INITIAL_REGION = {
   latitudeDelta: 0.1,
   longitudeDelta: 0.1
 };
-firebase.initializeApp({
-  apiKey: "AIzaSyBkCxRqmYLXkznasnf-MRTROWVJcORIGcw",
-  authDomain: "taxiapp-sinewave.firebaseapp.com",
-  databaseURL: "https://taxiapp-sinewave.firebaseio.com",
-  projectId: "taxiapp-sinewave",
-  storageBucket: "taxiapp-sinewave.appspot.com",
-  messagingSenderId: "503391985374"
-});
+
 let db = firebase.firestore();
 async function registerForPushNotificationsAsync() {
   const { status: existingStatus } = await Permissions.getAsync(
@@ -57,15 +60,33 @@ async function registerForPushNotificationsAsync() {
   return token;
 }
 class Home extends Component {
-  componentWillUnmount() {
-    Location.stopLocationUpdatesAsync("sinewave location");
-  }
-
   componentDidMount() {
-    Location.startLocationUpdatesAsync("sinewave location", {
-      accuracy: Location.Accuracy.Balanced,
-      distanceInterval: 6
+    Location.hasServicesEnabledAsync().then(ans => {
+      this.setState({ hasServicesEnabled: ans });
+      if (ans) {
+        console.log("wenas esta on");
+        Location.startLocationUpdatesAsync("sinewave location", {
+          accuracy: Location.Accuracy.Balanced,
+          distanceInterval: 6
+        });
+        Location.watchPositionAsync(
+          {
+            accuracy: Location.Accuracy.Balanced,
+            distanceInterval: 6
+          },
+          data => {
+            let aux = {
+              latitude: data.coords.latitude,
+              longitude: data.coords.longitude,
+              latitudeDelta: 0.1,
+              longitudeDelta: 0.1
+            };
+            this.setState({ actualcoords: aux });
+          }
+        );
+      }
     });
+
     firebase
       .database()
       .ref()
@@ -73,6 +94,7 @@ class Home extends Component {
       .once("value", snap => {
         this.setState({ selectedIndex: snap.exportVal() });
       });
+
     let save = user => {
       if (user) {
         this.setState({ userUID: user.uid });
@@ -98,6 +120,10 @@ class Home extends Component {
         save(null);
       }
     });
+  }
+
+  componentWillUnmount() {
+    Location.stopLocationUpdatesAsync("sinewave location");
   }
 
   registerPush = () => {
@@ -152,14 +178,6 @@ class Home extends Component {
     return firebase.auth().currentUser.uid;
   };
 
-  constructor() {
-    super();
-    this.state = {
-      selectedIndex: 0,
-      user: {}
-    };
-  }
-
   updateIndex = selectedIndex => {
     this.setState({ selectedIndex });
     firebase
@@ -168,6 +186,19 @@ class Home extends Component {
       .child("locations/" + firebase.auth().currentUser.uid + "/status")
       .set(selectedIndex);
   };
+  constructor() {
+    super();
+    this.state = {
+      selectedIndex: 0,
+      user: {},
+      actualcoords: {
+        latitude: 14.0723,
+        longitude: -87.1921,
+        latitudeDelta: 0.1,
+        longitudeDelta: 0.1
+      }
+    };
+  }
 
   render() {
     const buttons = ["Fuera de trabajo", "Libre", "En Carrera"];
@@ -175,7 +206,7 @@ class Home extends Component {
 
     return (
       <View style={{ flex: 1, marginTop: StatusBar.currentHeight }}>
-        <MapView style={{ flex: 1 }} initialRegion={INITIAL_REGION} />
+        <MapView style={{ flex: 1 }} initialRegion={this.state.actualcoords} />
         <View style={styles.datacontainer}>
           <View style={styles.profiledata}>
             <View style={{ paddingRight: 12 }}>
