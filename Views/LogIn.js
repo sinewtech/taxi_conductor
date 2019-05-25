@@ -16,7 +16,7 @@ export class LogIn extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      username: "",
+      mail: "",
       password: ""
     };
   }
@@ -50,7 +50,7 @@ export class LogIn extends React.Component {
       }
       firebase
         .auth()
-        .signInWithEmailAndPassword(this.state.username, this.state.password)
+        .signInWithEmailAndPassword(this.state.mail, this.state.password)
         .catch(error => {
           console.error(error);
         });
@@ -71,7 +71,7 @@ export class LogIn extends React.Component {
             autoCapitalize="none"
             autoComplete="email"
             keyboardType="email-address"
-            onChangeText={text => this.setState({ username: text })}
+            onChangeText={text => this.setState({ mail: text })}
           />
           <Input
             placeholder="Contraseña"

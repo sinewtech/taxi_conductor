@@ -66,6 +66,7 @@ class SignIn extends Component {
 
   handleSignIn = () => {
     let CanContinue = true;
+    console.log(this.state);
     for (key in this.state) {
       if (this.state[key].length === 0) {
         CanContinue = false;
@@ -103,7 +104,7 @@ class SignIn extends Component {
         Alert.alert("Numero de telefono", "Por favor use el formato indicado.");
         return;
       }
-      if (this.state.profile.length == 0) {
+      if (this.state.perfil.length == 0) {
         Alert.alert("Imagen de perfil", "Por favor seleccione una imagen.");
         return;
       }
@@ -114,7 +115,7 @@ class SignIn extends Component {
         );
         return;
       }
-      if (this.state.profile.length == 0) {
+      if (this.state.carro.length == 0) {
         Alert.alert(
           "Imagen Lateral  del carro",
           "Por favor seleccione una imagen."

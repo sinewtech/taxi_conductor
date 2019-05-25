@@ -62,6 +62,13 @@ async function registerForPushNotificationsAsync() {
 }
 class Home extends Component {
   componentDidMount = async () => {
+    let { status } = await Permissions.askAsync(Permissions.LOCATION);
+    if (status !== "granted") {
+      Alert.alert(
+        "Servicios GPS",
+        "Por favor deje que el app pueda trabajar con el gps"
+      );
+    }
     let tiene = await Location.getProviderStatusAsync();
     if (tiene.gpsAvailable) {
       Location.startLocationUpdatesAsync("sinewave location", {
