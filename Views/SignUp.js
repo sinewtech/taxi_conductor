@@ -6,7 +6,9 @@ import {
   Dimensions,
   TouchableOpacity,
   Text,
-  StatusBar
+  StatusBar,
+  Alert,
+  ScrollView
 } from "react-native";
 import firebase from "firebase";
 import "@firebase/firestore";
@@ -23,7 +25,9 @@ class SignIn extends Component {
       placa: "",
       carro: "",
       perfil: "",
-      perfilcarro: ""
+      perfilcarro: "",
+      name: "",
+      phone: ""
     };
   }
   _pickImage = async id => {
@@ -61,64 +65,124 @@ class SignIn extends Component {
   };
 
   handleSignIn = () => {
-    firebase
-      .auth()
-      .createUserWithEmailAndPassword(this.state.mail, this.state.password)
-      .then(async userdata => {
-        //drivers database
-        await firebase
-          .firestore()
-          .collection("drivers")
-          .doc(userdata.user.uid)
-          .set({
-            email: userdata.user.email,
-            username: this.state.username,
-            placa: this.state.placa
-          });
+    let CanContinue = true;
+    for (key in this.state) {
+      if (this.state[key].length === 0) {
+        CanContinue = false;
+        break;
+      }
+    }
+    if (!CanContinue) {
+      Alert.alert("Error", "Por favor Ingrese sus datos");
+      return;
+    } else {
+      if (
+        !/^((?!\.)[\w-_.]*[^.])(@\w+)(\.\w+(\.\w+)?[^.\W])$/.test(
+          this.state.mail
+        )
+      ) {
+        Alert.alert("Correo", "Por favor use un formato de correo valido.");
+        return;
+      }
+      if (!/^[A-Z]{1}\d{1,}$/.test(this.state.username)) {
+        Alert.alert("Codigo de empleado", "Por favor use el formato indicado.");
+        return;
+      }
+      if (!/^[A-Za-z0-9]{6,}$/.test(this.state.password)) {
+        Alert.alert(
+          "Contraseña",
+          "Por favor que la contraseña sea mayor a 6 caracteres."
+        );
+        return;
+      }
+      if (!/^([A-Z]{3})\ ([0-9]{4})$/.test(this.state.placa)) {
+        Alert.alert("Placa", "Por favor siga el formato indicado.");
+        return;
+      }
+      if (!/^\+504\ \d{4}-\d{4}$/.test(this.state.phone)) {
+        Alert.alert("Numero de telefono", "Por favor use el formato indicado.");
+        return;
+      }
+      if (this.state.profile.length == 0) {
+        Alert.alert("Imagen de perfil", "Por favor seleccione una imagen.");
+        return;
+      }
+      if (this.state.perfilcarro.length == 0) {
+        Alert.alert(
+          "Imagen de perfil del carro",
+          "Por favor seleccione una imagen."
+        );
+        return;
+      }
+      if (this.state.profile.length == 0) {
+        Alert.alert(
+          "Imagen Lateral  del carro",
+          "Por favor seleccione una imagen."
+        );
+        return;
+      }
 
-        //upload images :v
-        await this.urlToBlob(this.state.carro)
-          .then(value => {
-            firebase
-              .storage()
-              .ref()
-              .child("images/" + userdata.user.uid + "/lateralcar")
-              .put(value);
-          })
-          .catch(error => {
-            console.log("error1", error);
-          });
+      firebase
+        .auth()
+        .createUserWithEmailAndPassword(this.state.mail, this.state.password)
+        .then(async userdata => {
+          //drivers database
+          await firebase
+            .firestore()
+            .collection("drivers")
+            .doc(userdata.user.uid)
+            .set({
+              email: userdata.user.email,
+              username: this.state.username,
+              placa: this.state.placa,
+              name: this.state.name,
+              phone: this.state.phone
+            });
 
-        await this.urlToBlob(this.state.perfilcarro)
-          .then(value => {
-            firebase
-              .storage()
-              .ref()
-              .child("images/" + userdata.user.uid + "/profilecar")
-              .put(value);
-          })
-          .catch(error => {
-            console.log("error2", error);
-          });
+          //upload images :v
+          await this.urlToBlob(this.state.carro)
+            .then(value => {
+              firebase
+                .storage()
+                .ref()
+                .child("images/" + userdata.user.uid + "/lateralcar")
+                .put(value);
+            })
+            .catch(error => {
+              console.log("error1", error);
+            });
 
-        await this.urlToBlob(this.state.perfil)
-          .then(value => {
-            firebase
-              .storage()
-              .ref()
-              .child("images/" + userdata.user.uid + "/profile")
-              .put(value);
-          })
-          .catch(error => {
-            console.log("error3", error);
-          });
-      })
-      .catch(error => console.error(error));
+          await this.urlToBlob(this.state.perfilcarro)
+            .then(value => {
+              firebase
+                .storage()
+                .ref()
+                .child("images/" + userdata.user.uid + "/profilecar")
+                .put(value);
+            })
+            .catch(error => {
+              console.log("error2", error);
+            });
+
+          await this.urlToBlob(this.state.perfil)
+            .then(value => {
+              firebase
+                .storage()
+                .ref()
+                .child("images/" + userdata.user.uid + "/profile")
+                .put(value);
+            })
+            .catch(error => {
+              console.log("error3", error);
+            });
+        })
+        .catch(error => console.error(error));
+    }
   };
 
   render() {
     return (
-      <View style={styles.SignUpView}>
+      <ScrollView contentContainerStyle={styles.SignUpView}>
         <View style={styles.credentialsView}>
           <KeyboardAvoidingView behavior="padding">
             <Input
@@ -134,10 +198,11 @@ class SignIn extends Component {
               onChangeText={text => this.setState({ mail: text })}
             />
             <Input
-              placeholder="Usuario"
+              placeholder="Codigo Letra#"
               leftIcon={
                 <Icon
-                  name="person"
+                  name="hashtag"
+                  type="font-awesome"
                   size={24}
                   color="black"
                   style={styles.Icon}
@@ -165,7 +230,7 @@ class SignIn extends Component {
               onChangeText={text => this.setState({ password: text })}
             />
             <Input
-              placeholder="Placa"
+              placeholder="Placa 3Letras XXXX"
               leftIcon={
                 <Icon
                   name="directions-car"
@@ -178,6 +243,37 @@ class SignIn extends Component {
               leftIconContainerStyle={{ marginRight: 15 }}
               autoCapitalize="none"
               onChangeText={text => this.setState({ placa: text })}
+            />
+            <Input
+              placeholder="Numero de telefono +504 xxxx-xxxx"
+              leftIcon={
+                <Icon
+                  name="phone"
+                  size={24}
+                  color="black"
+                  style={styles.Icon}
+                />
+              }
+              keyboardType="phone-pad"
+              inputContainerStyle={styles.Input}
+              leftIconContainerStyle={{ marginRight: 15 }}
+              autoCapitalize="none"
+              onChangeText={text => this.setState({ phone: text })}
+            />
+            <Input
+              placeholder="Nombre y apellido"
+              leftIcon={
+                <Icon
+                  name="person"
+                  size={24}
+                  color="black"
+                  style={styles.Icon}
+                />
+              }
+              inputContainerStyle={styles.Input}
+              leftIconContainerStyle={{ marginRight: 15 }}
+              autoCapitalize="none"
+              onChangeText={text => this.setState({ name: text })}
             />
           </KeyboardAvoidingView>
           <View style={styles.imageSelectRow}>
@@ -198,7 +294,7 @@ class SignIn extends Component {
                       style={styles.imageSelectIcon}
                     />
                     <Text style={styles.imageSelectText}>
-                      Foto de perfil de carro
+                      Imagen de perfil del carro
                     </Text>
                   </View>
                 }
@@ -221,7 +317,7 @@ class SignIn extends Component {
                       style={styles.imageSelectIcon}
                     />
                     <Text style={styles.imageSelectText}>
-                      Foto lateral del carro
+                      Imagen lateral del carro
                     </Text>
                   </View>
                 }
@@ -243,7 +339,7 @@ class SignIn extends Component {
                       size={50}
                       style={styles.imageSelectIcon}
                     />
-                    <Text style={styles.imageSelectText}>Foto de perfil</Text>
+                    <Text style={styles.imageSelectText}>Imagen de perfil</Text>
                   </View>
                 }
               />
@@ -253,7 +349,7 @@ class SignIn extends Component {
         <View style={styles.buttonRow}>
           <Button title="Registrate" onPress={this.handleSignIn} />
         </View>
-      </View>
+      </ScrollView>
     );
   }
 }

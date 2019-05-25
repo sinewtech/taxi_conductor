@@ -7,7 +7,7 @@ import {
   createAppContainer
 } from "react-navigation";
 import Home from "./Views/Home";
-import SignIn from "./Views/SignIn";
+import SignUp from "./Views/SignUp";
 class App extends Component {
   render() {
     return <MyApp />;
@@ -29,12 +29,12 @@ const AuthStack = createStackNavigator({
     }
   },
   SignIn: {
-    screen: SignIn,
+    screen: SignUp,
     navigationOptions: {
       header: null
     }
   },
-  initialRouteName: "SignIn"
+  initialRouteName: "SignUp"
 });
 
 const MyApp = createAppContainer(

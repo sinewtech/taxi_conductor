@@ -1,6 +1,13 @@
 import React, { Component } from "react";
 import { ButtonGroup, Button, Icon, Avatar } from "react-native-elements";
-import { Text, View, BackHandler, StatusBar, StyleSheet } from "react-native";
+import {
+  Text,
+  View,
+  BackHandler,
+  StatusBar,
+  StyleSheet,
+  Alert
+} from "react-native";
 import {
   Permissions,
   Notifications,
@@ -20,12 +27,6 @@ if (!firebase.apps.length) {
   });
 }
 import "@firebase/firestore";
-const INITIAL_REGION = {
-  latitude: 14.0723,
-  longitude: -87.1921,
-  latitudeDelta: 0.1,
-  longitudeDelta: 0.1
-};
 
 let db = firebase.firestore();
 async function registerForPushNotificationsAsync() {
@@ -60,32 +61,34 @@ async function registerForPushNotificationsAsync() {
   return token;
 }
 class Home extends Component {
-  componentDidMount() {
-    Location.hasServicesEnabledAsync().then(ans => {
-      this.setState({ hasServicesEnabled: ans });
-      if (ans) {
-        console.log("wenas esta on");
-        Location.startLocationUpdatesAsync("sinewave location", {
+  componentDidMount = async () => {
+    let tiene = await Location.getProviderStatusAsync();
+    if (tiene.gpsAvailable) {
+      Location.startLocationUpdatesAsync("sinewave location", {
+        accuracy: Location.Accuracy.Balanced,
+        distanceInterval: 6
+      });
+      Location.watchPositionAsync(
+        {
           accuracy: Location.Accuracy.Balanced,
           distanceInterval: 6
-        });
-        Location.watchPositionAsync(
-          {
-            accuracy: Location.Accuracy.Balanced,
-            distanceInterval: 6
-          },
-          data => {
-            let aux = {
-              latitude: data.coords.latitude,
-              longitude: data.coords.longitude,
-              latitudeDelta: 0.1,
-              longitudeDelta: 0.1
-            };
-            this.setState({ actualcoords: aux });
-          }
-        );
-      }
-    });
+        },
+        data => {
+          let aux = {
+            latitude: data.coords.latitude,
+            longitude: data.coords.longitude,
+            latitudeDelta: 0.1,
+            longitudeDelta: 0.1
+          };
+          this.setState({
+            actualcoords: aux,
+            origin: { lat: data.coords.latitude, lng: data.coords.longitude }
+          });
+        }
+      );
+    } else {
+      Alert.alert("Servicios GPS", "Por favor active los servicios GPS");
+    }
 
     firebase
       .database()
@@ -120,10 +123,38 @@ class Home extends Component {
         save(null);
       }
     });
-  }
+  };
 
   componentWillUnmount() {
     Location.stopLocationUpdatesAsync("sinewave location");
+  }
+  async getPoly() {
+    await fetch(
+      "https://maps.googleapis.com/maps/api/directions/json?key=" +
+        API_KEY +
+        "&origin=" +
+        this.state.origin.lat +
+        "," +
+        this.state.origin.lng +
+        "&destination=" +
+        this.state.destination.lat +
+        "," +
+        this.state.destination.lng
+    )
+      .then(response => response.json())
+      .then(responseJson => {
+        //console.log(JSON.stringify(responseJson));
+        if (responseJson.status == "OK") {
+          // console.log(responseJson.routes[0].overview_polyline);
+          polyline = decodePolyline(
+            responseJson.routes[0].overview_polyline.points
+          );
+          //console.log(polyline);
+          this.setState({ polyline });
+        } else {
+          console.log("Status failed");
+        }
+      });
   }
 
   registerPush = () => {
