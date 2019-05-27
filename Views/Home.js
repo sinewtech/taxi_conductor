@@ -243,7 +243,7 @@ class Home extends Component {
     const { selectedIndex } = this.state;
 
     return (
-      <View style={{ flex: 1, marginTop: StatusBar.currentHeight }}>
+      <View style={{ flex: 1 }}>
         <MapView style={{ flex: 1 }} initialRegion={this.state.actualcoords} />
         <View style={styles.datacontainer}>
           <View style={styles.profiledata}>
@@ -287,6 +287,7 @@ const styles = StyleSheet.create({
   profiledata: { flexDirection: "row" },
   datacontainer: {
     width: "100%",
+    marginTop: 10,
     backgroundColor: "white",
     borderRadius: 25,
     position: "absolute",
