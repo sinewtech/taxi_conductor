@@ -130,6 +130,9 @@ class Home extends Component {
         save(null);
       }
     });
+    Notification.addListener(notif => {
+      console.log("notifica", notif);
+    });
   };
 
   componentWillUnmount() {
@@ -234,7 +237,9 @@ class Home extends Component {
         longitude: -87.1921,
         latitudeDelta: 0.1,
         longitudeDelta: 0.1
-      }
+      },
+      origin: {},
+      destination: {}
     };
   }
 
