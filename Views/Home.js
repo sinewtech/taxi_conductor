@@ -134,7 +134,7 @@ class Home extends Component {
       console.log("notifica", notif);
       Alert.alert(
         "Carrera Recibida",
-        ("De" + notif.data.origin.address + " a " + notif.data.destination.name),
+        "De" + notif.data.origin.address + " a " + notif.data.destination.name,
         [
           {
             text: "Aceptar",
@@ -150,10 +150,6 @@ class Home extends Component {
       );
     });
   };
-
-  componentWillUnmount() {
-    Location.stopLocationUpdatesAsync("sinewave location");
-  }
   async getPoly() {
     await fetch(
       "https://maps.googleapis.com/maps/api/directions/json?key=" +
