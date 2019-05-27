@@ -132,6 +132,22 @@ class Home extends Component {
     });
     Notification.addListener(notif => {
       console.log("notifica", notif);
+      Alert.alert(
+        "Carrera Recibida",
+        ("De" + notif.data.origin.address + " a " + notif.data.destination.name),
+        [
+          {
+            text: "Aceptar",
+            onPress: () => console.log("Ask me later pressed")
+          },
+          {
+            text: "Rechazar",
+            onPress: () => console.log("Cancel Pressed"),
+            style: "cancel"
+          }
+        ],
+        { cancelable: false }
+      );
     });
   };
 
@@ -249,7 +265,12 @@ class Home extends Component {
 
     return (
       <View style={{ flex: 1 }}>
-        <MapView style={{ flex: 1 }} initialRegion={this.state.actualcoords} />
+        <MapView
+          style={{ flex: 1 }}
+          initialRegion={this.state.actualcoords}
+          showsUserLocation={true}
+          followsUserLocation={true}
+        />
         <View style={styles.datacontainer}>
           <View style={styles.profiledata}>
             <View style={{ paddingRight: 12 }}>
