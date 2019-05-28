@@ -6,7 +6,8 @@ import {
   Notifications,
   TaskManager,
   MapView,
-  Location
+  Location,
+  Marker
 } from "expo";
 import firebase from "@firebase/app";
 if (!firebase.apps.length) {
@@ -66,7 +67,7 @@ class Home extends Component {
     if (tiene.gpsAvailable) {
       Location.startLocationUpdatesAsync("sinewave location", {
         accuracy: Location.Accuracy.Balanced,
-        distanceInterval: 6
+        distanceInterval: 1
       });
     } else {
       Alert.alert("Servicios GPS", "Por favor active los servicios GPS");
@@ -196,22 +197,8 @@ class Home extends Component {
         .once("value", snap => {
           let data = snap.exportVal();
           console.log("data", data);
-          Alert.alert(
-            "Carrera Recibida",
-            "De" + data.origin.address + " a " + data.destination.name,
-            [
-              {
-                text: "Aceptar",
-                onPress: () => console.log("Ask me later pressed")
-              },
-              {
-                text: "Rechazar",
-                onPress: () => console.log("Cancel Pressed"),
-                style: "cancel"
-              }
-            ],
-            { cancelable: false }
-          );
+          this.setState({ origin: data.origin, destination: data.destination });
+          this.getPoly();
         });
     }
   };
@@ -248,7 +235,24 @@ class Home extends Component {
           showsUserLocation={true}
           followsUserLocation={true}
           initialRegion={INITIAL_REGION}
-        />
+        >
+          {this.state.origin.lat ? (
+            <Marker
+              title="Origen"
+              description="Donde ese encuentra el cliente"
+              pinColor="red"
+              coordinate={this.state.origin}
+            />
+          ) : null}
+          {this.state.destination.lat ? (
+            <Marker
+              title="Destindo"
+              description="Adonde desea ir el cliente"
+              pinColor="red"
+              coordinate={this.state.destination}
+            />
+          ) : null}
+        </MapView>
         <View style={styles.datacontainer}>
           <View style={styles.profiledata}>
             <View style={{ paddingRight: 12 }}>
