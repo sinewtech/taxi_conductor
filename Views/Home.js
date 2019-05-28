@@ -1,13 +1,6 @@
 import React, { Component } from "react";
 import { ButtonGroup, Button, Icon, Avatar } from "react-native-elements";
-import {
-  Text,
-  View,
-  BackHandler,
-  StatusBar,
-  StyleSheet,
-  Alert
-} from "react-native";
+import { Text, View, BackHandler, StyleSheet, Alert } from "react-native";
 import {
   Permissions,
   Notifications,
@@ -27,6 +20,12 @@ if (!firebase.apps.length) {
   });
 }
 import "@firebase/firestore";
+const INITIAL_REGION = {
+  latitude: 14.0723,
+  longitude: -87.1921,
+  latitudeDelta: 0.1,
+  longitudeDelta: 0.1
+};
 
 let db = firebase.firestore();
 async function registerForPushNotificationsAsync() {
@@ -35,11 +34,7 @@ async function registerForPushNotificationsAsync() {
   );
   let finalStatus = existingStatus;
 
-  // only ask if permissions have not already been determined, because
-  // iOS won't necessarily prompt the user a second time.
   if (existingStatus !== "granted") {
-    // Android remote notification permissions are granted during the app
-    // install, so this will only ask on iOS
     const { status } = await Permissions.askAsync(Permissions.NOTIFICATIONS);
     finalStatus = status;
   }
@@ -48,8 +43,6 @@ async function registerForPushNotificationsAsync() {
     return null;
   }
 
-  // Get the token that uniquely identifies this device
-  //console.log("Asking for push token...");
   let token = "_";
 
   try {
@@ -75,24 +68,6 @@ class Home extends Component {
         accuracy: Location.Accuracy.Balanced,
         distanceInterval: 6
       });
-      Location.watchPositionAsync(
-        {
-          accuracy: Location.Accuracy.Balanced,
-          distanceInterval: 6
-        },
-        data => {
-          let aux = {
-            latitude: data.coords.latitude,
-            longitude: data.coords.longitude,
-            latitudeDelta: 0.1,
-            longitudeDelta: 0.1
-          };
-          this.setState({
-            actualcoords: aux,
-            origin: { lat: data.coords.latitude, lng: data.coords.longitude }
-          });
-        }
-      );
     } else {
       Alert.alert("Servicios GPS", "Por favor active los servicios GPS");
     }
@@ -130,30 +105,7 @@ class Home extends Component {
         save(null);
       }
     });
-    Notification.addListener(notif => {
-      console.log("notifica", notif);
-      Alert.alert(
-        "Carrera Recibida",
-        ("De" + notif.data.origin.address + " a " + notif.data.destination.name),
-        [
-          {
-            text: "Aceptar",
-            onPress: () => console.log("Ask me later pressed")
-          },
-          {
-            text: "Rechazar",
-            onPress: () => console.log("Cancel Pressed"),
-            style: "cancel"
-          }
-        ],
-        { cancelable: false }
-      );
-    });
   };
-
-  componentWillUnmount() {
-    Location.stopLocationUpdatesAsync("sinewave location");
-  }
   async getPoly() {
     await fetch(
       "https://maps.googleapis.com/maps/api/directions/json?key=" +
@@ -186,6 +138,7 @@ class Home extends Component {
   registerPush = () => {
     registerForPushNotificationsAsync()
       .then(pushToken => {
+        console.log(pushToken);
         if (pushToken) {
           db.collection("drivers")
             .doc(this.state.userUID)
@@ -200,12 +153,14 @@ class Home extends Component {
                     console.log("Pushtoken ya existe para usuario.");
                     return;
                   } else {
-                    pushTokens.push(deviceJson[token]);
+                    console.log("agregue :v");
+                    pushTokens.push(pushToken);
                   }
                 }
               } else {
                 pushTokens.push(pushToken);
               }
+              console.log("celulares", pushTokens);
               db.collection("drivers")
                 .doc(this.state.userUID)
                 .update({
@@ -221,16 +176,45 @@ class Home extends Component {
       })
       .catch(e => console.error(e));
 
-    // this._notificationSubscription = Notifications.addListener(
-    //   this._handleNotification.bind(this)
-    // );
+    this._notificationSubscription = Notifications.addListener(
+      this._handleNotification
+    );
 
     this.backHandler = BackHandler.addEventListener("hardwareBackPress", () => {
       this.deactivate(); // works best when the goBack is async
       return true;
     });
   };
-
+  _handleNotification = notification => {
+    console.log("notificationwenas", notification);
+    if (notification.data.id === 2) {
+      console.log("notifica", notification);
+      firebase
+        .database()
+        .ref()
+        .child("quotes/" + notification.data.currentOrder.uid + "/")
+        .once("value", snap => {
+          let data = snap.exportVal();
+          console.log("data", data);
+          Alert.alert(
+            "Carrera Recibida",
+            "De" + data.origin.address + " a " + data.destination.name,
+            [
+              {
+                text: "Aceptar",
+                onPress: () => console.log("Ask me later pressed")
+              },
+              {
+                text: "Rechazar",
+                onPress: () => console.log("Cancel Pressed"),
+                style: "cancel"
+              }
+            ],
+            { cancelable: false }
+          );
+        });
+    }
+  };
   static getcurrentuser = () => {
     return firebase.auth().currentUser.uid;
   };
@@ -248,12 +232,6 @@ class Home extends Component {
     this.state = {
       selectedIndex: 0,
       user: {},
-      actualcoords: {
-        latitude: 14.0723,
-        longitude: -87.1921,
-        latitudeDelta: 0.1,
-        longitudeDelta: 0.1
-      },
       origin: {},
       destination: {}
     };
@@ -267,9 +245,9 @@ class Home extends Component {
       <View style={{ flex: 1 }}>
         <MapView
           style={{ flex: 1 }}
-          initialRegion={this.state.actualcoords}
           showsUserLocation={true}
           followsUserLocation={true}
+          initialRegion={INITIAL_REGION}
         />
         <View style={styles.datacontainer}>
           <View style={styles.profiledata}>

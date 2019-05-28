@@ -6,8 +6,7 @@ import {
   Dimensions,
   Text,
   TouchableOpacity,
-  KeyboardAvoidingView,
-  StatusBar
+  KeyboardAvoidingView
 } from "react-native";
 import { Button, Input, Icon } from "react-native-elements";
 import firebase from "firebase";
@@ -113,8 +112,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FF9800",
     justifyContent: "center",
     alignItems: "center",
-    height: Dimensions.get("window").height,
-    marginTop: StatusBar.currentHeight
+    height: Dimensions.get("window").height
   },
   credentialsView: {
     width: Dimensions.get("window").width * 0.8
