@@ -78,8 +78,8 @@ class Home extends Component {
     if (tiene.gpsAvailable) {
       await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
         accuracy: Location.Accuracy.BestForNavigation,
-        timeInterval: 10000,
-        distanceInterval: 4
+        timeInterval: 6000,
+        distanceInterval: 2
       });
       await Location.watchPositionAsync(
         {
@@ -702,8 +702,11 @@ class Home extends Component {
       <View style={{ flex: 1 }}>
         <MapView
           style={{ flex: 1 }}
-          showsUserLocation={true}
-          followsUserLocation={true}
+          showsUserLocation
+          showsTraffic
+          followsUserLocation
+          showsMyLocationButton
+          loadingBackgroundColor="#FF9800"
           initialRegion={INITIAL_REGION}
         >
           {this.state.order.origin.lat && this.state.order.origin.lat ? (
@@ -735,7 +738,7 @@ class Home extends Component {
           this.state.order.destination.lng ? (
             <MapView.Polyline
               strokeWidth={4}
-              strokeColor="#2196f3"
+              strokeColor="#FF9800"
               coordinates={this.drawPolyline()}
             />
           ) : null}
@@ -766,33 +769,36 @@ const styles = StyleSheet.create({
 });
 
 export default Home;
-TaskManager.defineTask(LOCATION_TASK_NAME, ({ data: { locations }, error }) => {
-  if (error) {
-    return;
-  } else {
-    let location = locations[0];
-    console.log(location);
-    let pos = {
-      lat: location.coords.latitude,
-      lng: location.coords.longitude
-    };
-    Home.upload_data(pos);
-    // locations[0].user = Home.getcurrentuser();
-    // fetch(
-    //   "https://us-central1-taxiapp-sinewave.cloudfunctions.net/location/",
-    //   {
-    //     method: "POST",
-    //     headers: {
-    //       Accept: "application/json",
-    //       "Content-Type": "application/json"
-    //     },
-    //     body: JSON.stringify(locations[0])
-    //   }
-    // )
-    //   .then(res => res.text())
-    //   .then(Response => {
-    //     console.log("success:", Response);
-    //   })
-    //   .catch(error => console.log(error));
+TaskManager.defineTask(
+  LOCATION_TASK_NAME,
+  async ({ data: { locations }, error }) => {
+    if (error) {
+      return;
+    } else {
+      let location = locations[0];
+      let pos = {
+        lat: location.coords.latitude,
+        lng: location.coords.longitude
+      };
+      console.log("nueva pos", pos);
+      await Home.upload_data(pos);
+      // locations[0].user = Home.getcurrentuser();
+      // fetch(
+      //   "https://us-central1-taxiapp-sinewave.cloudfunctions.net/location/",
+      //   {
+      //     method: "POST",
+      //     headers: {
+      //       Accept: "application/json",
+      //       "Content-Type": "application/json"
+      //     },
+      //     body: JSON.stringify(locations[0])
+      //   }
+      // )
+      //   .then(res => res.text())
+      //   .then(Response => {
+      //     console.log("success:", Response);
+      //   })
+      //   .catch(error => console.log(error));
+    }
   }
-});
+);

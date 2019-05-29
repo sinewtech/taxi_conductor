@@ -18,6 +18,10 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "notification": {
+      "icon": "./assets/icon.png",
+      "color": "#FF9800"
+    },
     "updates": {
       "fallbackToCacheTimeout": 0
     },
