@@ -8,7 +8,7 @@ import {
   MapView,
   Location
 } from "expo";
-import firebase from "@firebase/app";
+import firebase from "firebase";
 
 if (!firebase.apps.length) {
   firebase.initializeApp({
@@ -36,7 +36,9 @@ const DRIVER_STATE_ASKING = 1;
 const DRIVER_STATE_GOING_TO_CLIENT = 2;
 const DRIVER_STATE_GOING_TO_DESTINATION = 3;
 
-const DRIVER_NOTIFICATION_ASKING = 2;
+const DRIVER_NOTIFICATION_ADS = 0;
+const DRIVER_NOTIFICATION_CONFIRMING = 2;
+const DRIVER_NOTIFICATION_CONFIRMED = 3;
 
 const LOCATION_TASK_NAME = "SINEWAVE_LOCATION";
 let db = firebase.firestore();
@@ -238,6 +240,11 @@ class Home extends Component {
                   title="Aceptar"
                   onPress={() => {
                     Alert.alert("Navegacion", "Vamos hacia el cliente");
+                    firebase
+                      .database()
+                      .ref()
+                      .child("/quotes/" + this.state.orderuid + "/status")
+                      .set(3);
                     this.setState({
                       driverstate: DRIVER_STATE_GOING_TO_CLIENT
                     });
@@ -255,6 +262,13 @@ class Home extends Component {
                         {
                           text: "OK",
                           onPress: () => {
+                            firebase
+                              .database()
+                              .ref()
+                              .child(
+                                "/quotes/" + this.state.orderuid + "/status"
+                              )
+                              .set(4);
                             this.setState({
                               order: { origin: {}, destination: {} },
                               driverstate: DRIVER_STATE_NONE
@@ -304,6 +318,11 @@ class Home extends Component {
                   buttonStyle={{ height: 75 }}
                   title="Aceptar"
                   onPress={() => {
+                    firebase
+                      .database()
+                      .ref()
+                      .child("/quotes/" + this.state.orderuid + "/status")
+                      .set(3);
                     Alert.alert("Navegacion", "Vamos hacia el cliente");
                     this.getPoly(
                       this.state.driverposition,
@@ -326,6 +345,13 @@ class Home extends Component {
                         {
                           text: "OK",
                           onPress: () => {
+                            firebase
+                              .database()
+                              .ref()
+                              .child(
+                                "/quotes/" + this.state.orderuid + "/status"
+                              )
+                              .set(4);
                             this.setState({
                               order: { origin: {}, destination: {} },
                               driverstate: DRIVER_STATE_NONE
@@ -378,6 +404,11 @@ class Home extends Component {
                   buttonStyle={{ height: 75 }}
                   title="Si"
                   onPress={() => {
+                    firebase
+                      .database()
+                      .ref()
+                      .child("/quotes/" + this.state.orderuid + "/status")
+                      .set(5);
                     Alert.alert(
                       "Navegacion",
                       "Vamos hacia el destino del cliente",
@@ -626,9 +657,7 @@ class Home extends Component {
   _handleNotification = notification => {
     console.log("notificationwenas", notification);
     if (notification.data) {
-      if (notification.data.id === DRIVER_NOTIFICATION_ASKING) {
-        this.setState({ driverstate: DRIVER_STATE_ASKING });
-        console.log("notifica", notification);
+      if (notification.data.id === DRIVER_NOTIFICATION_CONFIRMING) {
         firebase
           .database()
           .ref()
@@ -650,19 +679,28 @@ class Home extends Component {
             }
           });
       } else if (
-        notification.data.id === DRIVER_NOTIFICATION_ASKING &&
+        notification.data.id === DRIVER_NOTIFICATION_CONFIRMING &&
         notification.order.manual
       ) {
+        firebase
+          .database()
+          .ref()
+          .child("quotes/" + notification.data.order.uid + "/")
+          .once("value", snap => {
+            let data = snap.exportVal();
+            this.setState({
+              order: data,
+              orderuid: notification.data.order.uid,
+              ismanual: notification.data.order.manual
+            });
+          });
+      } else if (notification.data.id === DRIVER_NOTIFICATION_CONFIRMED) {
         this.setState({ driverstate: DRIVER_STATE_ASKING });
       }
     }
   };
-  static upload_data = location => {
-    firebase
-      .database()
-      .ref()
-      .child("locations/" + firebase.auth().currentUser.uid + "/position")
-      .set(location);
+  static getcurrentuser = () => {
+    return firebase.auth().currentUser.uid;
   };
 
   updateIndex = selectedIndex => {
@@ -738,7 +776,7 @@ class Home extends Component {
           this.state.order.destination.lng ? (
             <MapView.Polyline
               strokeWidth={4}
-              strokeColor="#FF9800"
+              strokeColor="#03A9F4"
               coordinates={this.drawPolyline()}
             />
           ) : null}
@@ -775,30 +813,31 @@ TaskManager.defineTask(
     if (error) {
       return;
     } else {
-      let location = locations[0];
-      let pos = {
-        lat: location.coords.latitude,
-        lng: location.coords.longitude
-      };
-      console.log("nueva pos", pos);
-      await Home.upload_data(pos);
-      // locations[0].user = Home.getcurrentuser();
-      // fetch(
-      //   "https://us-central1-taxiapp-sinewave.cloudfunctions.net/location/",
-      //   {
-      //     method: "POST",
-      //     headers: {
-      //       Accept: "application/json",
-      //       "Content-Type": "application/json"
-      //     },
-      //     body: JSON.stringify(locations[0])
-      //   }
-      // )
-      //   .then(res => res.text())
-      //   .then(Response => {
-      //     console.log("success:", Response);
-      //   })
-      //   .catch(error => console.log(error));
+      // let location = locations[0];
+      // let pos = {
+      //   lat: location.coords.latitude,
+      //   lng: location.coords.longitude
+      // };
+      // console.log("nueva pos", pos);
+      // await Home.upload_data(pos);
+      locations[0].user = Home.getcurrentuser();
+      console.log("punto", locations[0]);
+      fetch(
+        "https://us-central1-taxiapp-sinewave.cloudfunctions.net/location/",
+        {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(locations[0])
+        }
+      )
+        .then(res => res.text())
+        .then(Response => {
+          console.log("success:", Response);
+        })
+        .catch(error => console.log(error));
     }
   }
 );
