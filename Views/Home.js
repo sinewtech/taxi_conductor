@@ -36,6 +36,8 @@ const DRIVER_STATE_ASKING = 1;
 const DRIVER_STATE_GOING_TO_CLIENT = 2;
 const DRIVER_STATE_GOING_TO_DESTINATION = 3;
 
+const DRIVER_NOTIFICATION_ASKING = 2;
+
 const LOCATION_TASK_NAME = "SINEWAVE_LOCATION";
 let db = firebase.firestore();
 async function registerForPushNotificationsAsync() {
@@ -111,9 +113,7 @@ class Home extends Component {
     };
 
     firebase.auth().onAuthStateChanged(user => {
-      console.log("cambio :v");
       if (user) {
-        console.log(user.uid);
         firebase
           .firestore()
           .collection("drivers")
@@ -130,7 +130,7 @@ class Home extends Component {
       }
     });
   };
-  async getPoly(origin, destination) {
+  getPoly = async (origin, destination) => {
     await fetch(
       "https://maps.googleapis.com/maps/api/directions/json?key=" +
         API_KEY +
@@ -151,13 +151,12 @@ class Home extends Component {
           let polyline = decodePolyline(
             responseJson.routes[0].overview_polyline.points
           );
-          //console.log(polyline);
           this.setState({ polyline });
         } else {
           console.log("Status failed");
         }
       });
-  }
+  };
   getState = () => {
     switch (this.state.driverstate) {
       case DRIVER_STATE_NONE: {
@@ -192,179 +191,382 @@ class Home extends Component {
         );
       }
       case DRIVER_STATE_ASKING: {
+        let precio = this.state.order.price;
+        if (precio === undefined) {
+          precio = null;
+        } else {
+          precio = precio.toFixed(2);
+        }
+        console.log("precio", precio);
         let contenido =
           "De " +
-          this.state.origin.address +
+          this.state.order.origin.address +
           " a " +
-          this.state.destination.name;
-        return (
-          <View
-            style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
-          >
-            <Icon name="local-taxi" size={100} color="#4CAF50" />
-            <Text
-              style={{
-                textAlign: "center",
-                fontWeight: "bold",
-                fontSize: 25
-              }}
-            >
-              {contenido}
-            </Text>
+          this.state.order.destination.name +
+          " Por L. " +
+          precio;
+        if (this.state.ismanual === true) {
+          return (
             <View
               style={{
                 flex: 1,
                 justifyContent: "center",
-                alignItems: "center",
-                flexDirection: "row"
+                alignItems: "center"
               }}
             >
-              <Button
-                containerStyle={{ flex: 1, marginRight: 5 }}
-                buttonStyle={{ height: 75 }}
-                title="Aceptar"
-                onPress={() => {
-                  Alert.alert("Navegacion", "Vamos hacia el cliente");
-                  this.getPoly(this.state.driverposition, {
-                    lat: this.state.origin.lat,
-                    lng: this.state.origin.lng
-                  });
-                  this.setState({ driverstate: DRIVER_STATE_GOING_TO_CLIENT });
+              <Icon name="local-taxi" size={100} color="#4CAF50" />
+              <Text
+                style={{
+                  textAlign: "center",
+                  fontWeight: "bold",
+                  fontSize: 25
                 }}
-              />
-              <Button
-                containerStyle={{ flex: 1, marginLeft: 5 }}
-                buttonStyle={{ height: 75 }}
-                title="Rechazar"
-                onPress={() => {
-                  Alert.alert(
-                    "Rechazar",
-                    "Estas a punto de rechazar una carrera",
-                    [
-                      {
-                        text: "OK",
-                        onPress: () => {
-                          this.setState({
-                            origin: {},
-                            destination: {},
-                            driverstate: DRIVER_STATE_NONE
-                          });
+              >
+                {contenido}
+              </Text>
+              <View
+                style={{
+                  flex: 1,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  flexDirection: "row"
+                }}
+              >
+                <Button
+                  containerStyle={{ flex: 1, marginRight: 5 }}
+                  buttonStyle={{ height: 75 }}
+                  title="Aceptar"
+                  onPress={() => {
+                    Alert.alert("Navegacion", "Vamos hacia el cliente");
+                    this.setState({
+                      driverstate: DRIVER_STATE_GOING_TO_CLIENT
+                    });
+                  }}
+                />
+                <Button
+                  containerStyle={{ flex: 1, marginLeft: 5 }}
+                  buttonStyle={{ height: 75 }}
+                  title="Rechazar"
+                  onPress={() => {
+                    Alert.alert(
+                      "Rechazar",
+                      "Estas a punto de rechazar una carrera",
+                      [
+                        {
+                          text: "OK",
+                          onPress: () => {
+                            this.setState({
+                              order: { origin: {}, destination: {} },
+                              driverstate: DRIVER_STATE_NONE
+                            });
+                          }
+                        },
+                        {
+                          text: "REGRESAR"
                         }
-                      },
-                      {
-                        text: "REGRESAR"
-                      }
-                    ],
-                    { cancelable: false }
-                  );
-                }}
-              />
+                      ],
+                      { cancelable: false }
+                    );
+                  }}
+                />
+              </View>
             </View>
-          </View>
-        );
+          );
+        } else {
+          return (
+            <View
+              style={{
+                flex: 1,
+                justifyContent: "center",
+                alignItems: "center"
+              }}
+            >
+              <Icon name="local-taxi" size={100} color="#4CAF50" />
+              <Text
+                style={{
+                  textAlign: "center",
+                  fontWeight: "bold",
+                  fontSize: 25
+                }}
+              >
+                {contenido}
+              </Text>
+              <View
+                style={{
+                  flex: 1,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  flexDirection: "row"
+                }}
+              >
+                <Button
+                  containerStyle={{ flex: 1, marginRight: 5 }}
+                  buttonStyle={{ height: 75 }}
+                  title="Aceptar"
+                  onPress={() => {
+                    Alert.alert("Navegacion", "Vamos hacia el cliente");
+                    this.getPoly(
+                      this.state.driverposition,
+                      this.state.order.origin
+                    );
+                    this.setState({
+                      driverstate: DRIVER_STATE_GOING_TO_CLIENT
+                    });
+                  }}
+                />
+                <Button
+                  containerStyle={{ flex: 1, marginLeft: 5 }}
+                  buttonStyle={{ height: 75 }}
+                  title="Rechazar"
+                  onPress={() => {
+                    Alert.alert(
+                      "Rechazar",
+                      "Estas a punto de rechazar una carrera",
+                      [
+                        {
+                          text: "OK",
+                          onPress: () => {
+                            this.setState({
+                              order: { origin: {}, destination: {} },
+                              driverstate: DRIVER_STATE_NONE
+                            });
+                          }
+                        },
+                        {
+                          text: "REGRESAR"
+                        }
+                      ],
+                      { cancelable: false }
+                    );
+                  }}
+                />
+              </View>
+            </View>
+          );
+        }
       }
       case DRIVER_STATE_GOING_TO_CLIENT: {
-        return (
-          <View
-            style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
-          >
-            <Icon name="local-taxi" size={100} color="#4CAF50" />
-            <Text
-              style={{
-                textAlign: "center",
-                fontWeight: "bold",
-                fontSize: 25
-              }}
-            >
-              ¿Te encuentras con tu cliente?
-            </Text>
+        if (this.state.ismanual === true) {
+          return (
             <View
               style={{
                 flex: 1,
                 justifyContent: "center",
-                alignItems: "center",
-                flexDirection: "row"
+                alignItems: "center"
               }}
             >
-              <Button
-                containerStyle={{ flex: 1, marginRight: 5 }}
-                buttonStyle={{ height: 75 }}
-                title="Si"
-                onPress={() => {
-                  Alert.alert(
-                    "Navegacion",
-                    "Vamos hacia el destino del cliente",
-                    [{ text: "ok" }],
-                    { cancelable: false }
-                  );
-                  this.getPoly(this.state.driverposition, {
-                    lat: this.state.destination.lat,
-                    lng: this.state.destination.lng
-                  });
-                  this.setState({
-                    driverstate: DRIVER_STATE_GOING_TO_DESTINATION,
-                    origin: {}
-                  });
+              <Icon name="local-taxi" size={100} color="#4CAF50" />
+              <Text
+                style={{
+                  textAlign: "center",
+                  fontWeight: "bold",
+                  fontSize: 25
                 }}
-              />
+              >
+                ¿Te encuentras con tu cliente?
+              </Text>
+              <View
+                style={{
+                  flex: 1,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  flexDirection: "row"
+                }}
+              >
+                <Button
+                  containerStyle={{ flex: 1, marginRight: 5 }}
+                  buttonStyle={{ height: 75 }}
+                  title="Si"
+                  onPress={() => {
+                    Alert.alert(
+                      "Navegacion",
+                      "Vamos hacia el destino del cliente",
+                      [
+                        {
+                          text: "ok",
+                          onPress: () => {
+                            this.setState({
+                              driverstate: DRIVER_STATE_GOING_TO_DESTINATION
+                            });
+                          }
+                        }
+                      ],
+                      { cancelable: false }
+                    );
+                  }}
+                />
+              </View>
             </View>
-          </View>
-        );
+          );
+        } else {
+          return (
+            <View
+              style={{
+                flex: 1,
+                justifyContent: "center",
+                alignItems: "center"
+              }}
+            >
+              <Icon name="local-taxi" size={100} color="#4CAF50" />
+              <Text
+                style={{
+                  textAlign: "center",
+                  fontWeight: "bold",
+                  fontSize: 25
+                }}
+              >
+                ¿Te encuentras con tu cliente?
+              </Text>
+              <View
+                style={{
+                  flex: 1,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  flexDirection: "row"
+                }}
+              >
+                <Button
+                  containerStyle={{ flex: 1, marginRight: 5 }}
+                  buttonStyle={{ height: 75 }}
+                  title="Si"
+                  onPress={() => {
+                    Alert.alert(
+                      "Navegacion",
+                      "Vamos hacia el destino del cliente",
+                      [{ text: "ok" }],
+                      { cancelable: false }
+                    );
+                    console.log("destination", this.state.destination);
+                    this.setState({
+                      driverstate: DRIVER_STATE_GOING_TO_DESTINATION
+                    });
+                    this.getPoly(
+                      this.state.driverposition,
+                      this.state.order.destination
+                    );
+                  }}
+                />
+              </View>
+            </View>
+          );
+        }
       }
       case DRIVER_STATE_GOING_TO_DESTINATION: {
-        return (
-          <View
-            style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
-          >
-            <Icon name="local-taxi" size={100} color="#4CAF50" />
-            <Text
-              style={{
-                textAlign: "center",
-                fontWeight: "bold",
-                fontSize: 25
-              }}
-            >
-              ¿Haz terminado tu desplazamiento?
-            </Text>
+        if (this.state.ismanual === true) {
+          return (
             <View
               style={{
                 flex: 1,
                 justifyContent: "center",
-                alignItems: "center",
-                flexDirection: "row"
+                alignItems: "center"
               }}
             >
-              <Button
-                containerStyle={{ flex: 1, marginRight: 5 }}
-                buttonStyle={{ height: 75 }}
-                title="Si"
-                onPress={() => {
-                  Alert.alert(
-                    "Navegacion",
-                    "Gracias por cuidar de nuestro cliente",
-                    [
-                      {
-                        text: "OK",
-                        onPress: () => {
-                          this.setState({
-                            driverstate: DRIVER_STATE_NONE,
-                            origin: {},
-                            destination: {},
-                            polyline: []
-                          });
-                        }
-                      },
-                      {
-                        text: "Cancelar"
-                      }
-                    ],
-                    { cancelable: false }
-                  );
+              <Icon name="local-taxi" size={100} color="#4CAF50" />
+              <Text
+                style={{
+                  textAlign: "center",
+                  fontWeight: "bold",
+                  fontSize: 25
                 }}
-              />
+              >
+                ¿Haz terminado tu desplazamiento?
+              </Text>
+              <View
+                style={{
+                  flex: 1,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  flexDirection: "row"
+                }}
+              >
+                <Button
+                  containerStyle={{ flex: 1, marginRight: 5 }}
+                  buttonStyle={{ height: 75 }}
+                  title="Si"
+                  onPress={() => {
+                    Alert.alert(
+                      "Navegacion",
+                      "Gracias por cuidar de nuestro cliente",
+                      [
+                        {
+                          text: "OK",
+                          onPress: () => {
+                            this.setState({
+                              driverstate: DRIVER_STATE_NONE,
+                              order: { origin: {}, destination: {} },
+                              polyline: []
+                            });
+                          }
+                        },
+                        {
+                          text: "Cancelar"
+                        }
+                      ],
+                      { cancelable: false }
+                    );
+                  }}
+                />
+              </View>
             </View>
-          </View>
-        );
+          );
+        } else {
+          return (
+            <View
+              style={{
+                flex: 1,
+                justifyContent: "center",
+                alignItems: "center"
+              }}
+            >
+              <Icon name="local-taxi" size={100} color="#4CAF50" />
+              <Text
+                style={{
+                  textAlign: "center",
+                  fontWeight: "bold",
+                  fontSize: 25
+                }}
+              >
+                ¿Haz terminado tu desplazamiento?
+              </Text>
+              <View
+                style={{
+                  flex: 1,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  flexDirection: "row"
+                }}
+              >
+                <Button
+                  containerStyle={{ flex: 1, marginRight: 5 }}
+                  buttonStyle={{ height: 75 }}
+                  title="Si"
+                  onPress={() => {
+                    Alert.alert(
+                      "Navegacion",
+                      "Gracias por cuidar de nuestro cliente",
+                      [
+                        {
+                          text: "OK",
+                          onPress: () => {
+                            this.setState({
+                              driverstate: DRIVER_STATE_NONE,
+                              order: { origin: {}, destination: {} },
+                              polyline: []
+                            });
+                          }
+                        },
+                        {
+                          text: "Cancelar"
+                        }
+                      ],
+                      { cancelable: false }
+                    );
+                  }}
+                />
+              </View>
+            </View>
+          );
+        }
       }
     }
   };
@@ -419,12 +621,12 @@ class Home extends Component {
     });
   };
   deactivate = () => {
-    this.setState({ origen: {}, destination: {} });
+    this.setState({ order: { origin: {}, destination: {} } });
   };
   _handleNotification = notification => {
     console.log("notificationwenas", notification);
     if (notification.data) {
-      if (notification.data.id === 2) {
+      if (notification.data.id === DRIVER_NOTIFICATION_ASKING) {
         this.setState({ driverstate: DRIVER_STATE_ASKING });
         console.log("notifica", notification);
         firebase
@@ -433,10 +635,10 @@ class Home extends Component {
           .child("quotes/" + notification.data.order.uid + "/")
           .once("value", snap => {
             let data = snap.exportVal();
-            console.log("data", data);
             this.setState({
-              origin: data.origin,
-              destination: data.destination
+              order: data,
+              orderuid: notification.data.order.uid,
+              ismanual: notification.data.order.manual
             });
             if (
               data.origin.lat &&
@@ -447,7 +649,10 @@ class Home extends Component {
               this.getPoly(data.origin, data.destination);
             }
           });
-      } else if (notification.data.id === 2 && notification.order.manual) {
+      } else if (
+        notification.data.id === DRIVER_NOTIFICATION_ASKING &&
+        notification.order.manual
+      ) {
         this.setState({ driverstate: DRIVER_STATE_ASKING });
       }
     }
@@ -470,7 +675,6 @@ class Home extends Component {
   };
 
   drawPolyline = () => {
-    console.log("state", this.state.polyline);
     var coords = [];
     this.state.polyline.map(point => {
       coords.push({
@@ -488,8 +692,7 @@ class Home extends Component {
       driverstate: 0,
       selectedIndex: 0,
       user: {},
-      origin: {},
-      destination: {},
+      order: { origin: {}, destination: {} },
       polyline: []
     };
   }
@@ -503,32 +706,33 @@ class Home extends Component {
           followsUserLocation={true}
           initialRegion={INITIAL_REGION}
         >
-          {this.state.origin.lat && this.state.origin.lat ? (
+          {this.state.order.origin.lat && this.state.order.origin.lat ? (
             <MapView.Marker
               title="Origen"
               description="Donde ese encuentra el cliente"
               pinColor="#4CAF50"
               coordinate={{
-                latitude: this.state.origin.lat,
-                longitude: this.state.origin.lng
+                latitude: this.state.order.origin.lat,
+                longitude: this.state.order.origin.lng
               }}
             />
           ) : null}
-          {this.state.destination.lat && this.state.destination.lng ? (
+          {this.state.order.destination.lat &&
+          this.state.order.destination.lng ? (
             <MapView.Marker
               title="Destino"
               description="Adonde desea ir el cliente"
               pinColor="#FF9800"
               coordinate={{
-                latitude: this.state.destination.lat,
-                longitude: this.state.destination.lng
+                latitude: this.state.order.destination.lat,
+                longitude: this.state.order.destination.lng
               }}
             />
           ) : null}
-          {this.state.origin.lat &&
-          this.state.origin.lat &&
-          this.state.destination.lat &&
-          this.state.destination.lng ? (
+          {this.state.order.origin.lat &&
+          this.state.order.origin.lat &&
+          this.state.order.destination.lat &&
+          this.state.order.destination.lng ? (
             <MapView.Polyline
               strokeWidth={4}
               strokeColor="#2196f3"
@@ -564,7 +768,6 @@ const styles = StyleSheet.create({
 export default Home;
 TaskManager.defineTask(LOCATION_TASK_NAME, ({ data: { locations }, error }) => {
   if (error) {
-    // check `error.message` for more details.
     return;
   } else {
     let location = locations[0];
