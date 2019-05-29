@@ -404,11 +404,6 @@ class Home extends Component {
                   buttonStyle={{ height: 75 }}
                   title="Si"
                   onPress={() => {
-                    firebase
-                      .database()
-                      .ref()
-                      .child("/quotes/" + this.state.orderuid + "/status")
-                      .set(5);
                     Alert.alert(
                       "Navegacion",
                       "Vamos hacia el destino del cliente",
@@ -446,7 +441,7 @@ class Home extends Component {
                   fontSize: 25
                 }}
               >
-                ¿Te encuentras con tu cliente?
+                ¿Llegaste a la ubicación del cliente?
               </Text>
               <View
                 style={{
@@ -461,6 +456,25 @@ class Home extends Component {
                   buttonStyle={{ height: 75 }}
                   title="Si"
                   onPress={() => {
+                     console.log(
+                       "Confirmando status para orden",
+                       this.state.orderuid
+                     );
+
+                     firebase
+                       .database()
+                       .ref()
+                       .child(
+                         "/quotes/" +
+                           this.state.orderuid +
+                           "/status"
+                       )
+                       .set(5)
+                       .then(() =>
+                         console.log("Status enviado")
+                       )
+                       .catch(e => console.error(e));
+                       
                     Alert.alert(
                       "Navegacion",
                       "Vamos hacia el destino del cliente",
