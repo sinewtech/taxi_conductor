@@ -626,14 +626,14 @@ class Home extends Component {
             .then(DocumentSnapshot => {
               let pushTokens = [];
               if (DocumentSnapshot.data()["pushDevices"]) {
-                console.log("existe");
+                console.log("PushDevices encontrado para usuario.");
                 let deviceJson = DocumentSnapshot.data()["pushDevices"];
                 for (var token in deviceJson) {
                   if (deviceJson[token] === pushToken) {
                     console.log("Pushtoken ya existe para usuario.");
                     return;
                   } else {
-                    console.log("agregue :v");
+                    console.log("Agregando nuevo PushToken", pushToken);
                     pushTokens.push(pushToken);
                   }
                 }
