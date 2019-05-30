@@ -8,7 +8,18 @@ import {
 } from "react-navigation";
 import Home from "./Views/Home";
 import SignUp from "./Views/SignUp";
+import firebase from "firebase";
 class App extends Component {
+  componentWillUnmount() {
+    if (firebase.auth().currentUser) {
+      firebase
+        .database()
+        .ref()
+        .child("locations/" + firebase.auth().currentUser.uid + "/status")
+        .set(0);
+    }
+  }
+  
   render() {
     return <MyApp />;
   }

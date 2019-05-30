@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { ButtonGroup, Button, Icon, Avatar } from "react-native-elements";
+import { Button, Icon } from "react-native-elements";
 import { Text, View, BackHandler, StyleSheet, Alert } from "react-native";
 import {
   Permissions,
@@ -9,6 +9,8 @@ import {
   Location
 } from "expo";
 import firebase from "firebase";
+import Driver from "../Components/Driver";
+import Briefing from "../Components/Briefing";
 
 if (!firebase.apps.length) {
   firebase.initializeApp({
@@ -20,7 +22,9 @@ if (!firebase.apps.length) {
     messagingSenderId: "503391985374"
   });
 }
+
 import "@firebase/firestore";
+
 const INITIAL_REGION = {
   latitude: 14.0723,
   longitude: -87.1921,
@@ -35,6 +39,10 @@ const DRIVER_STATE_NONE = 0;
 const DRIVER_STATE_ASKING = 1;
 const DRIVER_STATE_GOING_TO_CLIENT = 2;
 const DRIVER_STATE_GOING_TO_DESTINATION = 3;
+
+const STATE_HEIGHT = {
+  0: "25%"
+};
 
 const DRIVER_NOTIFICATION_ADS = 0;
 const DRIVER_NOTIFICATION_CONFIRMING = 2;
@@ -67,26 +75,75 @@ async function registerForPushNotificationsAsync() {
 
   return token;
 }
+
 class Home extends Component {
+  constructor() {
+    super();
+    this.state = {
+      driverstate: 0,
+      selectedIndex: 0,
+      user: {},
+      order: { origin: {}, destination: {}, manual: true },
+      polyline: []
+    };
+  }
+
+  updateUser = userdata => {
+    userdata === null
+      ? this.setState({ userUID: null })
+      : this.setState(userdata);
+  };
+
   componentDidMount = async () => {
+    firebase.auth().onAuthStateChanged(user => {
+      if (user) {
+        firebase
+          .firestore()
+          .collection("drivers")
+          .doc(user.uid)
+          .get()
+          .then(value => {
+            let data = value.data();
+            console.log("User auth state changed data", data);
+            this.updateUser({ user: data, userUID: user.uid });
+            this.registerPush();
+          });
+
+        firebase
+          .database()
+          .ref()
+          .child("locations/" + firebase.auth().currentUser.uid + "/status")
+          .on("value", snap => {
+            this.setState({ driverStatus: snap.exportVal() });
+          });
+      } else {
+        this.updateUser(null);
+      }
+    });
+
     let { status } = await Permissions.askAsync(Permissions.LOCATION);
+
     if (status !== "granted") {
       Alert.alert(
         "Servicios GPS",
         "Por favor deje que el app pueda trabajar con el gps"
       );
     }
+
     let tiene = await Location.getProviderStatusAsync();
+
     if (tiene.gpsAvailable) {
       await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
         accuracy: Location.Accuracy.BestForNavigation,
         timeInterval: 6000,
         distanceInterval: 2
       });
+
       await Location.watchPositionAsync(
         {
           accuracy: Location.Accuracy.Balanced
         },
+
         location => {
           this.setState({
             driverposition: {
@@ -107,31 +164,8 @@ class Home extends Component {
       .once("value", snap => {
         this.setState({ selectedIndex: snap.exportVal() });
       });
-
-    let save = user => {
-      if (user) {
-        this.setState({ userUID: user.uid });
-      }
-    };
-
-    firebase.auth().onAuthStateChanged(user => {
-      if (user) {
-        firebase
-          .firestore()
-          .collection("drivers")
-          .doc(user.uid)
-          .get()
-          .then(value => {
-            let data = value.data();
-            this.setState({ user: data });
-          });
-        save(user);
-        this.registerPush();
-      } else {
-        save(null);
-      }
-    });
   };
+
   getPoly = async (origin, destination) => {
     await fetch(
       "https://maps.googleapis.com/maps/api/directions/json?key=" +
@@ -159,219 +193,67 @@ class Home extends Component {
         }
       });
   };
+
   getState = () => {
     switch (this.state.driverstate) {
       case DRIVER_STATE_NONE: {
-        return (
-          <View>
-            <View style={styles.profiledata}>
-              <View style={{ paddingRight: 12 }}>
-                <Avatar
-                  rounded
-                  source={{ uri: this.state.user.profile }}
-                  style={{ width: 100, height: 100 }}
-                  activeOpacity={0.7}
-                />
-              </View>
-              <View style={{ paddingLeft: 12 }}>
-                <Text>{this.state.user.username}</Text>
-                <Text>{this.state.user.name}</Text>
-                <Button
-                  title="Cerrar sesion"
-                  onPress={() => {
-                    firebase.auth().signOut();
-                  }}
-                />
-              </View>
-            </View>
-            <ButtonGroup
-              onPress={this.updateIndex}
-              selectedIndex={this.state.selectedIndex}
-              buttons={buttons}
-            />
-          </View>
-        );
+        console.log("updating user", this.state.user);
+        return <Briefing />;
       }
       case DRIVER_STATE_ASKING: {
-        let precio = this.state.order.price;
-        if (precio === undefined) {
-          precio = null;
-        } else {
-          precio = precio.toFixed(2);
-        }
-        console.log("precio", precio);
-        let contenido =
-          "De " +
-          this.state.order.origin.address +
-          " a " +
-          this.state.order.destination.name +
-          " Por L. " +
-          precio;
-        if (this.state.ismanual === true) {
-          return (
-            <View
-              style={{
-                flex: 1,
-                justifyContent: "center",
-                alignItems: "center"
-              }}
-            >
-              <Icon name="local-taxi" size={100} color="#4CAF50" />
-              <Text
-                style={{
-                  textAlign: "center",
-                  fontWeight: "bold",
-                  fontSize: 25
-                }}
-              >
-                {contenido}
-              </Text>
-              <View
-                style={{
-                  flex: 1,
-                  justifyContent: "center",
-                  alignItems: "center",
-                  flexDirection: "row"
-                }}
-              >
-                <Button
-                  containerStyle={{ flex: 1, marginRight: 5 }}
-                  buttonStyle={{ height: 75 }}
-                  title="Aceptar"
-                  onPress={() => {
-                    Alert.alert("Navegacion", "Vamos hacia el cliente");
-                    firebase
-                      .database()
-                      .ref()
-                      .child("/quotes/" + this.state.orderuid + "/status")
-                      .set(3);
-                    this.setState({
-                      driverstate: DRIVER_STATE_GOING_TO_CLIENT
-                    });
-                  }}
-                />
-                <Button
-                  containerStyle={{ flex: 1, marginLeft: 5 }}
-                  buttonStyle={{ height: 75 }}
-                  title="Rechazar"
-                  onPress={() => {
-                    Alert.alert(
-                      "Rechazar",
-                      "Estas a punto de rechazar una carrera",
-                      [
-                        {
-                          text: "OK",
-                          onPress: () => {
-                            firebase
-                              .database()
-                              .ref()
-                              .child(
-                                "/quotes/" + this.state.orderuid + "/status"
-                              )
-                              .set(4);
-                            this.setState({
-                              order: { origin: {}, destination: {} },
-                              driverstate: DRIVER_STATE_NONE
-                            });
-                          }
-                        },
-                        {
-                          text: "REGRESAR"
-                        }
-                      ],
-                      { cancelable: false }
-                    );
-                  }}
-                />
-              </View>
-            </View>
-          );
-        } else {
-          return (
-            <View
-              style={{
-                flex: 1,
-                justifyContent: "center",
-                alignItems: "center"
-              }}
-            >
-              <Icon name="local-taxi" size={100} color="#4CAF50" />
-              <Text
-                style={{
-                  textAlign: "center",
-                  fontWeight: "bold",
-                  fontSize: 25
-                }}
-              >
-                {contenido}
-              </Text>
-              <View
-                style={{
-                  flex: 1,
-                  justifyContent: "center",
-                  alignItems: "center",
-                  flexDirection: "row"
-                }}
-              >
-                <Button
-                  containerStyle={{ flex: 1, marginRight: 5 }}
-                  buttonStyle={{ height: 75 }}
-                  title="Aceptar"
-                  onPress={() => {
-                    firebase
-                      .database()
-                      .ref()
-                      .child("/quotes/" + this.state.orderuid + "/status")
-                      .set(3);
-                    Alert.alert("Navegacion", "Vamos hacia el cliente");
-                    this.getPoly(
-                      this.state.driverposition,
-                      this.state.order.origin
-                    );
-                    this.setState({
-                      driverstate: DRIVER_STATE_GOING_TO_CLIENT
-                    });
-                  }}
-                />
-                <Button
-                  containerStyle={{ flex: 1, marginLeft: 5 }}
-                  buttonStyle={{ height: 75 }}
-                  title="Rechazar"
-                  onPress={() => {
-                    Alert.alert(
-                      "Rechazar",
-                      "Estas a punto de rechazar una carrera",
-                      [
-                        {
-                          text: "OK",
-                          onPress: () => {
-                            firebase
-                              .database()
-                              .ref()
-                              .child(
-                                "/quotes/" + this.state.orderuid + "/status"
-                              )
-                              .set(4);
-                            this.setState({
-                              order: { origin: {}, destination: {} },
-                              driverstate: DRIVER_STATE_NONE
-                            });
-                          }
-                        },
-                        {
-                          text: "REGRESAR"
-                        }
-                      ],
-                      { cancelable: false }
-                    );
-                  }}
-                />
-              </View>
-            </View>
-          );
-        }
+        return (
+          <Asking
+            price={this.state.order.price}
+            isManual={this.state.ismanual}
+            orderUID={this.state.orderuid}
+            onAccept={() => {
+              Alert.alert("Navegacion", "Vamos hacia el cliente");
+              firebase
+                .database()
+                .ref()
+                .child("/quotes/" + this.state.orderuid + "/status")
+                .set(3);
+              if (this.state.ismanual) {
+                this.getPoly(
+                  this.state.driverposition,
+                  this.state.order.origin
+                );
+              }
+              this.setState({
+                driverstate: DRIVER_STATE_GOING_TO_CLIENT
+              });
+            }}
+            onReject={() => {
+              Alert.alert(
+                "Rechazar",
+                "Estas a punto de rechazar una carrera",
+                [
+                  {
+                    text: "OK",
+                    onPress: () => {
+                      firebase
+                        .database()
+                        .ref()
+                        .child("/quotes/" + this.state.orderuid + "/status")
+                        .set(4);
+                      this.setState({
+                        order: { origin: {}, destination: {} },
+                        driverstate: DRIVER_STATE_NONE
+                      });
+                    }
+                  },
+                  {
+                    text: "REGRESAR"
+                  }
+                ],
+                { cancelable: false }
+              );
+            }}
+          />
+        );
       }
       case DRIVER_STATE_GOING_TO_CLIENT: {
+        this.updateIndex(2);
         if (this.state.ismanual === true) {
           return (
             <View
@@ -456,25 +338,19 @@ class Home extends Component {
                   buttonStyle={{ height: 75 }}
                   title="Si"
                   onPress={() => {
-                     console.log(
-                       "Confirmando status para orden",
-                       this.state.orderuid
-                     );
+                    console.log(
+                      "Confirmando status para orden",
+                      this.state.orderuid
+                    );
 
-                     firebase
-                       .database()
-                       .ref()
-                       .child(
-                         "/quotes/" +
-                           this.state.orderuid +
-                           "/status"
-                       )
-                       .set(5)
-                       .then(() =>
-                         console.log("Status enviado")
-                       )
-                       .catch(e => console.error(e));
-                       
+                    firebase
+                      .database()
+                      .ref()
+                      .child("/quotes/" + this.state.orderuid + "/status")
+                      .set(5)
+                      .then(() => console.log("Status enviado"))
+                      .catch(e => console.error(e));
+
                     Alert.alert(
                       "Navegacion",
                       "Vamos hacia el destino del cliente",
@@ -665,11 +541,14 @@ class Home extends Component {
       return true;
     });
   };
+
   deactivate = () => {
     this.setState({ order: { origin: {}, destination: {} } });
   };
+
   _handleNotification = notification => {
-    console.log("notificationwenas", notification);
+    console.log("Notificación recibida", notification);
+
     if (notification.data) {
       if (notification.data.id === DRIVER_NOTIFICATION_CONFIRMING) {
         firebase
@@ -684,10 +563,8 @@ class Home extends Component {
               ismanual: notification.data.order.manual
             });
             if (
-              data.origin.lat &&
-              data.origin.lng &&
-              data.destination.lat &&
-              data.destination.lng
+              data.origin &&
+              data.destination
             ) {
               this.getPoly(data.origin, data.destination);
             }
@@ -738,18 +615,50 @@ class Home extends Component {
     return coords;
   };
 
-  constructor() {
-    super();
-    this.state = {
-      driverstate: 0,
-      selectedIndex: 0,
-      user: {},
-      order: { origin: {}, destination: {} },
-      polyline: []
-    };
-  }
-
   render() {
+    let originMarker = null;
+    let destinationMarker = null;
+    let polyline = null;
+
+    if (this.state.order) {
+      if (this.state.order.manual === false) {
+        console.log(
+          "Preparando componentes para marcadores...",
+          this.state.order
+        );
+
+        originMarker = (
+          <MapView.Marker
+            title="Origen"
+            description="Donde ese encuentra el cliente."
+            pinColor="#4CAF50"
+            coordinate={{
+              latitude: this.state.order.origin.lat,
+              longitude: this.state.order.origin.lng
+            }}
+          />
+        );
+        destinationMarker = (
+          <MapView.Marker
+            title="Destino"
+            description="Lleva al cliente acá."
+            pinColor="#FF9800"
+            coordinate={{
+              latitude: this.state.order.destination.lat,
+              longitude: this.state.order.destination.lng
+            }}
+          />
+        );
+        polyline = (
+          <MapView.Polyline
+            strokeWidth={4}
+            strokeColor="#03A9F4"
+            coordinates={this.drawPolyline()}
+          />
+        );
+      }
+    }
+
     return (
       <View style={{ flex: 1 }}>
         <MapView
@@ -761,41 +670,25 @@ class Home extends Component {
           loadingBackgroundColor="#FF9800"
           initialRegion={INITIAL_REGION}
         >
-          {this.state.order.origin.lat && this.state.order.origin.lat ? (
-            <MapView.Marker
-              title="Origen"
-              description="Donde ese encuentra el cliente"
-              pinColor="#4CAF50"
-              coordinate={{
-                latitude: this.state.order.origin.lat,
-                longitude: this.state.order.origin.lng
-              }}
-            />
-          ) : null}
-          {this.state.order.destination.lat &&
-          this.state.order.destination.lng ? (
-            <MapView.Marker
-              title="Destino"
-              description="Adonde desea ir el cliente"
-              pinColor="#FF9800"
-              coordinate={{
-                latitude: this.state.order.destination.lat,
-                longitude: this.state.order.destination.lng
-              }}
-            />
-          ) : null}
-          {this.state.order.origin.lat &&
-          this.state.order.origin.lat &&
-          this.state.order.destination.lat &&
-          this.state.order.destination.lng ? (
-            <MapView.Polyline
-              strokeWidth={4}
-              strokeColor="#03A9F4"
-              coordinates={this.drawPolyline()}
-            />
-          ) : null}
+          {originMarker}
+          {destinationMarker}
+          {polyline}
         </MapView>
-        <View style={styles.statecontainer}>{this.getState()}</View>
+        <View
+          style={styles.stateContainer}
+          height={STATE_HEIGHT[this.state.driverstate]}
+          elevation={3}
+        >
+          {this.getState()}
+        </View>
+        <Driver
+          elevation={3}
+          avatar={this.state.user.profile}
+          name={this.state.user.name}
+          username={this.state.user.username}
+          signOut={firebase.auth().signOut}
+          status={this.state.driverStatus}
+        />
       </View>
     );
   }
@@ -809,14 +702,18 @@ const styles = StyleSheet.create({
     height: 100
   },
   profiledata: { flexDirection: "row" },
-  statecontainer: {
-    width: "100%",
-    marginTop: 10,
+
+  stateContainer: {
+    width: "92%",
+    marginLeft: "4%",
+    marginRight: "4%",
     backgroundColor: "white",
-    borderRadius: 25,
+    borderRadius: 10,
     position: "absolute",
-    bottom: 10
+    overflow: "hidden",
+    bottom: "2%"
   },
+
   mapcontainer: { flex: 1 }
 });
 
