@@ -10,17 +10,20 @@ import {
 } from "react-native";
 import { Button, Input, Icon } from "react-native-elements";
 import firebase from "firebase";
+import Waiting from "../Components/Waiting";
 
 export class LogIn extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       mail: "",
-      password: ""
+      password: "",
+      Registrando: false
     };
   }
 
-  handleSignIn = () => {
+  handleSignIn = async () => {
+    await this.setState({ Registrando: true });
     let CanContinue = true;
     for (key in this.state) {
       if (this.state[key].length === 0) {
@@ -30,6 +33,7 @@ export class LogIn extends React.Component {
     }
     if (!CanContinue) {
       Alert.alert("Error", "Por favor Ingrese sus datos");
+      this.setState({ Registrando: false });
       return;
     } else {
       if (
@@ -38,6 +42,7 @@ export class LogIn extends React.Component {
         )
       ) {
         Alert.alert("Correo", "Por favor use un formato de correo valido");
+        this.setState({ Registrando: false });
         return;
       }
       if (!/^[A-Za-z0-9]{6,}$/.test(this.state.password)) {
@@ -45,18 +50,54 @@ export class LogIn extends React.Component {
           "Contraseña",
           "Recuerde que la contraseña debe ser mayor a 6 caracteres."
         );
+        this.setState({ Registrando: false });
         return;
       }
       firebase
         .auth()
         .signInWithEmailAndPassword(this.state.mail, this.state.password)
+        .then(userdata => {
+          if (user) {
+            firebase
+              .firestore()
+              .collection("drivers")
+              .doc(userdata.user.uid)
+              .get()
+              .then(snap => {
+                if (!snap.exists) {
+                  Alert.alert("Error", "No tiene cuenta en esta applicacion");
+                  firebase.auth().signOut();
+                }
+              });
+          }
+        })
         .catch(error => {
-          console.error(error);
+          switch (error.code) {
+            case "auth/wrong-password": {
+              Alert.alert("Error", "Su Contraseña es incorrecta");
+              break;
+            }
+            case "auth/user-disabled": {
+              Alert.alert("Error", "Esta cuenta ha sido deshabilitada");
+              break;
+            }
+            case "auth/user-not-found": {
+              Alert.alert(
+                "Error",
+                "No hemos encontrado una cuenta con este correo"
+              );
+              break;
+            }
+          }
+          this.setState({ Registrando: false });
         });
     }
   };
 
   render() {
+    if (this.state.Registrando) {
+      return <Waiting />;
+    }
     return (
       <KeyboardAvoidingView behavior={"padding"} style={styles.SignUpView}>
         <View style={styles.credentialsView}>
