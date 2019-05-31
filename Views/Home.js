@@ -1,6 +1,13 @@
 import React, { Component } from "react";
 import { Button, Icon } from "react-native-elements";
-import { Text, View, BackHandler, StyleSheet, Alert } from "react-native";
+import {
+  Text,
+  View,
+  BackHandler,
+  StyleSheet,
+  Alert,
+  Platform
+} from "react-native";
 import {
   Permissions,
   Notifications,
@@ -69,6 +76,14 @@ async function registerForPushNotificationsAsync() {
     return null;
   }
 
+  if (Platform.OS === "android") {
+    Expo.Notifications.createChannelAndroidAsync("carreras", {
+      name: "Carreras",
+      priority: "max",
+      vibrate: [0, 250, 250, 250],
+      sound: true
+    });
+  }
   let token = "_";
 
   try {
