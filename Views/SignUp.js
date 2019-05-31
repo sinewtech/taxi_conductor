@@ -14,7 +14,7 @@ import firebase from "firebase";
 import "@firebase/firestore";
 import { Input, Button, Icon, Image } from "react-native-elements";
 import { ImagePicker } from "expo";
-
+import Waiting from "../Components/Waiting";
 class SignIn extends Component {
   constructor(props) {
     super(props);
@@ -27,7 +27,8 @@ class SignIn extends Component {
       perfil: "",
       perfilcarro: "",
       name: "",
-      phone: ""
+      phone: "",
+      Registrando: false
     };
   }
   _pickImage = async id => {
@@ -35,8 +36,6 @@ class SignIn extends Component {
       allowsEditing: true,
       aspect: [4, 3]
     });
-
-    console.log(result);
 
     if (!result.cancelled) {
       if (id === 0) {
@@ -64,9 +63,10 @@ class SignIn extends Component {
     });
   };
 
-  handleSignIn = () => {
+  handleSignIn = async () => {
+    await this.setState({ Registrando: true });
+
     let CanContinue = true;
-    console.log(this.state);
     for (key in this.state) {
       if (this.state[key].length === 0) {
         CanContinue = false;
@@ -75,6 +75,7 @@ class SignIn extends Component {
     }
     if (!CanContinue) {
       Alert.alert("Error", "Por favor Ingrese sus datos");
+      this.setState({ Registrando: false });
       return;
     } else {
       if (
@@ -83,10 +84,12 @@ class SignIn extends Component {
         )
       ) {
         Alert.alert("Correo", "Por favor use un formato de correo valido.");
+        this.setState({ Registrando: false });
         return;
       }
       if (!/^[A-Z]{1}\d{1,}$/.test(this.state.username)) {
         Alert.alert("Codigo de empleado", "Por favor use el formato indicado.");
+        this.setState({ Registrando: false });
         return;
       }
       if (!/^[A-Za-z0-9]{6,}$/.test(this.state.password)) {
@@ -94,18 +97,22 @@ class SignIn extends Component {
           "Contraseña",
           "Por favor que la contraseña sea mayor a 6 caracteres."
         );
+        this.setState({ Registrando: false });
         return;
       }
       if (!/^([A-Z]{3})\ ([0-9]{4})$/.test(this.state.placa)) {
         Alert.alert("Placa", "Por favor siga el formato indicado.");
+        this.setState({ Registrando: false });
         return;
       }
       if (!/^\+504\ \d{4}-\d{4}$/.test(this.state.phone)) {
         Alert.alert("Numero de telefono", "Por favor use el formato indicado.");
+        this.setState({ Registrando: false });
         return;
       }
       if (this.state.perfil.length == 0) {
         Alert.alert("Imagen de perfil", "Por favor seleccione una imagen.");
+        this.setState({ Registrando: false });
         return;
       }
       if (this.state.perfilcarro.length == 0) {
@@ -113,6 +120,7 @@ class SignIn extends Component {
           "Imagen de perfil del carro",
           "Por favor seleccione una imagen."
         );
+        this.setState({ Registrando: false });
         return;
       }
       if (this.state.carro.length == 0) {
@@ -120,6 +128,7 @@ class SignIn extends Component {
           "Imagen Lateral  del carro",
           "Por favor seleccione una imagen."
         );
+        this.setState({ Registrando: false });
         return;
       }
 
@@ -177,11 +186,22 @@ class SignIn extends Component {
               console.log("error3", error);
             });
         })
-        .catch(error => console.error(error));
+        .catch(error => {
+          switch (error.code) {
+            case "auth/email-already-in-use": {
+              Alert.alert("Error", "Alguien ya se registro con este correo");
+              break;
+            }
+          }
+          this.setState({ Registrando: false });
+        });
     }
   };
 
   render() {
+    if (this.state.Registrando) {
+      return <Waiting />;
+    }
     return (
       <ScrollView contentContainerStyle={styles.SignUpView}>
         <View style={styles.credentialsView}>
@@ -211,7 +231,7 @@ class SignIn extends Component {
               }
               inputContainerStyle={styles.Input}
               leftIconContainerStyle={{ marginRight: 15 }}
-              autoCapitalize="none"
+              autoCapitalize="characters"
               onChangeText={text => this.setState({ username: text })}
             />
             <Input
@@ -242,7 +262,7 @@ class SignIn extends Component {
               }
               inputContainerStyle={styles.Input}
               leftIconContainerStyle={{ marginRight: 15 }}
-              autoCapitalize="none"
+              autoCapitalize="characters"
               onChangeText={text => this.setState({ placa: text })}
             />
             <Input
@@ -273,7 +293,7 @@ class SignIn extends Component {
               }
               inputContainerStyle={styles.Input}
               leftIconContainerStyle={{ marginRight: 15 }}
-              autoCapitalize="none"
+              autoCapitalize="words"
               onChangeText={text => this.setState({ name: text })}
             />
           </KeyboardAvoidingView>
