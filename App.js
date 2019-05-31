@@ -9,6 +9,23 @@ import {
 import Home from "./Views/Home";
 import SignUp from "./Views/SignUp";
 import firebase from "firebase";
+
+// Ignorar los warnings de firebase
+
+import { YellowBox } from "react-native";
+import _ from "lodash";
+
+YellowBox.ignoreWarnings(["Setting a timer"]);
+const _console = _.clone(console);
+console.warn = message => {
+  if (message.indexOf("Setting a timer") <= -1) {
+    _console.warn(message);
+  }
+};
+
+// Termina ignorar los warnings de firebase
+
+
 class App extends Component {
   componentWillUnmount() {
     if (firebase.auth().currentUser) {

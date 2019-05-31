@@ -1,6 +1,8 @@
 import React, { Component } from "react";
+import { Text, View, StyleSheet } from "react-native";
+import { Icon, Button } from "react-native-elements";
 
-class Asking extends Component() {
+class Asking extends Component {
   render() {
     let precio = this.props.price;
 
@@ -10,13 +12,13 @@ class Asking extends Component() {
       precio = precio.toFixed(2);
     }
 
-    console.log("precio", precio);
+    console.log("Orden recibida", this.props.order);
 
     let contenido =
       "De " +
-      this.state.order.origin.address +
+      this.props.order.origin.address +
       " a " +
-      this.state.order.destination.name +
+      this.props.order.destination.name +
       " Por L. " +
       precio;
 
@@ -28,15 +30,14 @@ class Asking extends Component() {
           alignItems: "center"
         }}
       >
-        <Icon name="local-taxi" size={100} color="#4CAF50" />
-        <Text
-          style={{
-            textAlign: "center",
-            fontWeight: "bold",
-            fontSize: 25
-          }}
-        >
-          {contenido}
+        <Text style={styles.heading}>Carrera Recibida</Text>
+        <Text style={styles.title}>{this.props.order.origin.name}</Text>
+        <Text style={styles.subtitle}>
+          {this.props.order.origin.address}
+        </Text>
+        <Text style={styles.title}>{this.props.order.destination.name}</Text>
+        <Text style={styles.subtitle}>
+          {this.props.order.destination.address}
         </Text>
         <View
           style={{
@@ -63,5 +64,20 @@ class Asking extends Component() {
     );
   }
 }
+
+const styles = StyleSheet.create({
+  heading:{
+    fontSize: 25
+  },
+
+  title: {
+    fontSize: 20,
+    fontWeight: "bold"
+  },
+
+  subtitle: {
+    fontSize: 15,
+  }
+});
 
 export default Asking;

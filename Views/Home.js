@@ -11,6 +11,7 @@ import {
 import firebase from "firebase";
 import Driver from "../Components/Driver";
 import Briefing from "../Components/Briefing";
+import Asking from "../Components/Asking";
 
 if (!firebase.apps.length) {
   firebase.initializeApp({
@@ -126,7 +127,7 @@ class Home extends Component {
     if (status !== "granted") {
       Alert.alert(
         "Servicios GPS",
-        "Por favor deje que el app pueda trabajar con el gps"
+        "Por favor activa los servicios de GPS para continuar."
       );
     }
 
@@ -154,7 +155,7 @@ class Home extends Component {
         }
       );
     } else {
-      Alert.alert("Servicios GPS", "Por favor active los servicios GPS");
+      Alert.alert("Servicios GPS", "Por favor activa los servicios de GPS para continuar.");
     }
 
     firebase
@@ -197,7 +198,6 @@ class Home extends Component {
   getState = () => {
     switch (this.state.driverstate) {
       case DRIVER_STATE_NONE: {
-        console.log("updating user", this.state.user);
         return <Briefing />;
       }
       case DRIVER_STATE_ASKING: {
@@ -205,7 +205,7 @@ class Home extends Component {
           <Asking
             price={this.state.order.price}
             isManual={this.state.ismanual}
-            orderUID={this.state.orderuid}
+            order={this.state.order}
             onAccept={() => {
               Alert.alert("Navegacion", "Vamos hacia el cliente");
               firebase
@@ -253,7 +253,8 @@ class Home extends Component {
         );
       }
       case DRIVER_STATE_GOING_TO_CLIENT: {
-        this.updateIndex(2);
+        this.updateDriverStatus(2);
+
         if (this.state.ismanual === true) {
           return (
             <View
@@ -405,6 +406,8 @@ class Home extends Component {
                   buttonStyle={{ height: 75 }}
                   title="Si"
                   onPress={() => {
+                    this.updateDriverStatus(1);
+
                     Alert.alert(
                       "Navegacion",
                       "Gracias por cuidar de nuestro cliente",
@@ -562,10 +565,7 @@ class Home extends Component {
               orderuid: notification.data.order.uid,
               ismanual: notification.data.order.manual
             });
-            if (
-              data.origin &&
-              data.destination
-            ) {
+            if (data.origin && data.destination) {
               this.getPoly(data.origin, data.destination);
             }
           });
@@ -586,7 +586,23 @@ class Home extends Component {
             });
           });
       } else if (notification.data.id === DRIVER_NOTIFICATION_CONFIRMED) {
-        this.setState({ driverstate: DRIVER_STATE_ASKING });
+        if (this.state.order.manual)
+          firebase
+            .database()
+            .ref()
+            .child("quotes/" + notification.data.order.uid + "/")
+            .once("value", snap => {
+              let data = snap.exportVal();
+              console.log("Orden manual recibida:", data);
+
+              this.setState({
+                order: data,
+                orderuid: notification.data.order.uid,
+                ismanual: notification.data.order.manual,
+                driverstate: DRIVER_STATE_ASKING
+              });
+            });
+        else this.setState({ driverstate: DRIVER_STATE_ASKING });
       }
     }
   };
@@ -594,13 +610,15 @@ class Home extends Component {
     return firebase.auth().currentUser.uid;
   };
 
-  updateIndex = selectedIndex => {
-    this.setState({ selectedIndex });
-    firebase
-      .database()
-      .ref()
-      .child("locations/" + firebase.auth().currentUser.uid + "/status")
-      .set(selectedIndex);
+  updateDriverStatus = selectedIndex => {
+    if (this.state.selectedIndex !== selectedIndex){
+      this.setState({ selectedIndex });
+      firebase
+        .database()
+        .ref()
+        .child("locations/" + firebase.auth().currentUser.uid + "/status")
+        .set(selectedIndex);
+    }
   };
 
   drawPolyline = () => {
@@ -688,6 +706,7 @@ class Home extends Component {
           username={this.state.user.username}
           signOut={firebase.auth().signOut}
           status={this.state.driverStatus}
+          updateDriverStatus={this.updateDriverStatus}
         />
       </View>
     );

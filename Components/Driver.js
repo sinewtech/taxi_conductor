@@ -1,29 +1,99 @@
 import React, { Component } from "react";
-import { Text, View, StyleSheet, Button, Dimensions } from "react-native";
+import {
+  Text,
+  View,
+  StyleSheet,
+  Alert,
+  Dimensions,
+  ActivityIndicator,
+  TouchableNativeFeedback
+} from "react-native";
 import { Avatar } from "react-native-elements";
 
 const INFO_HEIGHT = Dimensions.get("window").height * 0.05;
 
 export default class Driver extends Component {
-  render() {
+  constructor(props) {
+    super(props);
+
     let statusColor = "black";
     let statusText = "-";
+    let loading = true;
 
-    switch (this.props.status) {
+    switch (props.status) {
+      case 0:
+        statusColor = "#f44336";
+        statusText = "Fuera de T.";
+        break;
+      case 1:
+        statusColor = "#4CAF50";
+        statusText = "Libre";
+        break;
+      case 2:
+        statusColor = "#FF9800";
+        statusText = "En Carrera";
+        break;
+      default:
+        loading = true;
+        break;
+    }
+
+    this.state = {
+      loading,
+      statusColor,
+      statusText,
+      prevStatus: -1
+    };
+  }
+
+  componentWillReceiveProps = props => {
+    console.log(
+      "Props received.",
+      props.status,
+      this.state.prevStatus,
+      this.state.loading
+    );
+
+    if (this.state.prevStatus !== props.status) {
+      switch (props.status) {
         case 0:
-            statusColor = "#f44336";
-            statusText = "Fuera de T.";
-            break;
+          this.setState({
+            statusColor: "#f44336",
+            statusText: "Fuera de T.",
+            loading: false,
+            prevStatus: props.status
+          });
+          break;
         case 1:
-            statusColor = "#4CAF50";
-            statusText = "Libre";
-            break
+          this.setState({
+            statusColor: "#4CAF50",
+            statusText: "Libre",
+            loading: false,
+            prevStatus: props.status
+          });
+          break;
         case 2:
-            statusColor = "#FF9800"
-            statusText = "En Carrera";
-            break;
+          this.setState({
+            statusColor: "#FF9800",
+            statusText: "En Carrera",
+            loading: false,
+            prevStatus: props.status
+          });
+          break;
         default:
-            break;
+          this.setState({ loading: true });
+          break;
+      }
+    }
+  };
+
+  render() {
+    let driverStatusContent = <ActivityIndicator color="white" />;
+
+    if (!this.state.loading) {
+      driverStatusContent = (
+        <Text style={styles.driverStatusText}>{this.state.statusText}</Text>
+      );
     }
 
     return (
@@ -44,9 +114,46 @@ export default class Driver extends Component {
             {this.props.name ? this.props.name : "Cargando..."}
           </Text>
         </View>
-        <View style={styles.driverStatus} backgroundColor={statusColor}>
-          <Text style={styles.driverStatusText}>{statusText}</Text>
-        </View>
+        <TouchableNativeFeedback
+          background={TouchableNativeFeedback.SelectableBackground()}
+          onPress={() => {
+            if (this.props.status !== 1 && this.props.status !== 0)
+              Alert.alert(
+                "Error",
+                "No puedes cambiar tu estado en este momento."
+              );
+            else
+              Alert.alert(
+                "Cambiando Estado",
+                "¿Estas seguro de que quieres cambiar tu estado?",
+                [
+                  { text: "Regresar" },
+                  {
+                    text: "Cambiar Estado",
+                    onPress: () => {
+                      switch (this.props.status) {
+                        case 0: {
+                          this.props.updateDriverStatus(1);
+                          break;
+                        }
+                        case 1: {
+                          this.props.updateDriverStatus(0);
+                          break;
+                        }
+                      }
+                    }
+                  }
+                ]
+              );
+          }}
+        >
+          <View
+            style={styles.driverStatus}
+            backgroundColor={this.state.statusColor}
+          >
+            {driverStatusContent}
+          </View>
+        </TouchableNativeFeedback>
       </View>
     );
   }
@@ -63,6 +170,7 @@ const styles = StyleSheet.create({
   },
 
   driverContainer: {
+    zIndex: 1,
     borderRadius: 5,
     height: INFO_HEIGHT,
     width: "92%",
