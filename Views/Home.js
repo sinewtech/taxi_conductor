@@ -34,7 +34,6 @@ const INITIAL_REGION = {
 };
 const API_KEY = "AIzaSyApNgtxFBp0SXSHljP_xku6peNCzjTFWM4";
 const decodePolyline = require("decode-google-map-polyline");
-const buttons = ["Fuera de trabajo", "Libre", "En Carrera"];
 
 const DRIVER_STATE_NONE = 0;
 const DRIVER_STATE_ASKING = 1;
@@ -48,6 +47,10 @@ const STATE_HEIGHT = {
 const DRIVER_NOTIFICATION_ADS = 0;
 const DRIVER_NOTIFICATION_CONFIRMING = 2;
 const DRIVER_NOTIFICATION_CONFIRMED = 3;
+
+const DRIVER_STATUS_NOT_WORKING = 0;
+const DRIVER_STATUS_LOOKING_FOR_DRIVE = 1;
+const DRIVER_STATUS_ON_A_DRIVE = 2;
 
 const LOCATION_TASK_NAME = "SINEWAVE_LOCATION";
 let db = firebase.firestore();
@@ -155,7 +158,10 @@ class Home extends Component {
         }
       );
     } else {
-      Alert.alert("Servicios GPS", "Por favor activa los servicios de GPS para continuar.");
+      Alert.alert(
+        "Servicios GPS",
+        "Por favor activa los servicios de GPS para continuar."
+      );
     }
 
     firebase
@@ -253,8 +259,7 @@ class Home extends Component {
         );
       }
       case DRIVER_STATE_GOING_TO_CLIENT: {
-        this.updateDriverStatus(2);
-
+        this.updateDriverStatus(DRIVER_STATUS_ON_A_DRIVE);
         if (this.state.ismanual === true) {
           return (
             <View
@@ -406,8 +411,6 @@ class Home extends Component {
                   buttonStyle={{ height: 75 }}
                   title="Si"
                   onPress={() => {
-                    this.updateDriverStatus(1);
-
                     Alert.alert(
                       "Navegacion",
                       "Gracias por cuidar de nuestro cliente",
@@ -415,6 +418,10 @@ class Home extends Component {
                         {
                           text: "OK",
                           onPress: () => {
+                            this.updateDriverStatus(
+                              DRIVER_STATUS_LOOKING_FOR_DRIVE
+                            );
+
                             this.setState({
                               driverstate: DRIVER_STATE_NONE,
                               order: { origin: {}, destination: {} },
@@ -472,6 +479,10 @@ class Home extends Component {
                         {
                           text: "OK",
                           onPress: () => {
+                            this.updateDriverStatus(
+                              DRIVER_STATUS_LOOKING_FOR_DRIVE
+                            );
+
                             this.setState({
                               driverstate: DRIVER_STATE_NONE,
                               order: { origin: {}, destination: {} },
@@ -611,7 +622,7 @@ class Home extends Component {
   };
 
   updateDriverStatus = selectedIndex => {
-    if (this.state.selectedIndex !== selectedIndex){
+    if (this.state.selectedIndex !== selectedIndex) {
       this.setState({ selectedIndex });
       firebase
         .database()

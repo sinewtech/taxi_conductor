@@ -25,18 +25,17 @@ console.warn = message => {
 
 // Termina ignorar los warnings de firebase
 
-
 class App extends Component {
-  componentWillUnmount() {
+  componentWillUnmount = async () => {
     if (firebase.auth().currentUser) {
-      firebase
+      await firebase
         .database()
         .ref()
         .child("locations/" + firebase.auth().currentUser.uid + "/status")
         .set(0);
     }
-  }
-  
+  };
+
   render() {
     return <MyApp />;
   }
