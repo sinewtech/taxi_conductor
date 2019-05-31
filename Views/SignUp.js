@@ -231,7 +231,7 @@ class SignIn extends Component {
               }
               inputContainerStyle={styles.Input}
               leftIconContainerStyle={{ marginRight: 15 }}
-              autoCapitalize="none"
+              autoCapitalize="characters"
               onChangeText={text => this.setState({ username: text })}
             />
             <Input
