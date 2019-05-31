@@ -149,6 +149,12 @@ class SignIn extends Component {
               phone: this.state.phone
             });
 
+          await firebase
+            .database()
+            .ref()
+            .child("locations/" + userdata.user.uid + "/status")
+            .set(0);
+
           //upload images :v
           await this.urlToBlob(this.state.carro)
             .then(value => {
