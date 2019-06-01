@@ -83,6 +83,12 @@ async function registerForPushNotificationsAsync() {
       vibrate: [0, 250, 250, 250],
       sound: true
     });
+    Expo.Notifications.createChannelAndroidAsync("ads", {
+      name: "Ads",
+      priority: "max",
+      vibrate: [0, 250, 250, 250],
+      sound: true
+    });
   }
   let token = "_";
 
