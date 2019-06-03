@@ -6,7 +6,8 @@ import {
   BackHandler,
   StyleSheet,
   Alert,
-  Platform
+  Platform,
+  Dimensions
 } from "react-native";
 import {
   Permissions,
@@ -719,6 +720,12 @@ class Home extends Component {
           showsMyLocationButton
           loadingBackgroundColor="#FF9800"
           initialRegion={INITIAL_REGION}
+          mapPadding={{
+            bottom: STATE_HEIGHT[this.state.driverstate],
+            top: Dimensions.get("window").height * 0.1,
+            left: 0,
+            right: 0
+          }}
         >
           {originMarker}
           {destinationMarker}
