@@ -1,25 +1,7 @@
-import React from "react";
+import React, { Component } from "react";
 import { View, Dimensions, ActivityIndicator } from "react-native";
-import firebase from "firebase";
-class Waiting extends React.Component {
-  componentDidMount() {
-    firebase.auth().onAuthStateChanged(user => {
-      if (user) {
-        firebase
-          .firestore()
-          .collection("drivers")
-          .doc(user.uid)
-          .get()
-          .then(snap => {
-            if (snap.exists) {
-              this.props.navigation.navigate("App");
-            }
-          });
-      } else {
-        this.props.navigation.navigate("Auth");
-      }
-    });
-  }
+
+class Waiting extends Component {
   render() {
     return (
       <View
@@ -36,4 +18,5 @@ class Waiting extends React.Component {
     );
   }
 }
+
 export default Waiting;

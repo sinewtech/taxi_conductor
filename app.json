@@ -19,7 +19,7 @@
       "backgroundColor": "#FF9800"
     },
     "notification": {
-      "icon": "./assets/icon.png",
+      "icon": "./assets/notificationicon.png",
       "color": "#FF9800"
     },
     "updates": {
