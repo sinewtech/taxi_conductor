@@ -14,7 +14,8 @@ import {
   Notifications,
   TaskManager,
   MapView,
-  Location
+  Location,
+  KeepAwake
 } from "expo";
 import firebase from "firebase";
 import Driver from "../Components/Driver";
@@ -712,6 +713,7 @@ class Home extends Component {
 
     return (
       <View style={{ flex: 1 }}>
+        <KeepAwake />
         <MapView
           style={{ flex: 1 }}
           showsUserLocation
