@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import { LogIn } from "./Views/LogIn";
-import Waiting from "./Components/Waiting";
+import UserValidator from "./Components/UserValidator";
 import {
   createStackNavigator,
   createSwitchNavigator,
@@ -40,6 +40,7 @@ class App extends Component {
     return <MyApp />;
   }
 }
+
 const AppStack = createStackNavigator({
   Home: {
     screen: Home,
@@ -48,6 +49,7 @@ const AppStack = createStackNavigator({
     }
   }
 });
+
 const AuthStack = createStackNavigator({
   LogIn: {
     screen: LogIn,
@@ -67,7 +69,7 @@ const AuthStack = createStackNavigator({
 const MyApp = createAppContainer(
   createSwitchNavigator(
     {
-      AuthLoading: Waiting,
+      AuthLoading: UserValidator,
       App: AppStack,
       Auth: AuthStack
     },
@@ -76,4 +78,5 @@ const MyApp = createAppContainer(
     }
   )
 );
+
 export default App;
