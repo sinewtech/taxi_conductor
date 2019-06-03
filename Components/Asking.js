@@ -35,9 +35,16 @@ class Asking extends Component {
         <Text style={styles.subtitle}>
           {this.props.order.origin.address}
         </Text>
-        <Text style={styles.title}>{this.props.order.destination.name}</Text>
+        {//<Icon name="angle-down" type="font-awesome" flex={1}/>
+        }
+        <Text style={styles.title}>
+          {this.props.order.destination.name}
+        </Text>
         <Text style={styles.subtitle}>
           {this.props.order.destination.address}
+        </Text>
+        <Text style={styles.subtitle}>
+          Por {this.props.order.price}
         </Text>
         <View
           style={{
@@ -67,16 +74,19 @@ class Asking extends Component {
 
 const styles = StyleSheet.create({
   heading:{
-    fontSize: 25
+    fontSize: 25,
+    flex: 2
   },
 
   title: {
     fontSize: 20,
-    fontWeight: "bold"
+    fontWeight: "bold",
+    flex: 1
   },
 
   subtitle: {
     fontSize: 15,
+    flex: 1
   }
 });
 
