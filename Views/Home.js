@@ -19,6 +19,7 @@ import firebase from "firebase";
 import Driver from "../Components/Driver";
 import Briefing from "../Components/Briefing";
 import Asking from "../Components/Asking";
+import "@firebase/firestore";
 
 if (!firebase.apps.length) {
   firebase.initializeApp({
@@ -31,14 +32,13 @@ if (!firebase.apps.length) {
   });
 }
 
-import "@firebase/firestore";
-
 const INITIAL_REGION = {
   latitude: 14.0723,
   longitude: -87.1921,
   latitudeDelta: 0.1,
   longitudeDelta: 0.1
 };
+
 const API_KEY = "AIzaSyApNgtxFBp0SXSHljP_xku6peNCzjTFWM4";
 const decodePolyline = require("decode-google-map-polyline");
 
@@ -47,10 +47,6 @@ const DRIVER_STATE_ASKING = 1;
 const DRIVER_STATE_GOING_TO_CLIENT = 2;
 const DRIVER_STATE_GOING_TO_DESTINATION = 3;
 
-const STATE_HEIGHT = {
-  0: "25%"
-};
-
 const DRIVER_NOTIFICATION_ADS = 0;
 const DRIVER_NOTIFICATION_CONFIRMING = 2;
 const DRIVER_NOTIFICATION_CONFIRMED = 3;
@@ -58,6 +54,10 @@ const DRIVER_NOTIFICATION_CONFIRMED = 3;
 const DRIVER_STATUS_NOT_WORKING = 0;
 const DRIVER_STATUS_LOOKING_FOR_DRIVE = 1;
 const DRIVER_STATUS_ON_A_DRIVE = 2;
+
+const STATE_HEIGHT = {
+  0: "25%"
+};
 
 const LOCATION_TASK_NAME = "SINEWAVE_LOCATION";
 let db = firebase.firestore();
