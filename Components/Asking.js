@@ -14,14 +14,6 @@ class Asking extends Component {
 
     console.log("Orden recibida", this.props.order);
 
-    let contenido =
-      "De " +
-      this.props.order.origin.address +
-      " a " +
-      this.props.order.destination.name +
-      " Por L. " +
-      precio;
-
     return (
       <View
         style={{
@@ -31,21 +23,22 @@ class Asking extends Component {
         }}
       >
         <Text style={styles.heading}>Carrera Recibida</Text>
+        <Text flex={1}>{"\n"}</Text>
         <Text style={styles.title}>{this.props.order.origin.name}</Text>
         <Text style={styles.subtitle}>
           {this.props.order.origin.address}
         </Text>
-        {//<Icon name="angle-down" type="font-awesome" flex={1}/>
-        }
+        <View flex={1}>
+          <Icon name="angle-down" type="font-awesome" color="#FF9800" />
+        </View>
         <Text style={styles.title}>
           {this.props.order.destination.name}
         </Text>
         <Text style={styles.subtitle}>
           {this.props.order.destination.address}
         </Text>
-        <Text style={styles.subtitle}>
-          Por {this.props.order.price}
-        </Text>
+        <Text flex={1}>{"\n"}</Text>
+        <Text style={styles.price}>Por {this.props.order.price}</Text>
         <View
           style={{
             flex: 1,
@@ -87,6 +80,12 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 15,
     flex: 1
+  },
+
+  precio:{
+    marginBottom: 5,
+    fontSize: 16,
+    fontWeight: "bold"
   }
 });
 
