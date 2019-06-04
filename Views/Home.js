@@ -132,7 +132,6 @@ class Home extends Component {
           .get()
           .then(value => {
             let data = value.data();
-            console.log("User auth state changed data", data);
             this.updateUser({ user: data, userUID: user.uid });
             this.registerPush();
           });
@@ -218,6 +217,7 @@ class Home extends Component {
           let polyline = decodePolyline(
             responseJson.routes[0].overview_polyline.points
           );
+
           this.setState({ polyline });
         } else {
           console.log("Status failed");
@@ -234,7 +234,7 @@ class Home extends Component {
         return (
           <Asking
             price={this.state.order.price}
-            isManual={this.state.ismanual}
+            isManual={this.state.isManual}
             order={this.state.order}
             onAccept={() => {
               Alert.alert("Navegacion", "Vamos hacia el cliente");
@@ -243,12 +243,14 @@ class Home extends Component {
                 .ref()
                 .child("/quotes/" + this.state.orderuid + "/status")
                 .set(3);
-              if (!this.state.ismanual) {
+
+              if (!this.state.isManual) {
                 this.getPoly(
                   this.state.driverposition,
                   this.state.order.origin
                 );
               }
+
               this.setState({
                 driverstate: DRIVER_STATE_GOING_TO_CLIENT
               });
@@ -389,12 +391,14 @@ class Home extends Component {
                     .set(5)
                     .then(() => console.log("Status enviado"))
                     .catch(e => console.error(e));
+
                   if (!this.isManual) {
                     this.getPoly(
                       this.state.driverposition,
                       this.state.order.destination
                     );
                   }
+
                   Alert.alert(
                     "Navegacion",
                     "Vamos hacia el destino del cliente",
@@ -558,9 +562,17 @@ class Home extends Component {
             this.setState({
               order: data,
               orderuid: notification.data.order.uid,
-              ismanual: notification.data.order.manual
+              isManual: notification.data.order.manual
             });
-            if (data.origin && data.destination) {
+
+            console.log("Estado", this.state);
+
+            if (
+              !this.state.isManual &&
+              this.state.order.origin !== undefined &&
+              this.state.order.destination !== undefined
+            ) {
+              console.log("Dibujando ruta...");
               this.getPoly(data.origin, data.destination);
             }
           });
@@ -577,7 +589,7 @@ class Home extends Component {
             this.setState({
               order: data,
               orderuid: notification.data.order.uid,
-              ismanual: notification.data.order.manual
+              isManual: notification.data.order.manual
             });
           });
       } else if (notification.data.id === DRIVER_NOTIFICATION_CONFIRMED) {
@@ -593,7 +605,7 @@ class Home extends Component {
               this.setState({
                 order: data,
                 orderuid: notification.data.order.uid,
-                ismanual: notification.data.order.manual,
+                isManual: notification.data.order.manual,
                 driverstate: DRIVER_STATE_ASKING
               });
             });
@@ -618,6 +630,7 @@ class Home extends Component {
 
   drawPolyline = () => {
     var coords = [];
+
     this.state.polyline.map(point => {
       coords.push({
         latitude: point.lat,
@@ -634,7 +647,7 @@ class Home extends Component {
     let polyline = null;
 
     if (this.state.order) {
-      if (this.state.order.manual === false) {
+      if (this.state.isManual === false) {
         console.log(
           "Preparando componentes para marcadores...",
           this.state.order
@@ -651,6 +664,7 @@ class Home extends Component {
             }}
           />
         );
+
         destinationMarker = (
           <MapView.Marker
             title="Destino"
@@ -662,6 +676,7 @@ class Home extends Component {
             }}
           />
         );
+
         polyline = (
           <MapView.Polyline
             strokeWidth={4}
@@ -753,7 +768,7 @@ TaskManager.defineTask(
       // console.log("nueva pos", pos);
       // await Home.upload_data(pos);
       locations[0].user = Home.getcurrentuser();
-      console.log("punto", locations[0]);
+
       fetch(
         "https://us-central1-taxiapp-sinewave.cloudfunctions.net/location/",
         {
