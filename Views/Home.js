@@ -243,7 +243,7 @@ class Home extends Component {
                 .ref()
                 .child("/quotes/" + this.state.orderuid + "/status")
                 .set(3);
-              if (this.state.ismanual) {
+              if (!this.state.ismanual) {
                 this.getPoly(
                   this.state.driverposition,
                   this.state.order.origin
@@ -329,8 +329,8 @@ class Home extends Component {
                     .catch(e => console.error(e));
 
                   Alert.alert(
-                    "Navegacion",
-                    "Vamos hacia el destino del cliente",
+                    "Aviso",
+                    "Listo le notificaremos al cliente.",
                     [{ text: "ok" }],
                     { cancelable: false }
                   );
@@ -338,12 +338,6 @@ class Home extends Component {
                   this.setState({
                     driverstate: DRIVER_STATE_CLIENT_IS_WITH_HIM
                   });
-                  if (this.isManual) {
-                    this.getPoly(
-                      this.state.driverposition,
-                      this.state.order.destination
-                    );
-                  }
                 }}
               />
             </View>
@@ -395,7 +389,12 @@ class Home extends Component {
                     .set(5)
                     .then(() => console.log("Status enviado"))
                     .catch(e => console.error(e));
-
+                  if (!this.isManual) {
+                    this.getPoly(
+                      this.state.driverposition,
+                      this.state.order.destination
+                    );
+                  }
                   Alert.alert(
                     "Navegacion",
                     "Vamos hacia el destino del cliente",
@@ -451,6 +450,13 @@ class Home extends Component {
                 buttonStyle={{ height: 75 }}
                 title="Si"
                 onPress={() => {
+                  firebase
+                    .database()
+                    .ref()
+                    .child("/quotes/" + this.state.orderuid + "/status")
+                    .set(6)
+                    .then(() => console.log("Status enviado"))
+                    .catch(e => console.error(e));
                   Alert.alert(
                     "Navegacion",
                     "Gracias por cuidar de nuestro cliente",
