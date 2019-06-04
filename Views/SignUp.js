@@ -28,6 +28,7 @@ class SignIn extends Component {
       perfilcarro: "",
       name: "",
       phone: "",
+      id: "",
       Registrando: false
     };
   }
@@ -110,6 +111,14 @@ class SignIn extends Component {
         this.setState({ Registrando: false });
         return;
       }
+      if (!/^(\d{4}-\d{4}-\d{5})$/.test(this.state.id)) {
+        Alert.alert(
+          "Numero de identidad",
+          "Por favor use el formato indicado."
+        );
+        this.setState({ Registrando: false });
+        return;
+      }
       if (this.state.perfil.length == 0) {
         Alert.alert("Imagen de perfil", "Por favor seleccione una imagen.");
         this.setState({ Registrando: false });
@@ -146,7 +155,8 @@ class SignIn extends Component {
               username: this.state.username,
               placa: this.state.placa,
               name: this.state.name,
-              phone: this.state.phone
+              phone: this.state.phone,
+              id: this.state.id
             });
 
           await firebase
@@ -195,7 +205,10 @@ class SignIn extends Component {
         .catch(error => {
           switch (error.code) {
             case "auth/email-already-in-use": {
-              Alert.alert("Error", "Ya existe una cuenta con el correo proporcionado.");
+              Alert.alert(
+                "Error",
+                "Ya existe una cuenta con el correo proporcionado."
+              );
               break;
             }
           }
@@ -301,6 +314,22 @@ class SignIn extends Component {
               leftIconContainerStyle={{ marginRight: 15 }}
               autoCapitalize="words"
               onChangeText={text => this.setState({ name: text })}
+            />
+            <Input
+              placeholder="Identidad xxxx-xxxx-xxxxx"
+              leftIcon={
+                <Icon
+                  name="credit-card"
+                  size={24}
+                  color="black"
+                  style={styles.Icon}
+                />
+              }
+              keyboardType="number-pad"
+              inputContainerStyle={styles.Input}
+              leftIconContainerStyle={{ marginRight: 15 }}
+              autoCapitalize="none"
+              onChangeText={text => this.setState({ id: text })}
             />
           </KeyboardAvoidingView>
           <View style={styles.imageSelectRow}>
