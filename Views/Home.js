@@ -47,7 +47,8 @@ const decodePolyline = require("decode-google-map-polyline");
 const DRIVER_STATE_NONE = 0;
 const DRIVER_STATE_ASKING = 1;
 const DRIVER_STATE_GOING_TO_CLIENT = 2;
-const DRIVER_STATE_GOING_TO_DESTINATION = 3;
+const DRIVER_STATE_CLIENT_IS_WITH_HIM = 3;
+const DRIVER_STATE_GOING_TO_DESTINATION = 4;
 
 const DRIVER_NOTIFICATION_ADS = 0;
 const DRIVER_NOTIFICATION_CONFIRMING = 2;
@@ -225,117 +226,65 @@ class Home extends Component {
   };
 
   getState = () => {
-    switch (this.state.driverstate) {
-      case DRIVER_STATE_NONE: {
-        return <Briefing />;
-      }
-      case DRIVER_STATE_ASKING: {
-        return (
-          <Asking
-            price={this.state.order.price}
-            isManual={this.state.ismanual}
-            order={this.state.order}
-            onAccept={() => {
-              Alert.alert("Navegacion", "Vamos hacia el cliente");
-              firebase
-                .database()
-                .ref()
-                .child("/quotes/" + this.state.orderuid + "/status")
-                .set(3);
-              if (this.state.ismanual) {
-                this.getPoly(
-                  this.state.driverposition,
-                  this.state.order.origin
-                );
-              }
-              this.setState({
-                driverstate: DRIVER_STATE_GOING_TO_CLIENT
-              });
-            }}
-            onReject={() => {
-              Alert.alert(
-                "Rechazar",
-                "Estas a punto de rechazar una carrera",
-                [
-                  {
-                    text: "OK",
-                    onPress: () => {
-                      firebase
-                        .database()
-                        .ref()
-                        .child("/quotes/" + this.state.orderuid + "/status")
-                        .set(4);
-                      this.setState({
-                        order: { origin: {}, destination: {} },
-                        driverstate: DRIVER_STATE_NONE
-                      });
-                    }
-                  },
-                  {
-                    text: "REGRESAR"
-                  }
-                ],
-                { cancelable: false }
-              );
-            }}
-          />
-        );
-      }
-      case DRIVER_STATE_GOING_TO_CLIENT: {
-        this.updateDriverStatus(DRIVER_STATUS_ON_A_DRIVE);
-        if (this.state.ismanual === true) {
+    if (!this.state.ismanual) {
+      switch (this.state.driverstate) {
+        case DRIVER_STATE_NONE: {
+          return <Briefing />;
+        }
+        case DRIVER_STATE_ASKING: {
           return (
-            <View
-              style={{
-                flex: 1,
-                justifyContent: "center",
-                alignItems: "center"
+            <Asking
+              price={this.state.order.price}
+              isManual={this.state.ismanual}
+              order={this.state.order}
+              onAccept={() => {
+                Alert.alert("Navegacion", "Vamos hacia el cliente");
+                firebase
+                  .database()
+                  .ref()
+                  .child("/quotes/" + this.state.orderuid + "/status")
+                  .set(3);
+                if (this.state.ismanual) {
+                  this.getPoly(
+                    this.state.driverposition,
+                    this.state.order.origin
+                  );
+                }
+                this.setState({
+                  driverstate: DRIVER_STATE_GOING_TO_CLIENT
+                });
               }}
-            >
-              <Icon name="local-taxi" size={100} color="#4CAF50" />
-              <Text
-                style={{
-                  textAlign: "center",
-                  fontWeight: "bold",
-                  fontSize: 25
-                }}
-              >
-                ¿Te encuentras con tu cliente?
-              </Text>
-              <View
-                style={{
-                  flex: 1,
-                  justifyContent: "center",
-                  alignItems: "center",
-                  flexDirection: "row"
-                }}
-              >
-                <Button
-                  containerStyle={{ flex: 1, marginRight: 5 }}
-                  buttonStyle={{ height: 75 }}
-                  title="Si"
-                  onPress={() => {
-                    Alert.alert(
-                      "Navegacion",
-                      "Vamos hacia el destino del cliente",
-                      [
-                        {
-                          text: "ok",
-                          onPress: () => {
-                            this.setState({
-                              driverstate: DRIVER_STATE_GOING_TO_DESTINATION
-                            });
-                          }
-                        }
-                      ],
-                      { cancelable: false }
-                    );
-                  }}
-                />
-              </View>
-            </View>
+              onReject={() => {
+                Alert.alert(
+                  "Rechazar",
+                  "Estas a punto de rechazar una carrera",
+                  [
+                    {
+                      text: "OK",
+                      onPress: () => {
+                        firebase
+                          .database()
+                          .ref()
+                          .child("/quotes/" + this.state.orderuid + "/status")
+                          .set(4);
+                        this.setState({
+                          order: { origin: {}, destination: {} },
+                          driverstate: DRIVER_STATE_NONE
+                        });
+                      }
+                    },
+                    {
+                      text: "REGRESAR"
+                    }
+                  ],
+                  { cancelable: false }
+                );
+              }}
+            />
           );
-        } else {
+        }
+        case DRIVER_STATE_GOING_TO_CLIENT: {
+          this.updateDriverStatus(DRIVER_STATUS_ON_A_DRIVE);
           return (
             <View
               style={{
@@ -388,21 +337,22 @@ class Home extends Component {
                     );
                     console.log("destination", this.state.destination);
                     this.setState({
-                      driverstate: DRIVER_STATE_GOING_TO_DESTINATION
+                      driverstate: DRIVER_STATE_CLIENT_IS_WITH_HIM
                     });
-                    this.getPoly(
-                      this.state.driverposition,
-                      this.state.order.destination
-                    );
+                    if (this.isManual) {
+                      this.getPoly(
+                        this.state.driverposition,
+                        this.state.order.destination
+                      );
+                    }
                   }}
                 />
               </View>
             </View>
           );
         }
-      }
-      case DRIVER_STATE_GOING_TO_DESTINATION: {
-        if (this.state.ismanual === true) {
+
+        case DRIVER_STATE_CLIENT_IS_WITH_HIM: {
           return (
             <View
               style={{
@@ -419,7 +369,7 @@ class Home extends Component {
                   fontSize: 25
                 }}
               >
-                ¿Haz terminado tu desplazamiento?
+                ¿El cliente ya abordo?
               </Text>
               <View
                 style={{
@@ -434,36 +384,43 @@ class Home extends Component {
                   buttonStyle={{ height: 75 }}
                   title="Si"
                   onPress={() => {
+                    console.log(
+                      "Confirmando status para orden",
+                      this.state.orderuid
+                    );
+
+                    firebase
+                      .database()
+                      .ref()
+                      .child("/quotes/" + this.state.orderuid + "/status")
+                      .set(5)
+                      .then(() => console.log("Status enviado"))
+                      .catch(e => console.error(e));
+
                     Alert.alert(
                       "Navegacion",
-                      "Gracias por cuidar de nuestro cliente",
-                      [
-                        {
-                          text: "OK",
-                          onPress: () => {
-                            this.updateDriverStatus(
-                              DRIVER_STATUS_LOOKING_FOR_DRIVE
-                            );
-
-                            this.setState({
-                              driverstate: DRIVER_STATE_NONE,
-                              order: { origin: {}, destination: {} },
-                              polyline: []
-                            });
-                          }
-                        },
-                        {
-                          text: "Cancelar"
-                        }
-                      ],
+                      "Vamos hacia el destino del cliente",
+                      [{ text: "ok" }],
                       { cancelable: false }
                     );
+                    console.log("destination", this.state.destination);
+                    this.setState({
+                      driverstate: DRIVER_STATE_GOING_TO_DESTINATION
+                    });
+                    if (!this.state.isManual) {
+                      this.getPoly(
+                        this.state.driverposition,
+                        this.state.order.destination
+                      );
+                    }
                   }}
                 />
               </View>
             </View>
           );
-        } else {
+        }
+
+        case DRIVER_STATE_GOING_TO_DESTINATION: {
           return (
             <View
               style={{
