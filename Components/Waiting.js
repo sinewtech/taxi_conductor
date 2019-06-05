@@ -13,7 +13,7 @@ class Waiting extends Component {
           width: Dimensions.get("window").width
         }}
       >
-        <ActivityIndicator size="large" color="white" />
+        <ActivityIndicator size={60} color="white" />
       </View>
     );
   }
