@@ -57,6 +57,7 @@ const DRIVER_NOTIFICATION_CONFIRMED = 3;
 const DRIVER_STATUS_NOT_WORKING = 0;
 const DRIVER_STATUS_LOOKING_FOR_DRIVE = 1;
 const DRIVER_STATUS_ON_A_DRIVE = 2;
+const DRIVER_STATUS_CONFIRMING_DRIVE = 3;
 
 const STATE_HEIGHT = {
   0: "25%"
@@ -237,23 +238,29 @@ class Home extends Component {
             isManual={this.state.isManual}
             order={this.state.order}
             onAccept={() => {
-              Alert.alert("Navegacion", "Vamos hacia el cliente");
-              firebase
-                .database()
-                .ref()
-                .child("/quotes/" + this.state.orderuid + "/status")
-                .set(3);
+              Alert.alert("Navegacion", "Vamos hacia el cliente", [
+                {
+                  text: "OK",
+                  onPress: () => {
+                    this.updateDriverStatus(DRIVER_STATUS_ON_A_DRIVE);
+                    firebase
+                      .database()
+                      .ref()
+                      .child("/quotes/" + this.state.orderuid + "/status")
+                      .set(3);
+                    if (!this.state.isManual) {
+                      this.getPoly(
+                        this.state.driverposition,
+                        this.state.order.origin
+                      );
+                    }
 
-              if (!this.state.isManual) {
-                this.getPoly(
-                  this.state.driverposition,
-                  this.state.order.origin
-                );
-              }
-
-              this.setState({
-                driverstate: DRIVER_STATE_GOING_TO_CLIENT
-              });
+                    this.setState({
+                      driverstate: DRIVER_STATE_GOING_TO_CLIENT
+                    });
+                  }
+                }
+              ]);
             }}
             onReject={() => {
               Alert.alert(
@@ -270,8 +277,10 @@ class Home extends Component {
                         .set(4);
                       this.setState({
                         order: { origin: {}, destination: {} },
+                        polyline: [],
                         driverstate: DRIVER_STATE_NONE
                       });
+                      this.updateDriverStatus(DRIVER_STATUS_LOOKING_FOR_DRIVE);
                     }
                   },
                   {
@@ -336,15 +345,15 @@ class Home extends Component {
                             .set(5)
                             .then(() => console.log("Status enviado"))
                             .catch(e => console.error(e));
+                          this.setState({
+                            driverstate: DRIVER_STATE_CLIENT_IS_WITH_HIM
+                          });
                         }
                       }
                     ],
                     { cancelable: false }
                   );
                   console.log("destination", this.state.destination);
-                  this.setState({
-                    driverstate: DRIVER_STATE_CLIENT_IS_WITH_HIM
-                  });
                 }}
               />
             </View>
@@ -389,13 +398,6 @@ class Home extends Component {
                     this.state.orderuid
                   );
 
-                  if (!this.isManual) {
-                    this.getPoly(
-                      this.state.driverposition,
-                      this.state.order.destination
-                    );
-                  }
-
                   Alert.alert(
                     "Navegacion",
                     "Vamos hacia el destino del cliente",
@@ -416,6 +418,7 @@ class Home extends Component {
                     { cancelable: false }
                   );
                   console.log("destination", this.state.destination);
+
                   this.setState({
                     driverstate: DRIVER_STATE_GOING_TO_DESTINATION
                   });
@@ -573,6 +576,7 @@ class Home extends Component {
               orderuid: notification.data.order.uid,
               isManual: notification.data.order.manual
             });
+            this.updateDriverStatus(DRIVER_STATUS_CONFIRMING_DRIVE);
 
             console.log("Estado", this.state);
 
@@ -600,6 +604,7 @@ class Home extends Component {
               orderuid: notification.data.order.uid,
               isManual: notification.data.order.manual
             });
+            this.updateDriverStatus(DRIVER_STATUS_CONFIRMING_DRIVE);
           });
       } else if (notification.data.id === DRIVER_NOTIFICATION_CONFIRMED) {
         if (this.state.order.manual)
@@ -617,6 +622,7 @@ class Home extends Component {
                 isManual: notification.data.order.manual,
                 driverstate: DRIVER_STATE_ASKING
               });
+              this.updateDriverStatus(DRIVER_STATUS_CONFIRMING_DRIVE);
             });
         else this.setState({ driverstate: DRIVER_STATE_ASKING });
       }

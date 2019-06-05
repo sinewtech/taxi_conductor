@@ -13,6 +13,7 @@ import { Avatar } from "react-native-elements";
 const DRIVER_STATUS_NOT_WORKING = 0;
 const DRIVER_STATUS_LOOKING_FOR_DRIVE = 1;
 const DRIVER_STATUS_ON_A_DRIVE = 2;
+const DRIVER_STATUS_CONFIRMING_DRIVE = 3;
 
 const INFO_HEIGHT = Dimensions.get("window").height * 0.05;
 
@@ -60,7 +61,7 @@ export default class Driver extends Component {
 
     if (this.state.prevStatus !== props.status) {
       switch (props.status) {
-        case 0:
+        case DRIVER_STATUS_NOT_WORKING:
           this.setState({
             statusColor: "#f44336",
             statusText: "Fuera de T.",
@@ -68,7 +69,7 @@ export default class Driver extends Component {
             prevStatus: props.status
           });
           break;
-        case 1:
+        case DRIVER_STATUS_LOOKING_FOR_DRIVE:
           this.setState({
             statusColor: "#4CAF50",
             statusText: "Libre",
@@ -76,10 +77,18 @@ export default class Driver extends Component {
             prevStatus: props.status
           });
           break;
-        case 2:
+        case DRIVER_STATUS_ON_A_DRIVE:
           this.setState({
             statusColor: "#FF9800",
             statusText: "En Carrera",
+            loading: false,
+            prevStatus: props.status
+          });
+          break;
+        case DRIVER_STATUS_CONFIRMING_DRIVE:
+          this.setState({
+            statusColor: "#FF9800",
+            statusText: "Confirmando",
             loading: false,
             prevStatus: props.status
           });
