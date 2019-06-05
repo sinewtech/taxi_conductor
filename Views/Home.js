@@ -322,18 +322,23 @@ class Home extends Component {
                     this.state.orderuid
                   );
 
-                  firebase
-                    .database()
-                    .ref()
-                    .child("/quotes/" + this.state.orderuid + "/status")
-                    .set(5)
-                    .then(() => console.log("Status enviado"))
-                    .catch(e => console.error(e));
-
                   Alert.alert(
                     "Aviso",
                     "Listo le notificaremos al cliente.",
-                    [{ text: "ok" }],
+                    [
+                      {
+                        text: "ok",
+                        onPress: () => {
+                          firebase
+                            .database()
+                            .ref()
+                            .child("/quotes/" + this.state.orderuid + "/status")
+                            .set(5)
+                            .then(() => console.log("Status enviado"))
+                            .catch(e => console.error(e));
+                        }
+                      }
+                    ],
                     { cancelable: false }
                   );
                   console.log("destination", this.state.destination);
@@ -384,14 +389,6 @@ class Home extends Component {
                     this.state.orderuid
                   );
 
-                  firebase
-                    .database()
-                    .ref()
-                    .child("/quotes/" + this.state.orderuid + "/status")
-                    .set(5)
-                    .then(() => console.log("Status enviado"))
-                    .catch(e => console.error(e));
-
                   if (!this.isManual) {
                     this.getPoly(
                       this.state.driverposition,
@@ -402,7 +399,20 @@ class Home extends Component {
                   Alert.alert(
                     "Navegacion",
                     "Vamos hacia el destino del cliente",
-                    [{ text: "ok" }],
+                    [
+                      {
+                        text: "ok",
+                        onPress: () => {
+                          firebase
+                            .database()
+                            .ref()
+                            .child("/quotes/" + this.state.orderuid + "/status")
+                            .set(6)
+                            .then(() => console.log("Status enviado"))
+                            .catch(e => console.error(e));
+                        }
+                      }
+                    ],
                     { cancelable: false }
                   );
                   console.log("destination", this.state.destination);
@@ -454,13 +464,6 @@ class Home extends Component {
                 buttonStyle={{ height: 75 }}
                 title="Si"
                 onPress={() => {
-                  firebase
-                    .database()
-                    .ref()
-                    .child("/quotes/" + this.state.orderuid + "/status")
-                    .set(6)
-                    .then(() => console.log("Status enviado"))
-                    .catch(e => console.error(e));
                   Alert.alert(
                     "Navegacion",
                     "Gracias por cuidar de nuestro cliente",
@@ -471,7 +474,13 @@ class Home extends Component {
                           this.updateDriverStatus(
                             DRIVER_STATUS_LOOKING_FOR_DRIVE
                           );
-
+                          firebase
+                            .database()
+                            .ref()
+                            .child("/quotes/" + this.state.orderuid + "/status")
+                            .set(7)
+                            .then(() => console.log("Status enviado"))
+                            .catch(e => console.error(e));
                           this.setState({
                             driverstate: DRIVER_STATE_NONE,
                             order: { origin: {}, destination: {} },
@@ -705,9 +714,13 @@ class Home extends Component {
             right: 0
           }}
         >
-          {originMarker}
-          {destinationMarker}
-          {polyline}
+          {this.state.order.origin.lat && this.state.order.origin.lng
+            ? originMarker
+            : null}
+          {this.state.order.destination.lat && this.state.order.destination.lng
+            ? destinationMarker
+            : null}
+          {this.state.polyline.length > 0 ? polyline : null}
         </MapView>
         <View
           style={styles.stateContainer}
