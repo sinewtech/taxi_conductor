@@ -9,14 +9,12 @@ import {
   Platform,
   Dimensions
 } from "react-native";
-import {
-  Permissions,
-  Notifications,
-  TaskManager,
-  MapView,
-  Location,
-  KeepAwake
-} from "expo";
+import { Notifications } from "expo";
+import KeepAwake from "expo-keep-awake";
+import * as Location from "expo-location";
+import MapView from "react-native-maps";
+import * as TaskManager from "expo-task-manager";
+import * as Permissions from "expo-permissions";
 import firebase from "firebase";
 import Driver from "../Components/Driver";
 import Briefing from "../Components/Briefing";
@@ -707,14 +705,14 @@ class Home extends Component {
         <KeepAwake />
         <MapView
           style={{ flex: 1 }}
-          showsUserLocation
           showsTraffic
+          showsUserLocation
           followsUserLocation
           showsMyLocationButton
           loadingBackgroundColor="#FF9800"
           initialRegion={INITIAL_REGION}
           mapPadding={{
-            bottom: STATE_HEIGHT[this.state.driverstate],
+            bottom: Number.parseFloat(STATE_HEIGHT[this.state.driverstate]),
             top: Dimensions.get("window").height * 0.1,
             left: 0,
             right: 0

@@ -6,14 +6,13 @@ import {
   Dimensions,
   TouchableOpacity,
   Text,
-  StatusBar,
   Alert,
   ScrollView
 } from "react-native";
 import firebase from "firebase";
 import "@firebase/firestore";
 import { Input, Button, Icon, Image } from "react-native-elements";
-import { ImagePicker } from "expo";
+import * as ImagePicker from "expo-image-picker";
 import Waiting from "../Components/Waiting";
 class SignIn extends Component {
   constructor(props) {
