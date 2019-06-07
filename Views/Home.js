@@ -10,7 +10,7 @@ import {
   Dimensions
 } from "react-native";
 import { Notifications } from "expo";
-import KeepAwake from "expo-keep-awake";
+// import KeepAwake from "expo-keep-awake";
 import * as Location from "expo-location";
 import MapView from "react-native-maps";
 import * as TaskManager from "expo-task-manager";
@@ -702,7 +702,7 @@ class Home extends Component {
 
     return (
       <View style={{ flex: 1 }}>
-        <KeepAwake />
+        {/* <KeepAwake /> */}
         <MapView
           style={{ flex: 1 }}
           showsTraffic
