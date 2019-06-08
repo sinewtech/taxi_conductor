@@ -120,6 +120,11 @@ class Home extends Component {
       ? this.setState({ userUID: null })
       : this.setState(userdata);
   };
+  componentWillUnmount = async () => {
+    Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME).then(value => {
+      console.log(value);
+    });
+  };
 
   componentDidMount = async () => {
     firebase.auth().onAuthStateChanged(user => {
@@ -162,7 +167,12 @@ class Home extends Component {
       await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
         accuracy: Location.Accuracy.BestForNavigation,
         timeInterval: 6000,
-        distanceInterval: 2
+        distanceInterval: 2,
+        foregroundService: {
+          notificationTitle: "Servicios de Ubicacion",
+          notificationBody: "Estamos mandando estos datos a la central",
+          notificationColor: "#FF9800"
+        }
       });
 
       await Location.watchPositionAsync(
@@ -514,7 +524,6 @@ class Home extends Component {
             .then(DocumentSnapshot => {
               let pushTokens = [];
               if (DocumentSnapshot.data()["pushDevices"]) {
-                console.log("PushDevices encontrado para usuario.");
                 let deviceJson = DocumentSnapshot.data()["pushDevices"];
                 for (var token in deviceJson) {
                   if (deviceJson[token] === pushToken) {
@@ -528,7 +537,6 @@ class Home extends Component {
               } else {
                 pushTokens.push(pushToken);
               }
-              console.log("celulares", pushTokens);
               db.collection("drivers")
                 .doc(this.state.userUID)
                 .update({
@@ -777,13 +785,6 @@ TaskManager.defineTask(
     if (error) {
       return;
     } else {
-      // let location = locations[0];
-      // let pos = {
-      //   lat: location.coords.latitude,
-      //   lng: location.coords.longitude
-      // };
-      // console.log("nueva pos", pos);
-      // await Home.upload_data(pos);
       locations[0].user = Home.getcurrentuser();
 
       fetch(

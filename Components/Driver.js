@@ -52,13 +52,6 @@ export default class Driver extends Component {
   }
 
   componentWillReceiveProps = props => {
-    console.log(
-      "Props received.",
-      props.status,
-      this.state.prevStatus,
-      this.state.loading
-    );
-
     if (this.state.prevStatus !== props.status) {
       switch (props.status) {
         case DRIVER_STATUS_NOT_WORKING:
