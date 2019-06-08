@@ -1,13 +1,13 @@
 import React, { Component } from "react";
-import { LogIn } from "./Views/LogIn";
-import UserValidator from "./Components/UserValidator";
+import { LogIn } from "./src/Views/LogIn";
+import UserValidator from "./src/Components/UserValidator";
 import {
   createStackNavigator,
   createSwitchNavigator,
   createAppContainer
 } from "react-navigation";
-import Home from "./Views/Home";
-import SignUp from "./Views/SignUp";
+import Home from "./src/Views/Home";
+import SignUp from "./src/Views/SignUp";
 import firebase from "firebase";
 
 // Ignorar los warnings de firebase

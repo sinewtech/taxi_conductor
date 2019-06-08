@@ -6,10 +6,10 @@ import {
   Dimensions,
   Text,
   TouchableOpacity,
-  KeyboardAvoidingView
+  KeyboardAvoidingView,
 } from "react-native";
 import { Button, Input, Icon } from "react-native-elements";
-import firebase from "firebase";
+import firebase from "../../firebase";
 import Waiting from "../Components/Waiting";
 
 export class LogIn extends React.Component {
@@ -18,7 +18,7 @@ export class LogIn extends React.Component {
     this.state = {
       mail: "",
       password: "",
-      Registrando: false
+      Registrando: false,
     };
   }
 
@@ -36,20 +36,13 @@ export class LogIn extends React.Component {
       this.setState({ Registrando: false });
       return;
     } else {
-      if (
-        !/^((?!\.)[\w-_.]*[^.])(@\w+)(\.\w+(\.\w+)?[^.\W])$/.test(
-          this.state.mail
-        )
-      ) {
+      if (!/^((?!\.)[\w-_.]*[^.])(@\w+)(\.\w+(\.\w+)?[^.\W])$/.test(this.state.mail)) {
         Alert.alert("Correo", "Por favor use un formato de correo valido");
         this.setState({ Registrando: false });
         return;
       }
       if (!/^[A-Za-z0-9]{6,}$/.test(this.state.password)) {
-        Alert.alert(
-          "Contraseña",
-          "Recuerde que la contraseña debe ser mayor a 6 caracteres."
-        );
+        Alert.alert("Contraseña", "Recuerde que la contraseña debe ser mayor a 6 caracteres.");
         this.setState({ Registrando: false });
         return;
       }
@@ -82,10 +75,7 @@ export class LogIn extends React.Component {
               break;
             }
             case "auth/user-not-found": {
-              Alert.alert(
-                "Error",
-                "No hemos encontrado una cuenta con este correo"
-              );
+              Alert.alert("Error", "No hemos encontrado una cuenta con este correo");
               break;
             }
           }
@@ -103,9 +93,7 @@ export class LogIn extends React.Component {
         <View style={styles.credentialsView}>
           <Input
             placeholder="Usuario"
-            leftIcon={
-              <Icon name="person" size={24} color="black" style={styles.Icon} />
-            }
+            leftIcon={<Icon name="person" size={24} color="black" style={styles.Icon} />}
             inputContainerStyle={styles.Input}
             leftIconContainerStyle={{ marginRight: 15 }}
             autoCapitalize="none"
@@ -115,14 +103,7 @@ export class LogIn extends React.Component {
           />
           <Input
             placeholder="Contraseña"
-            leftIcon={
-              <Icon
-                name="vpn-key"
-                size={24}
-                color="black"
-                style={styles.Icon}
-              />
-            }
+            leftIcon={<Icon name="vpn-key" size={24} color="black" style={styles.Icon} />}
             inputContainerStyle={styles.Input}
             leftIconContainerStyle={{ marginRight: 15 }}
             autoComplete="password"
@@ -137,11 +118,8 @@ export class LogIn extends React.Component {
           onPress={() => {
             this.props.navigation.navigate("SignIn");
           }}
-          style={{ marginTop: 5 }}
-        >
-          <Text style={{ color: "white", textDecorationLine: "underline" }}>
-            Registrarse
-          </Text>
+          style={{ marginTop: 5 }}>
+          <Text style={{ color: "white", textDecorationLine: "underline" }}>Registrarse</Text>
         </TouchableOpacity>
       </KeyboardAvoidingView>
     );
@@ -153,22 +131,22 @@ const styles = StyleSheet.create({
     backgroundColor: "#FF9800",
     justifyContent: "center",
     alignItems: "center",
-    height: Dimensions.get("window").height
+    height: Dimensions.get("window").height,
   },
   credentialsView: {
-    width: Dimensions.get("window").width * 0.8
+    width: Dimensions.get("window").width * 0.8,
   },
 
   Input: {
     backgroundColor: "white",
     borderRadius: 5,
     marginBottom: 15,
-    padding: 5
+    padding: 5,
   },
 
   buttonRow: {
     flexDirection: "row",
     justifyContent: "space-evenly",
-    width: "100%"
-  }
+    width: "100%",
+  },
 });

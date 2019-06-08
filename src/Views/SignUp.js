@@ -7,10 +7,9 @@ import {
   TouchableOpacity,
   Text,
   Alert,
-  ScrollView
+  ScrollView,
 } from "react-native";
-import firebase from "firebase";
-import "@firebase/firestore";
+import firebase from "../../firebase";
 import { Input, Button, Icon, Image } from "react-native-elements";
 import * as ImagePicker from "expo-image-picker";
 import Waiting from "../Components/Waiting";
@@ -28,13 +27,13 @@ class SignIn extends Component {
       name: "",
       phone: "",
       id: "",
-      Registrando: false
+      Registrando: false,
     };
   }
   _pickImage = async id => {
     let result = await ImagePicker.launchImageLibraryAsync({
       allowsEditing: true,
-      aspect: [4, 3]
+      aspect: [4, 3],
     });
 
     if (!result.cancelled) {
@@ -78,11 +77,7 @@ class SignIn extends Component {
       this.setState({ Registrando: false });
       return;
     } else {
-      if (
-        !/^((?!\.)[\w-_.]*[^.])(@\w+)(\.\w+(\.\w+)?[^.\W])$/.test(
-          this.state.mail
-        )
-      ) {
+      if (!/^((?!\.)[\w-_.]*[^.])(@\w+)(\.\w+(\.\w+)?[^.\W])$/.test(this.state.mail)) {
         Alert.alert("Correo", "Por favor use un formato de correo valido.");
         this.setState({ Registrando: false });
         return;
@@ -93,10 +88,7 @@ class SignIn extends Component {
         return;
       }
       if (!/^[A-Za-z0-9]{6,}$/.test(this.state.password)) {
-        Alert.alert(
-          "Contraseña",
-          "Por favor que la contraseña sea mayor a 6 caracteres."
-        );
+        Alert.alert("Contraseña", "Por favor que la contraseña sea mayor a 6 caracteres.");
         this.setState({ Registrando: false });
         return;
       }
@@ -111,10 +103,7 @@ class SignIn extends Component {
         return;
       }
       if (!/^(\d{4}-\d{4}-\d{5})$/.test(this.state.id)) {
-        Alert.alert(
-          "Numero de identidad",
-          "Por favor use el formato indicado."
-        );
+        Alert.alert("Numero de identidad", "Por favor use el formato indicado.");
         this.setState({ Registrando: false });
         return;
       }
@@ -124,18 +113,12 @@ class SignIn extends Component {
         return;
       }
       if (this.state.perfilcarro.length == 0) {
-        Alert.alert(
-          "Imagen de perfil del carro",
-          "Por favor seleccione una imagen."
-        );
+        Alert.alert("Imagen de perfil del carro", "Por favor seleccione una imagen.");
         this.setState({ Registrando: false });
         return;
       }
       if (this.state.carro.length == 0) {
-        Alert.alert(
-          "Imagen Lateral  del carro",
-          "Por favor seleccione una imagen."
-        );
+        Alert.alert("Imagen Lateral  del carro", "Por favor seleccione una imagen.");
         this.setState({ Registrando: false });
         return;
       }
@@ -155,7 +138,7 @@ class SignIn extends Component {
               placa: this.state.placa,
               name: this.state.name,
               phone: this.state.phone,
-              id: this.state.id
+              id: this.state.id,
             });
 
           await firebase
@@ -204,10 +187,7 @@ class SignIn extends Component {
         .catch(error => {
           switch (error.code) {
             case "auth/email-already-in-use": {
-              Alert.alert(
-                "Error",
-                "Ya existe una cuenta con el correo proporcionado."
-              );
+              Alert.alert("Error", "Ya existe una cuenta con el correo proporcionado.");
               break;
             }
           }
@@ -226,9 +206,7 @@ class SignIn extends Component {
           <KeyboardAvoidingView behavior="padding">
             <Input
               placeholder="Correo"
-              leftIcon={
-                <Icon name="mail" size={24} color="black" style={styles.Icon} />
-              }
+              leftIcon={<Icon name="mail" size={24} color="black" style={styles.Icon} />}
               inputContainerStyle={styles.Input}
               leftIconContainerStyle={{ marginRight: 15 }}
               autoCapitalize="none"
@@ -254,14 +232,7 @@ class SignIn extends Component {
             />
             <Input
               placeholder="Contraseña"
-              leftIcon={
-                <Icon
-                  name="vpn-key"
-                  size={24}
-                  color="black"
-                  style={styles.Icon}
-                />
-              }
+              leftIcon={<Icon name="vpn-key" size={24} color="black" style={styles.Icon} />}
               inputContainerStyle={styles.Input}
               leftIconContainerStyle={{ marginRight: 15 }}
               autoComplete="password"
@@ -270,14 +241,7 @@ class SignIn extends Component {
             />
             <Input
               placeholder="Placa 3Letras XXXX"
-              leftIcon={
-                <Icon
-                  name="directions-car"
-                  size={24}
-                  color="black"
-                  style={styles.Icon}
-                />
-              }
+              leftIcon={<Icon name="directions-car" size={24} color="black" style={styles.Icon} />}
               inputContainerStyle={styles.Input}
               leftIconContainerStyle={{ marginRight: 15 }}
               autoCapitalize="characters"
@@ -285,14 +249,7 @@ class SignIn extends Component {
             />
             <Input
               placeholder="Numero de telefono +504 xxxx-xxxx"
-              leftIcon={
-                <Icon
-                  name="phone"
-                  size={24}
-                  color="black"
-                  style={styles.Icon}
-                />
-              }
+              leftIcon={<Icon name="phone" size={24} color="black" style={styles.Icon} />}
               keyboardType="phone-pad"
               inputContainerStyle={styles.Input}
               leftIconContainerStyle={{ marginRight: 15 }}
@@ -301,14 +258,7 @@ class SignIn extends Component {
             />
             <Input
               placeholder="Nombre y apellido"
-              leftIcon={
-                <Icon
-                  name="person"
-                  size={24}
-                  color="black"
-                  style={styles.Icon}
-                />
-              }
+              leftIcon={<Icon name="person" size={24} color="black" style={styles.Icon} />}
               inputContainerStyle={styles.Input}
               leftIconContainerStyle={{ marginRight: 15 }}
               autoCapitalize="words"
@@ -316,14 +266,7 @@ class SignIn extends Component {
             />
             <Input
               placeholder="Identidad xxxx-xxxx-xxxxx"
-              leftIcon={
-                <Icon
-                  name="credit-card"
-                  size={24}
-                  color="black"
-                  style={styles.Icon}
-                />
-              }
+              leftIcon={<Icon name="credit-card" size={24} color="black" style={styles.Icon} />}
               keyboardType="number-pad"
               inputContainerStyle={styles.Input}
               leftIconContainerStyle={{ marginRight: 15 }}
@@ -336,21 +279,14 @@ class SignIn extends Component {
               onPress={() => {
                 this._pickImage(0);
               }}
-              style={styles.imageTouchable}
-            >
+              style={styles.imageTouchable}>
               <Image
                 source={{ uri: this.state.perfilcarro }}
                 style={styles.image}
                 PlaceholderContent={
                   <View style={styles.imageSelectView}>
-                    <Icon
-                      name="camera"
-                      size={50}
-                      style={styles.imageSelectIcon}
-                    />
-                    <Text style={styles.imageSelectText}>
-                      Imagen de perfil del carro
-                    </Text>
+                    <Icon name="camera" size={50} style={styles.imageSelectIcon} />
+                    <Text style={styles.imageSelectText}>Imagen de perfil del carro</Text>
                   </View>
                 }
               />
@@ -359,21 +295,14 @@ class SignIn extends Component {
               onPress={() => {
                 this._pickImage(1);
               }}
-              style={styles.imageTouchable}
-            >
+              style={styles.imageTouchable}>
               <Image
                 source={{ uri: this.state.carro }}
                 style={styles.image}
                 PlaceholderContent={
                   <View style={styles.imageSelectView}>
-                    <Icon
-                      name="camera"
-                      size={50}
-                      style={styles.imageSelectIcon}
-                    />
-                    <Text style={styles.imageSelectText}>
-                      Imagen lateral del carro
-                    </Text>
+                    <Icon name="camera" size={50} style={styles.imageSelectIcon} />
+                    <Text style={styles.imageSelectText}>Imagen lateral del carro</Text>
                   </View>
                 }
               />
@@ -382,18 +311,13 @@ class SignIn extends Component {
               onPress={() => {
                 this._pickImage(2);
               }}
-              style={styles.imageTouchable}
-            >
+              style={styles.imageTouchable}>
               <Image
                 source={{ uri: this.state.perfil }}
                 style={styles.image}
                 PlaceholderContent={
                   <View style={styles.imageSelectView}>
-                    <Icon
-                      name="camera"
-                      size={50}
-                      style={styles.imageSelectIcon}
-                    />
+                    <Icon name="camera" size={50} style={styles.imageSelectIcon} />
                     <Text style={styles.imageSelectText}>Imagen de perfil</Text>
                   </View>
                 }
@@ -413,34 +337,34 @@ const styles = StyleSheet.create({
     backgroundColor: "#FF9800",
     justifyContent: "center",
     alignItems: "center",
-    height: Dimensions.get("window").height
+    height: Dimensions.get("window").height,
   },
   credentialsView: {
-    width: Dimensions.get("window").width * 0.8
+    width: Dimensions.get("window").width * 0.8,
   },
 
   Input: {
     backgroundColor: "white",
     borderRadius: 5,
     marginBottom: 15,
-    padding: 5
+    padding: 5,
   },
 
   buttonRow: {
     flexDirection: "row",
     justifyContent: "space-evenly",
-    width: "100%"
+    width: "100%",
   },
 
   imageSelectRow: {
     flexDirection: "row",
     justifyContent: "space-around",
-    alignItems: "center"
+    alignItems: "center",
   },
 
   imageTouchable: {
     margin: 5,
-    borderRadius: 5
+    borderRadius: 5,
   },
 
   imageSelectView: {
@@ -453,22 +377,22 @@ const styles = StyleSheet.create({
     textAlign: "center",
     borderRadius: 5,
     overflow: "hidden",
-    elevation: 2
+    elevation: 2,
   },
 
   imageSelectText: {
     textAlign: "center",
-    color: "gray"
+    color: "gray",
   },
 
   imageSelectIcon: {
-    color: "gray"
+    color: "gray",
   },
 
   image: {
     width: 100,
-    height: 100
-  }
+    height: 100,
+  },
 });
 
 export default SignIn;

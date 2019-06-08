@@ -1,42 +1,22 @@
 import React, { Component } from "react";
 import { Button, Icon } from "react-native-elements";
-import {
-  Text,
-  View,
-  BackHandler,
-  StyleSheet,
-  Alert,
-  Platform,
-  Dimensions
-} from "react-native";
+import { Text, View, BackHandler, StyleSheet, Alert, Platform, Dimensions } from "react-native";
 import { Notifications } from "expo";
 // import KeepAwake from "expo-keep-awake";
 import * as Location from "expo-location";
 import MapView from "react-native-maps";
 import * as TaskManager from "expo-task-manager";
 import * as Permissions from "expo-permissions";
-import firebase from "firebase";
 import Driver from "../Components/Driver";
 import Briefing from "../Components/Briefing";
 import Asking from "../Components/Asking";
-import "@firebase/firestore";
-
-if (!firebase.apps.length) {
-  firebase.initializeApp({
-    apiKey: "AIzaSyBkCxRqmYLXkznasnf-MRTROWVJcORIGcw",
-    authDomain: "taxiapp-sinewave.firebaseapp.com",
-    databaseURL: "https://taxiapp-sinewave.firebaseio.com",
-    projectId: "taxiapp-sinewave",
-    storageBucket: "taxiapp-sinewave.appspot.com",
-    messagingSenderId: "503391985374"
-  });
-}
+import firebase from "../../firebase";
 
 const INITIAL_REGION = {
   latitude: 14.0723,
   longitude: -87.1921,
   latitudeDelta: 0.1,
-  longitudeDelta: 0.1
+  longitudeDelta: 0.1,
 };
 
 const API_KEY = "AIzaSyApNgtxFBp0SXSHljP_xku6peNCzjTFWM4";
@@ -58,15 +38,13 @@ const DRIVER_STATUS_ON_A_DRIVE = 2;
 const DRIVER_STATUS_CONFIRMING_DRIVE = 3;
 
 const STATE_HEIGHT = {
-  0: "25%"
+  0: "25%",
 };
 
 const LOCATION_TASK_NAME = "SINEWAVE_LOCATION";
 let db = firebase.firestore();
 async function registerForPushNotificationsAsync() {
-  const { status: existingStatus } = await Permissions.getAsync(
-    Permissions.NOTIFICATIONS
-  );
+  const { status: existingStatus } = await Permissions.getAsync(Permissions.NOTIFICATIONS);
   let finalStatus = existingStatus;
 
   if (existingStatus !== "granted") {
@@ -83,13 +61,13 @@ async function registerForPushNotificationsAsync() {
       name: "Carreras",
       priority: "max",
       vibrate: [0, 250, 250, 250],
-      sound: true
+      sound: true,
     });
     Expo.Notifications.createChannelAndroidAsync("ads", {
       name: "Ads",
       priority: "max",
       vibrate: [0, 250, 250, 250],
-      sound: true
+      sound: true,
     });
   }
   let token = "_";
@@ -111,14 +89,12 @@ class Home extends Component {
       selectedIndex: 0,
       user: {},
       order: { origin: {}, destination: {}, manual: true },
-      polyline: []
+      polyline: [],
     };
   }
 
   updateUser = userdata => {
-    userdata === null
-      ? this.setState({ userUID: null })
-      : this.setState(userdata);
+    userdata === null ? this.setState({ userUID: null }) : this.setState(userdata);
   };
   componentWillUnmount = async () => {
     Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME).then(value => {
@@ -155,10 +131,7 @@ class Home extends Component {
     let { status } = await Permissions.askAsync(Permissions.LOCATION);
 
     if (status !== "granted") {
-      Alert.alert(
-        "Servicios GPS",
-        "Por favor activa los servicios de GPS para continuar."
-      );
+      Alert.alert("Servicios GPS", "Por favor activa los servicios de GPS para continuar.");
     }
 
     let tiene = await Location.getProviderStatusAsync();
@@ -171,29 +144,26 @@ class Home extends Component {
         foregroundService: {
           notificationTitle: "Servicios de Ubicacion",
           notificationBody: "Estamos mandando estos datos a la central",
-          notificationColor: "#FF9800"
-        }
+          notificationColor: "#FF9800",
+        },
       });
 
       await Location.watchPositionAsync(
         {
-          accuracy: Location.Accuracy.Balanced
+          accuracy: Location.Accuracy.Balanced,
         },
 
         location => {
           this.setState({
             driverposition: {
               lat: location.coords.latitude,
-              lng: location.coords.longitude
-            }
+              lng: location.coords.longitude,
+            },
           });
         }
       );
     } else {
-      Alert.alert(
-        "Servicios GPS",
-        "Por favor activa los servicios de GPS para continuar."
-      );
+      Alert.alert("Servicios GPS", "Por favor activa los servicios de GPS para continuar.");
     }
 
     firebase
@@ -223,9 +193,7 @@ class Home extends Component {
         //console.log(JSON.stringify(responseJson));
         if (responseJson.status == "OK") {
           // console.log(responseJson.routes[0].overview_polyline);
-          let polyline = decodePolyline(
-            responseJson.routes[0].overview_polyline.points
-          );
+          let polyline = decodePolyline(responseJson.routes[0].overview_polyline.points);
 
           this.setState({ polyline });
         } else {
@@ -257,17 +225,14 @@ class Home extends Component {
                       .child("/quotes/" + this.state.orderuid + "/status")
                       .set(3);
                     if (!this.state.isManual) {
-                      this.getPoly(
-                        this.state.driverposition,
-                        this.state.order.origin
-                      );
+                      this.getPoly(this.state.driverposition, this.state.order.origin);
                     }
 
                     this.setState({
-                      driverstate: DRIVER_STATE_GOING_TO_CLIENT
+                      driverstate: DRIVER_STATE_GOING_TO_CLIENT,
                     });
-                  }
-                }
+                  },
+                },
               ]);
             }}
             onReject={() => {
@@ -286,14 +251,14 @@ class Home extends Component {
                       this.setState({
                         order: { origin: {}, destination: {} },
                         polyline: [],
-                        driverstate: DRIVER_STATE_NONE
+                        driverstate: DRIVER_STATE_NONE,
                       });
                       this.updateDriverStatus(DRIVER_STATUS_LOOKING_FOR_DRIVE);
-                    }
+                    },
                   },
                   {
-                    text: "REGRESAR"
-                  }
+                    text: "REGRESAR",
+                  },
                 ],
                 { cancelable: false }
               );
@@ -308,17 +273,15 @@ class Home extends Component {
             style={{
               flex: 1,
               justifyContent: "center",
-              alignItems: "center"
-            }}
-          >
+              alignItems: "center",
+            }}>
             <Icon name="local-taxi" size={100} color="#4CAF50" />
             <Text
               style={{
                 textAlign: "center",
                 fontWeight: "bold",
-                fontSize: 25
-              }}
-            >
+                fontSize: 25,
+              }}>
               ¿Llegaste a la ubicación del cliente?
             </Text>
             <View
@@ -326,18 +289,14 @@ class Home extends Component {
                 flex: 1,
                 justifyContent: "center",
                 alignItems: "center",
-                flexDirection: "row"
-              }}
-            >
+                flexDirection: "row",
+              }}>
               <Button
                 containerStyle={{ flex: 1, marginRight: 5 }}
                 buttonStyle={{ height: 75 }}
                 title="Si"
                 onPress={() => {
-                  console.log(
-                    "Confirmando status para orden",
-                    this.state.orderuid
-                  );
+                  console.log("Confirmando status para orden", this.state.orderuid);
 
                   Alert.alert(
                     "Aviso",
@@ -354,10 +313,10 @@ class Home extends Component {
                             .then(() => console.log("Status enviado"))
                             .catch(e => console.error(e));
                           this.setState({
-                            driverstate: DRIVER_STATE_CLIENT_IS_WITH_HIM
+                            driverstate: DRIVER_STATE_CLIENT_IS_WITH_HIM,
                           });
-                        }
-                      }
+                        },
+                      },
                     ],
                     { cancelable: false }
                   );
@@ -375,17 +334,15 @@ class Home extends Component {
             style={{
               flex: 1,
               justifyContent: "center",
-              alignItems: "center"
-            }}
-          >
+              alignItems: "center",
+            }}>
             <Icon name="local-taxi" size={100} color="#4CAF50" />
             <Text
               style={{
                 textAlign: "center",
                 fontWeight: "bold",
-                fontSize: 25
-              }}
-            >
+                fontSize: 25,
+              }}>
               ¿El cliente ya abordo?
             </Text>
             <View
@@ -393,18 +350,14 @@ class Home extends Component {
                 flex: 1,
                 justifyContent: "center",
                 alignItems: "center",
-                flexDirection: "row"
-              }}
-            >
+                flexDirection: "row",
+              }}>
               <Button
                 containerStyle={{ flex: 1, marginRight: 5 }}
                 buttonStyle={{ height: 75 }}
                 title="Si"
                 onPress={() => {
-                  console.log(
-                    "Confirmando status para orden",
-                    this.state.orderuid
-                  );
+                  console.log("Confirmando status para orden", this.state.orderuid);
 
                   Alert.alert(
                     "Navegacion",
@@ -420,21 +373,18 @@ class Home extends Component {
                             .set(6)
                             .then(() => console.log("Status enviado"))
                             .catch(e => console.error(e));
-                        }
-                      }
+                        },
+                      },
                     ],
                     { cancelable: false }
                   );
                   console.log("destination", this.state.destination);
 
                   this.setState({
-                    driverstate: DRIVER_STATE_GOING_TO_DESTINATION
+                    driverstate: DRIVER_STATE_GOING_TO_DESTINATION,
                   });
                   if (!this.state.isManual) {
-                    this.getPoly(
-                      this.state.driverposition,
-                      this.state.order.destination
-                    );
+                    this.getPoly(this.state.driverposition, this.state.order.destination);
                   }
                 }}
               />
@@ -449,17 +399,15 @@ class Home extends Component {
             style={{
               flex: 1,
               justifyContent: "center",
-              alignItems: "center"
-            }}
-          >
+              alignItems: "center",
+            }}>
             <Icon name="local-taxi" size={100} color="#4CAF50" />
             <Text
               style={{
                 textAlign: "center",
                 fontWeight: "bold",
-                fontSize: 25
-              }}
-            >
+                fontSize: 25,
+              }}>
               ¿Haz terminado tu desplazamiento?
             </Text>
             <View
@@ -467,9 +415,8 @@ class Home extends Component {
                 flex: 1,
                 justifyContent: "center",
                 alignItems: "center",
-                flexDirection: "row"
-              }}
-            >
+                flexDirection: "row",
+              }}>
               <Button
                 containerStyle={{ flex: 1, marginRight: 5 }}
                 buttonStyle={{ height: 75 }}
@@ -482,9 +429,7 @@ class Home extends Component {
                       {
                         text: "OK",
                         onPress: () => {
-                          this.updateDriverStatus(
-                            DRIVER_STATUS_LOOKING_FOR_DRIVE
-                          );
+                          this.updateDriverStatus(DRIVER_STATUS_LOOKING_FOR_DRIVE);
                           firebase
                             .database()
                             .ref()
@@ -495,13 +440,13 @@ class Home extends Component {
                           this.setState({
                             driverstate: DRIVER_STATE_NONE,
                             order: { origin: {}, destination: {} },
-                            polyline: []
+                            polyline: [],
                           });
-                        }
+                        },
                       },
                       {
-                        text: "Cancelar"
-                      }
+                        text: "Cancelar",
+                      },
                     ],
                     { cancelable: false }
                   );
@@ -540,7 +485,7 @@ class Home extends Component {
               db.collection("drivers")
                 .doc(this.state.userUID)
                 .update({
-                  pushDevices: pushTokens
+                  pushDevices: pushTokens,
                 });
             })
             .catch(e => {
@@ -552,9 +497,7 @@ class Home extends Component {
       })
       .catch(e => console.error(e));
 
-    this._notificationSubscription = Notifications.addListener(
-      this._handleNotification
-    );
+    this._notificationSubscription = Notifications.addListener(this._handleNotification);
 
     this.backHandler = BackHandler.addEventListener("hardwareBackPress", () => {
       this.deactivate(); // works best when the goBack is async
@@ -580,7 +523,7 @@ class Home extends Component {
             this.setState({
               order: data,
               orderuid: notification.data.order.uid,
-              isManual: notification.data.order.manual
+              isManual: notification.data.order.manual,
             });
             this.updateDriverStatus(DRIVER_STATUS_CONFIRMING_DRIVE);
 
@@ -608,7 +551,7 @@ class Home extends Component {
             this.setState({
               order: data,
               orderuid: notification.data.order.uid,
-              isManual: notification.data.order.manual
+              isManual: notification.data.order.manual,
             });
             this.updateDriverStatus(DRIVER_STATUS_CONFIRMING_DRIVE);
           });
@@ -626,7 +569,7 @@ class Home extends Component {
                 order: data,
                 orderuid: notification.data.order.uid,
                 isManual: notification.data.order.manual,
-                driverstate: DRIVER_STATE_ASKING
+                driverstate: DRIVER_STATE_ASKING,
               });
               this.updateDriverStatus(DRIVER_STATUS_CONFIRMING_DRIVE);
             });
@@ -655,7 +598,7 @@ class Home extends Component {
     this.state.polyline.map(point => {
       coords.push({
         latitude: point.lat,
-        longitude: point.lng
+        longitude: point.lng,
       });
     });
 
@@ -669,10 +612,7 @@ class Home extends Component {
 
     if (this.state.order) {
       if (this.state.isManual === false) {
-        console.log(
-          "Preparando componentes para marcadores...",
-          this.state.order
-        );
+        console.log("Preparando componentes para marcadores...", this.state.order);
 
         originMarker = (
           <MapView.Marker
@@ -681,7 +621,7 @@ class Home extends Component {
             pinColor="#4CAF50"
             coordinate={{
               latitude: this.state.order.origin.lat,
-              longitude: this.state.order.origin.lng
+              longitude: this.state.order.origin.lng,
             }}
           />
         );
@@ -693,7 +633,7 @@ class Home extends Component {
             pinColor="#FF9800"
             coordinate={{
               latitude: this.state.order.destination.lat,
-              longitude: this.state.order.destination.lng
+              longitude: this.state.order.destination.lng,
             }}
           />
         );
@@ -723,12 +663,9 @@ class Home extends Component {
             bottom: Number.parseFloat(STATE_HEIGHT[this.state.driverstate]),
             top: Dimensions.get("window").height * 0.1,
             left: 0,
-            right: 0
-          }}
-        >
-          {this.state.order.origin.lat && this.state.order.origin.lng
-            ? originMarker
-            : null}
+            right: 0,
+          }}>
+          {this.state.order.origin.lat && this.state.order.origin.lng ? originMarker : null}
           {this.state.order.destination.lat && this.state.order.destination.lng
             ? destinationMarker
             : null}
@@ -737,8 +674,7 @@ class Home extends Component {
         <View
           style={styles.stateContainer}
           height={STATE_HEIGHT[this.state.driverstate]}
-          elevation={3}
-        >
+          elevation={3}>
           {this.getState()}
         </View>
         <Driver
@@ -760,7 +696,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     width: 100,
-    height: 100
+    height: 100,
   },
   profiledata: { flexDirection: "row" },
 
@@ -772,37 +708,31 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     position: "absolute",
     overflow: "hidden",
-    bottom: "2%"
+    bottom: "2%",
   },
 
-  mapcontainer: { flex: 1 }
+  mapcontainer: { flex: 1 },
 });
 
 export default Home;
-TaskManager.defineTask(
-  LOCATION_TASK_NAME,
-  async ({ data: { locations }, error }) => {
-    if (error) {
-      return;
-    } else {
-      locations[0].user = Home.getcurrentuser();
+TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data: { locations }, error }) => {
+  if (error) {
+    return;
+  } else {
+    locations[0].user = Home.getcurrentuser();
 
-      fetch(
-        "https://us-central1-taxiapp-sinewave.cloudfunctions.net/location/",
-        {
-          method: "POST",
-          headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(locations[0])
-        }
-      )
-        .then(res => res.text())
-        .then(Response => {
-          console.log("success:", Response);
-        })
-        .catch(error => console.log(error));
-    }
+    fetch("https://us-central1-taxiapp-sinewave.cloudfunctions.net/location/", {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(locations[0]),
+    })
+      .then(res => res.text())
+      .then(Response => {
+        console.log("success:", Response);
+      })
+      .catch(error => console.log(error));
   }
-);
+});

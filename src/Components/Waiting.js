@@ -10,9 +10,8 @@ class Waiting extends Component {
           justifyContent: "center",
           alignItems: "center",
           height: Dimensions.get("window").height,
-          width: Dimensions.get("window").width
-        }}
-      >
+          width: Dimensions.get("window").width,
+        }}>
         <ActivityIndicator size={60} color="white" />
       </View>
     );

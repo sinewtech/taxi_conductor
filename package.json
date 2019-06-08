@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "decode-google-map-polyline": "^1.0.1",
+    "eslint-config-universe": "^1.0.7",
     "expo": "^33.0.0",
     "expo-image-picker": "^5.0.2",
     "expo-location": "^5.0.1",
