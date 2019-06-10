@@ -57,13 +57,13 @@ async function registerForPushNotificationsAsync() {
   }
 
   if (Platform.OS === "android") {
-    Expo.Notifications.createChannelAndroidAsync("carreras", {
+    Notifications.createChannelAndroidAsync("carreras", {
       name: "Carreras",
       priority: "max",
       vibrate: [0, 250, 250, 250],
       sound: true,
     });
-    Expo.Notifications.createChannelAndroidAsync("ads", {
+    Notifications.createChannelAndroidAsync("ads", {
       name: "Ads",
       priority: "max",
       vibrate: [0, 250, 250, 250],
@@ -138,12 +138,12 @@ class Home extends Component {
 
     if (tiene.gpsAvailable) {
       await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-        accuracy: Location.Accuracy.BestForNavigation,
+        accuracy: Location.Accuracy.High,
         timeInterval: 6000,
         distanceInterval: 2,
         foregroundService: {
-          notificationTitle: "Servicios de Ubicacion",
-          notificationBody: "Estamos mandando estos datos a la central",
+          notificationTitle: "Servicios de Ubicación",
+          notificationBody: "Tu ubicación está siendo monitoreada por la central.",
           notificationColor: "#FF9800",
         },
       });
