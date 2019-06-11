@@ -679,9 +679,9 @@ class Home extends Component {
           loadingBackgroundColor="#FF9800"
           initialRegion={INITIAL_REGION}
           mapPadding={{
-            bottom:
+            /*bottom:
               Dimensions.get("window").height *
-              (Number.parseFloat(STATE_HEIGHT[this.state.driverState]) / 100),
+              (Number.parseFloat(STATE_HEIGHT[this.state.driverState]) / 100),*/
             top: Dimensions.get("window").height * 0.1,
             left: 0,
             right: 0,
@@ -694,7 +694,7 @@ class Home extends Component {
         </MapView>
         <View
           style={styles.stateContainer}
-          height={STATE_HEIGHT[this.state.driverState]}
+          //height={STATE_HEIGHT[this.state.driverState]}
           elevation={3}>
           {this.getState()}
         </View>
