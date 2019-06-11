@@ -19,6 +19,8 @@ const INITIAL_REGION = {
   longitudeDelta: 0.1,
 };
 
+const DEBUG_MODE = false;
+
 const API_KEY = "AIzaSyApNgtxFBp0SXSHljP_xku6peNCzjTFWM4";
 const decodePolyline = require("decode-google-map-polyline");
 
@@ -39,6 +41,7 @@ const DRIVER_STATUS_CONFIRMING_DRIVE = 3;
 
 const STATE_HEIGHT = {
   0: "25%",
+  1: "40%",
 };
 
 const LOCATION_TASK_NAME = "SINEWAVE_LOCATION";
@@ -85,12 +88,28 @@ class Home extends Component {
   constructor() {
     super();
     this.state = {
-      driverstate: 0,
+      driverState: DRIVER_STATE_NONE,
       selectedIndex: 0,
       user: {},
       order: { origin: {}, destination: {}, manual: true },
       polyline: [],
     };
+
+    if (DEBUG_MODE) {
+      this.state = {
+        //driverState: DRIVER_STATE_NONE,
+        driverState: DRIVER_STATE_ASKING,
+        //order: { origin: {}, destination: {}, manual: true },
+        order: {
+          origin: {
+            name: "olo",
+            address: "mi nepe",
+          },
+          destination: { name: "gusbai", address: "tukulitosacayama" },
+          manual: true,
+        },
+      };
+    }
   }
 
   updateUser = userdata => {
@@ -203,7 +222,7 @@ class Home extends Component {
   };
 
   getState = () => {
-    switch (this.state.driverstate) {
+    switch (this.state.driverState) {
       case DRIVER_STATE_NONE: {
         return <Briefing />;
       }
@@ -229,7 +248,7 @@ class Home extends Component {
                     }
 
                     this.setState({
-                      driverstate: DRIVER_STATE_GOING_TO_CLIENT,
+                      driverState: DRIVER_STATE_GOING_TO_CLIENT,
                     });
                   },
                 },
@@ -251,7 +270,7 @@ class Home extends Component {
                       this.setState({
                         order: { origin: {}, destination: {} },
                         polyline: [],
-                        driverstate: DRIVER_STATE_NONE,
+                        driverState: DRIVER_STATE_NONE,
                       });
                       this.updateDriverStatus(DRIVER_STATUS_LOOKING_FOR_DRIVE);
                     },
@@ -313,7 +332,7 @@ class Home extends Component {
                             .then(() => console.log("Status enviado"))
                             .catch(e => console.error(e));
                           this.setState({
-                            driverstate: DRIVER_STATE_CLIENT_IS_WITH_HIM,
+                            driverState: DRIVER_STATE_CLIENT_IS_WITH_HIM,
                           });
                         },
                       },
@@ -343,7 +362,7 @@ class Home extends Component {
                 fontWeight: "bold",
                 fontSize: 25,
               }}>
-              ¿El cliente ya abordo?
+              {"¿El cliente ya abordó?"}
             </Text>
             <View
               style={{
@@ -381,7 +400,7 @@ class Home extends Component {
                   console.log("destination", this.state.destination);
 
                   this.setState({
-                    driverstate: DRIVER_STATE_GOING_TO_DESTINATION,
+                    driverState: DRIVER_STATE_GOING_TO_DESTINATION,
                   });
                   if (!this.state.isManual) {
                     this.getPoly(this.state.driverposition, this.state.order.destination);
@@ -438,7 +457,7 @@ class Home extends Component {
                             .then(() => console.log("Status enviado"))
                             .catch(e => console.error(e));
                           this.setState({
-                            driverstate: DRIVER_STATE_NONE,
+                            driverState: DRIVER_STATE_NONE,
                             order: { origin: {}, destination: {} },
                             polyline: [],
                           });
@@ -569,11 +588,11 @@ class Home extends Component {
                 order: data,
                 orderuid: notification.data.order.uid,
                 isManual: notification.data.order.manual,
-                driverstate: DRIVER_STATE_ASKING,
+                driverState: DRIVER_STATE_ASKING,
               });
               this.updateDriverStatus(DRIVER_STATUS_CONFIRMING_DRIVE);
             });
-        else this.setState({ driverstate: DRIVER_STATE_ASKING });
+        else this.setState({ driverState: DRIVER_STATE_ASKING });
       }
     }
   };
@@ -660,7 +679,9 @@ class Home extends Component {
           loadingBackgroundColor="#FF9800"
           initialRegion={INITIAL_REGION}
           mapPadding={{
-            bottom: Number.parseFloat(STATE_HEIGHT[this.state.driverstate]),
+            bottom:
+              Dimensions.get("window").height *
+              (Number.parseFloat(STATE_HEIGHT[this.state.driverState]) / 100),
             top: Dimensions.get("window").height * 0.1,
             left: 0,
             right: 0,
@@ -673,7 +694,7 @@ class Home extends Component {
         </MapView>
         <View
           style={styles.stateContainer}
-          height={STATE_HEIGHT[this.state.driverstate]}
+          height={STATE_HEIGHT[this.state.driverState]}
           elevation={3}>
           {this.getState()}
         </View>
