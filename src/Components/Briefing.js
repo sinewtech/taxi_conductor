@@ -80,16 +80,18 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
     alignItems: "center",
-    justifyContent: "center"
+    justifyContent: "center",
+    paddingTop: 15,
+    paddingBottom: 15,
   },
 
   timeContainer: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center"
+    justifyContent: "center",
   },
 
   time: {
-    fontSize: 60
-  }
+    fontSize: 60,
+  },
 });
