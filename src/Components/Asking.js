@@ -19,45 +19,31 @@ class Asking extends Component {
         style={{
           flex: 1,
           justifyContent: "center",
-          alignItems: "center"
-        }}
-      >
+          alignItems: "center",
+        }}>
         <Text style={styles.heading}>Carrera Recibida</Text>
-        <Text flex={1}>{"\n"}</Text>
-        <Text style={styles.title}>{this.props.order.origin.name}</Text>
-        <Text style={styles.subtitle}>
-          {this.props.order.origin.address}
-        </Text>
-        <View flex={1}>
-          <Icon name="angle-down" type="font-awesome" color="#FF9800" />
+        <View style={styles.textView}>
+          <Text style={styles.title}>{this.props.order.origin.name}</Text>
+          <Text style={styles.subtitle}>{this.props.order.origin.address}</Text>
+          <View flex={1}>
+            <Icon name="angle-down" type="font-awesome" color="#FF9800" />
+          </View>
+          <Text style={styles.title}>{this.props.order.destination.name}</Text>
+          <Text style={styles.subtitle}>{this.props.order.destination.address}</Text>
+          <Text style={styles.price}>Por L. {this.props.order.price.toFixed(2)}</Text>
         </View>
-        <Text style={styles.title}>
-          {this.props.order.destination.name}
-        </Text>
-        <Text style={styles.subtitle}>
-          {this.props.order.destination.address}
-        </Text>
-        <Text flex={1}>{"\n"}</Text>
-        <Text style={styles.price}>Por {this.props.order.price}</Text>
-        <View
-          style={{
-            flex: 1,
-            justifyContent: "center",
-            alignItems: "center",
-            flexDirection: "row"
-          }}
-        >
+        <View style={styles.buttonView}>
           <Button
-            containerStyle={{ flex: 1, marginRight: 5 }}
-            buttonStyle={{ height: 75 }}
-            title="Aceptar"
-            onPress={this.props.onAccept}
+            containerStyle={{ flex: 1 }}
+            buttonStyle={styles.buttonReject}
+            title="X"
+            onPress={this.props.onReject}
           />
           <Button
-            containerStyle={{ flex: 1, marginLeft: 5 }}
-            buttonStyle={{ height: 75 }}
-            title="Rechazar"
-            onPress={this.props.onReject}
+            containerStyle={{ flex: 5 }}
+            buttonStyle={styles.buttonAccept}
+            title="Aceptar"
+            onPress={this.props.onAccept}
           />
         </View>
       </View>
@@ -66,27 +52,58 @@ class Asking extends Component {
 }
 
 const styles = StyleSheet.create({
-  heading:{
+  heading: {
     fontSize: 25,
-    flex: 2
+    flex: 1,
+    fontWeight: "bold",
   },
 
   title: {
-    fontSize: 20,
-    fontWeight: "bold",
-    flex: 1
+    fontSize: 22,
+    //fontWeight: "bold",
+    flex: 1,
+    textAlign: "center",
   },
 
   subtitle: {
-    fontSize: 15,
-    flex: 1
+    fontSize: 18,
+    flex: 1,
+    textAlign: "center",
+    display: "none",
   },
 
-  precio:{
-    marginBottom: 5,
-    fontSize: 16,
-    fontWeight: "bold"
-  }
+  price: {
+    marginBottom: 7,
+    fontSize: 22,
+    fontWeight: "bold",
+    textAlign: "center",
+    flex: 1,
+  },
+
+  textView: {
+    paddingLeft: 15,
+    paddingRight: 15,
+    flex: 3,
+  },
+
+  buttonView: {
+    flex: 2,
+    justifyContent: "center",
+    alignItems: "center",
+    flexDirection: "row",
+  },
+
+  buttonAccept: {
+    height: "100%",
+    borderRadius: 0,
+    backgroundColor: "#4CAF50",
+  },
+
+  buttonReject: {
+    height: "100%",
+    borderRadius: 0,
+    backgroundColor: "#f44336",
+  },
 });
 
 export default Asking;

@@ -13,6 +13,8 @@ import firebase from "../../firebase";
 import { Input, Button, Icon, Image } from "react-native-elements";
 import * as ImagePicker from "expo-image-picker";
 import Waiting from "../Components/Waiting";
+import { TextInputMask } from "react-native-masked-text";
+
 class SignIn extends Component {
   constructor(props) {
     super(props);
@@ -202,6 +204,12 @@ class SignIn extends Component {
     if (this.state.Registrando) {
       return <Waiting />;
     }
+
+    const userIcon = <Icon name="directions-car" size={24} color="black" style={styles.Icon} />;
+    const phoneIcon = <Icon name="phone" size={24} color="black" style={styles.Icon} />;
+    const idIcon = <Icon name="credit-card" size={24} color="black" style={styles.Icon} />;
+    const plateIcon = <Icon type="material-community" name="steering" size={24} color="black" style={styles.Icon} />;
+
     return (
       <ScrollView contentContainerStyle={styles.SignUpView}>
         <View style={styles.credentialsView}>
@@ -216,22 +224,28 @@ class SignIn extends Component {
               keyboardType="email-address"
               onChangeText={text => this.setState({ mail: text })}
             />
-            <Input
-              placeholder="Codigo de unidad A3"
-              leftIcon={
-                <Icon
-                  name="hashtag"
-                  type="font-awesome"
-                  size={24}
-                  color="black"
-                  style={styles.Icon}
-                />
-              }
-              inputContainerStyle={styles.Input}
-              leftIconContainerStyle={{ marginRight: 15 }}
-              autoCapitalize="characters"
-              onChangeText={text => this.setState({ username: text })}
+
+            <TextInputMask
+              type={"custom"}
+              customTextInput={Input}
+              customTextInputProps={{
+                inputContainerStyle: styles.Input,
+                placeholder: "Código de Unidad (A3)",
+                leftIcon: userIcon,
+                leftIconContainerStyle: { marginRight: 15 },
+                autoCapitalize: "characters",
+              }}
+              options={{
+                mask: "A999",
+              }}
+              value={this.state.username}
+              onChangeText={text => {
+                this.setState({
+                  username: text,
+                });
+              }}
             />
+
             <Input
               placeholder="Contraseña"
               leftIcon={<Icon name="vpn-key" size={24} color="black" style={styles.Icon} />}
@@ -242,7 +256,7 @@ class SignIn extends Component {
               onChangeText={text => this.setState({ password: text })}
             />
 
-            <Input
+            {/*<Input
               placeholder="+504 xxxx-xxxx"
               leftIcon={<Icon name="phone" size={24} color="black" style={styles.Icon} />}
               keyboardType="phone-pad"
@@ -250,6 +264,26 @@ class SignIn extends Component {
               leftIconContainerStyle={{ marginRight: 15 }}
               autoCapitalize="none"
               onChangeText={text => this.setState({ phone: text })}
+            />*/}
+            <TextInputMask
+              type={"custom"}
+              customTextInput={Input}
+              customTextInputProps={{
+                inputContainerStyle: styles.Input,
+                placeholder: "Número de Teléfono",
+                leftIcon: phoneIcon,
+                keyboardType: "phone-pad",
+                leftIconContainerStyle: { marginRight: 15 },
+              }}
+              options={{
+                mask: "+504 9999-9999",
+              }}
+              value={this.state.phone}
+              onChangeText={text => {
+                this.setState({
+                  phone: text,
+                });
+              }}
             />
             <Input
               placeholder="Nombre y apellido"
@@ -259,25 +293,51 @@ class SignIn extends Component {
               autoCapitalize="words"
               onChangeText={text => this.setState({ name: text })}
             />
-            <Input
-              placeholder="Identidad (xxxx-xxxx-xxxxx)"
-              leftIcon={<Icon name="credit-card" size={24} color="black" style={styles.Icon} />}
-              keyboardType="number-pad"
-              inputContainerStyle={styles.Input}
-              leftIconContainerStyle={{ marginRight: 15 }}
-              autoCapitalize="none"
-              onChangeText={text => this.setState({ id: text })}
+
+            <TextInputMask
+              type={"custom"}
+              customTextInput={Input}
+              customTextInputProps={{
+                inputContainerStyle: styles.Input,
+                placeholder: "Identidad",
+                leftIcon: idIcon,
+                keyboardType: "number-pad",
+                leftIconContainerStyle: { marginRight: 15 },
+              }}
+              options={{
+                mask: "9999-9999-99999",
+              }}
+              value={this.state.id}
+              onChangeText={text => {
+                this.setState({
+                  id: text,
+                });
+              }}
             />
-            <Input
-              placeholder="ABC 1234"
-              leftIcon={<Icon name="directions-car" size={24} color="black" style={styles.Icon} />}
-              inputContainerStyle={styles.Input}
-              leftIconContainerStyle={{ marginRight: 15 }}
-              autoCapitalize="characters"
-              onChangeText={text => this.setState({ placa: text })}
+
+            <TextInputMask
+              type={"custom"}
+              customTextInput={Input}
+              customTextInputProps={{
+                inputContainerStyle: styles.Input,
+                placeholder: "Placa del Vehículo",
+                leftIcon: plateIcon,
+                leftIconContainerStyle: { marginRight: 15 },
+                autoCapitalize: "characters",
+              }}
+              options={{
+                mask: "AAA 9999",
+              }}
+              value={this.state.placa}
+              onChangeText={text => {
+                this.setState({
+                  placa: text,
+                });
+              }}
             />
+
             <Input
-              placeholder="Honda Civic 2007 Color Rojo"
+              placeholder="Descripción del Vehículo (Honda Civic 2007 Rojo)"
               multiline
               leftIcon={
                 <Icon name="chat-bubble-outline" size={24} color="black" style={styles.Icon} />
@@ -349,11 +409,13 @@ class SignIn extends Component {
 }
 const styles = StyleSheet.create({
   SignUpView: {
+    paddingTop: 50,
     backgroundColor: "#FF9800",
     justifyContent: "center",
     alignItems: "center",
     height: Dimensions.get("window").height,
   },
+
   credentialsView: {
     width: Dimensions.get("window").width * 0.8,
   },

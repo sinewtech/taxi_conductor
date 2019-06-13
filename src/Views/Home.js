@@ -41,10 +41,11 @@ const DRIVER_STATUS_CONFIRMING_DRIVE = 3;
 
 const STATE_HEIGHT = {
   0: "25%",
-  1: "40%",
+  1: "50%",
 };
 
-const LOCATION_TASK_NAME = "SINEWAVE_LOCATION";
+const LOCATION_TASK_NAME = "TAXI_DRIVER_LOCATION";
+
 let db = firebase.firestore();
 async function registerForPushNotificationsAsync() {
   const { status: existingStatus } = await Permissions.getAsync(Permissions.NOTIFICATIONS);
@@ -96,18 +97,20 @@ class Home extends Component {
     };
 
     if (DEBUG_MODE) {
-      this.state = {
-        //driverState: DRIVER_STATE_NONE,
-        driverState: DRIVER_STATE_ASKING,
-        //order: { origin: {}, destination: {}, manual: true },
-        order: {
-          origin: {
-            name: "olo",
-            address: "mi nepe",
-          },
-          destination: { name: "gusbai", address: "tukulitosacayama" },
-          manual: true,
+      this.state.driverState = DRIVER_STATE_ASKING;
+      this.state.order = {
+        origin: {
+          name: "Universidad Tecnológica Centroamericana",
+          //address: "frente a Residencial, V-782 Boulevard Kennedy, Tegucigalpa",
+          address: null,
         },
+        destination: {
+          name: "Universidad Nacional Autónoma de Honduras",
+          //address: "Bulevar Suyapa, Tegucigalpa, M.D.C, Honduras, Centroamérica ",
+          address: null,
+        },
+        manual: true,
+        price: 420.69,
       };
     }
   }
@@ -221,6 +224,14 @@ class Home extends Component {
       });
   };
 
+  clear = () => {
+    this.setState({
+      driverState: DRIVER_STATE_NONE,
+      order: { origin: {}, destination: {} },
+      polyline: [],
+    });
+  };
+
   getState = () => {
     switch (this.state.driverState) {
       case DRIVER_STATE_NONE: {
@@ -233,7 +244,7 @@ class Home extends Component {
             isManual={this.state.isManual}
             order={this.state.order}
             onAccept={() => {
-              Alert.alert("Navegacion", "Vamos hacia el cliente", [
+              Alert.alert("Navegación", "Vamos hacia el cliente", [
                 {
                   text: "OK",
                   onPress: () => {
@@ -256,8 +267,8 @@ class Home extends Component {
             }}
             onReject={() => {
               Alert.alert(
-                "Rechazar",
-                "Estas a punto de rechazar una carrera",
+                "Rechazando",
+                "Estas a punto de rechazar una carrera.",
                 [
                   {
                     text: "OK",
@@ -318,8 +329,8 @@ class Home extends Component {
                   console.log("Confirmando status para orden", this.state.orderuid);
 
                   Alert.alert(
-                    "Aviso",
-                    "Listo le notificaremos al cliente.",
+                    "Notificando al cliente",
+                    "Le notificaremos tu llegada al cliente.",
                     [
                       {
                         text: "ok",
@@ -331,6 +342,7 @@ class Home extends Component {
                             .set(5)
                             .then(() => console.log("Status enviado"))
                             .catch(e => console.error(e));
+
                           this.setState({
                             driverState: DRIVER_STATE_CLIENT_IS_WITH_HIM,
                           });
@@ -362,7 +374,7 @@ class Home extends Component {
                 fontWeight: "bold",
                 fontSize: 25,
               }}>
-              {"¿El cliente ya abordó?"}
+              {"¿El cliente ya abordó a la unidad?"}
             </Text>
             <View
               style={{
@@ -380,7 +392,7 @@ class Home extends Component {
 
                   Alert.alert(
                     "Navegacion",
-                    "Vamos hacia el destino del cliente",
+                    "Vamos hacia el destino del cliente.",
                     [
                       {
                         text: "ok",
@@ -442,13 +454,17 @@ class Home extends Component {
                 title="Si"
                 onPress={() => {
                   Alert.alert(
-                    "Navegacion",
-                    "Gracias por cuidar de nuestro cliente",
+                    "Terminando Desplazamiento",
+                    "¿Has terminado la carrera?",
                     [
                       {
-                        text: "OK",
+                        text: "No",
+                      },
+                      {
+                        text: "Sí",
                         onPress: () => {
                           this.updateDriverStatus(DRIVER_STATUS_LOOKING_FOR_DRIVE);
+
                           firebase
                             .database()
                             .ref()
@@ -456,18 +472,18 @@ class Home extends Component {
                             .set(7)
                             .then(() => console.log("Status enviado"))
                             .catch(e => console.error(e));
-                          this.setState({
-                            driverState: DRIVER_STATE_NONE,
-                            order: { origin: {}, destination: {} },
-                            polyline: [],
-                          });
+
+                          this.clear();
+
+                          Alert.alert(
+                            "Carrera terminada",
+                            "Gracias por cuidar a nuestro cliente.",
+                            [{text: "Cerrar"}]
+                          );
                         },
                       },
-                      {
-                        text: "Cancelar",
-                      },
                     ],
-                    { cancelable: false }
+                    { cancelable: true }
                   );
                 }}
               />
@@ -695,6 +711,11 @@ class Home extends Component {
         <View
           style={styles.stateContainer}
           //height={STATE_HEIGHT[this.state.driverState]}
+          maxHeight={STATE_HEIGHT[this.state.driverState] ?
+            Dimensions.get("window").height *
+            (Number.parseFloat(STATE_HEIGHT[this.state.driverState]) / 100)
+            : null
+          }
           elevation={3}>
           {this.getState()}
         </View>
@@ -719,6 +740,7 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
   },
+
   profiledata: { flexDirection: "row" },
 
   stateContainer: {
