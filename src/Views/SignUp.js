@@ -27,6 +27,7 @@ class SignIn extends Component {
       name: "",
       phone: "",
       id: "",
+      descripcion: "",
       Registrando: false,
     };
   }
@@ -135,10 +136,11 @@ class SignIn extends Component {
             .set({
               email: userdata.user.email,
               username: this.state.username,
-              placa: this.state.placa,
+              plate: this.state.placa,
               name: this.state.name,
               phone: this.state.phone,
               id: this.state.id,
+              description: this.state.descripcion,
             });
 
           await firebase
@@ -215,7 +217,7 @@ class SignIn extends Component {
               onChangeText={text => this.setState({ mail: text })}
             />
             <Input
-              placeholder="Codigo Letra#"
+              placeholder="Codigo de unidad A3"
               leftIcon={
                 <Icon
                   name="hashtag"
@@ -239,16 +241,9 @@ class SignIn extends Component {
               secureTextEntry
               onChangeText={text => this.setState({ password: text })}
             />
+
             <Input
-              placeholder="Placa 3Letras XXXX"
-              leftIcon={<Icon name="directions-car" size={24} color="black" style={styles.Icon} />}
-              inputContainerStyle={styles.Input}
-              leftIconContainerStyle={{ marginRight: 15 }}
-              autoCapitalize="characters"
-              onChangeText={text => this.setState({ placa: text })}
-            />
-            <Input
-              placeholder="Numero de telefono +504 xxxx-xxxx"
+              placeholder="+504 xxxx-xxxx"
               leftIcon={<Icon name="phone" size={24} color="black" style={styles.Icon} />}
               keyboardType="phone-pad"
               inputContainerStyle={styles.Input}
@@ -265,13 +260,33 @@ class SignIn extends Component {
               onChangeText={text => this.setState({ name: text })}
             />
             <Input
-              placeholder="Identidad xxxx-xxxx-xxxxx"
+              placeholder="Identidad (xxxx-xxxx-xxxxx)"
               leftIcon={<Icon name="credit-card" size={24} color="black" style={styles.Icon} />}
               keyboardType="number-pad"
               inputContainerStyle={styles.Input}
               leftIconContainerStyle={{ marginRight: 15 }}
               autoCapitalize="none"
               onChangeText={text => this.setState({ id: text })}
+            />
+            <Input
+              placeholder="ABC 1234"
+              leftIcon={<Icon name="directions-car" size={24} color="black" style={styles.Icon} />}
+              inputContainerStyle={styles.Input}
+              leftIconContainerStyle={{ marginRight: 15 }}
+              autoCapitalize="characters"
+              onChangeText={text => this.setState({ placa: text })}
+            />
+            <Input
+              placeholder="Honda Civic 2007 Color Rojo"
+              multiline
+              leftIcon={
+                <Icon name="chat-bubble-outline" size={24} color="black" style={styles.Icon} />
+              }
+              keyboardType="default"
+              inputContainerStyle={styles.Input}
+              leftIconContainerStyle={{ marginRight: 15 }}
+              autoCapitalize="words"
+              onChangeText={text => this.setState({ descripcion: text })}
             />
           </KeyboardAvoidingView>
           <View style={styles.imageSelectRow}>
