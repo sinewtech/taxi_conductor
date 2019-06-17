@@ -24,14 +24,6 @@ export class LogIn extends React.Component {
 
   handleSignIn = async () => {
     await this.setState({ registrando: true });
-    //let CanContinue = true;
-
-    /*for (key in this.state) {
-      if (this.state[key].length === 0) {
-        CanContinue = false;
-        break;
-      }
-    }*/
 
     if (this.state.mail === "" || this.state.password === "") {
       Alert.alert("Error", "Por favor llene todos los campos.");
@@ -48,7 +40,7 @@ export class LogIn extends React.Component {
         this.setState({ registrando: false });
         return;
       }
-      
+
       firebase
         .auth()
         .signInWithEmailAndPassword(this.state.mail, this.state.password)
