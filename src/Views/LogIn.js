@@ -18,34 +18,37 @@ export class LogIn extends React.Component {
     this.state = {
       mail: "",
       password: "",
-      Registrando: false,
+      registrando: false,
     };
   }
 
   handleSignIn = async () => {
-    await this.setState({ Registrando: true });
-    let CanContinue = true;
-    for (key in this.state) {
+    await this.setState({ registrando: true });
+    //let CanContinue = true;
+
+    /*for (key in this.state) {
       if (this.state[key].length === 0) {
         CanContinue = false;
         break;
       }
-    }
-    if (!CanContinue) {
-      Alert.alert("Error", "Por favor Ingrese sus datos");
-      this.setState({ Registrando: false });
+    }*/
+
+    if (this.state.mail === "" || this.state.password === "") {
+      Alert.alert("Error", "Por favor llene todos los campos.");
+      this.setState({ registrando: false });
       return;
     } else {
       if (!/^((?!\.)[\w-_.]*[^.])(@\w+)(\.\w+(\.\w+)?[^.\W])$/.test(this.state.mail)) {
         Alert.alert("Correo", "Por favor use un formato de correo valido");
-        this.setState({ Registrando: false });
+        this.setState({ registrando: false });
         return;
       }
       if (!/^[A-Za-z0-9]{6,}$/.test(this.state.password)) {
         Alert.alert("Contraseña", "Recuerde que la contraseña debe ser mayor a 6 caracteres.");
-        this.setState({ Registrando: false });
+        this.setState({ registrando: false });
         return;
       }
+      
       firebase
         .auth()
         .signInWithEmailAndPassword(this.state.mail, this.state.password)
@@ -79,13 +82,13 @@ export class LogIn extends React.Component {
               break;
             }
           }
-          this.setState({ Registrando: false });
+          this.setState({ registrando: false });
         });
     }
   };
 
   render() {
-    if (this.state.Registrando) {
+    if (this.state.registrando) {
       return <Waiting />;
     }
     return (

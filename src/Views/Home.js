@@ -11,6 +11,11 @@ import Driver from "../Components/Driver";
 import Briefing from "../Components/Briefing";
 import Asking from "../Components/Asking";
 import firebase from "../../firebase";
+import {
+  TouchableOpacity,
+  TouchableNativeFeedback,
+  TouchableHighlight,
+} from "react-native-gesture-handler";
 
 const INITIAL_REGION = {
   latitude: 14.0723,
@@ -478,7 +483,7 @@ class Home extends Component {
                           Alert.alert(
                             "Carrera terminada",
                             "Gracias por cuidar a nuestro cliente.",
-                            [{text: "Cerrar"}]
+                            [{ text: "Cerrar" }]
                           );
                         },
                       },
@@ -690,10 +695,10 @@ class Home extends Component {
           style={{ flex: 1 }}
           showsTraffic
           showsUserLocation
-          followsUserLocation
           showsMyLocationButton
           loadingBackgroundColor="#FF9800"
           initialRegion={INITIAL_REGION}
+          ref={ref => (this.map = ref)}
           mapPadding={{
             /*bottom:
               Dimensions.get("window").height *
@@ -711,13 +716,30 @@ class Home extends Component {
         <View
           style={styles.stateContainer}
           //height={STATE_HEIGHT[this.state.driverState]}
-          maxHeight={STATE_HEIGHT[this.state.driverState] ?
-            Dimensions.get("window").height *
-            (Number.parseFloat(STATE_HEIGHT[this.state.driverState]) / 100)
-            : null
+          maxHeight={
+            STATE_HEIGHT[this.state.driverState]
+              ? Dimensions.get("window").height *
+                (Number.parseFloat(STATE_HEIGHT[this.state.driverState]) / 100)
+              : null
           }
           elevation={3}>
           {this.getState()}
+        </View>
+        <View style={styles.centerNavigationView}>
+          <TouchableHighlight
+            flex={1}
+            onPress={() => {
+              if (this.map) {
+                this.map.animateCamera({
+                  pitch: 90,
+                  heading: 180,
+                  altitude: 10,
+                  zoom: 60,
+                });
+              }
+            }}>
+            <Text>Olo</Text>
+          </TouchableHighlight>
         </View>
         <Driver
           elevation={3}
@@ -755,6 +777,17 @@ const styles = StyleSheet.create({
   },
 
   mapcontainer: { flex: 1 },
+
+  centerNavigationView: {
+    position: "absolute",
+    top: "50%",
+    left: "5%",
+    zIndex: 10,
+    backgroundColor: "red",
+    borderRadius: 100,
+    height: 25,
+    width: 25,
+  },
 });
 
 export default Home;

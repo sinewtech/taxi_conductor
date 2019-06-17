@@ -255,16 +255,7 @@ class SignIn extends Component {
               secureTextEntry
               onChangeText={text => this.setState({ password: text })}
             />
-
-            {/*<Input
-              placeholder="+504 xxxx-xxxx"
-              leftIcon={<Icon name="phone" size={24} color="black" style={styles.Icon} />}
-              keyboardType="phone-pad"
-              inputContainerStyle={styles.Input}
-              leftIconContainerStyle={{ marginRight: 15 }}
-              autoCapitalize="none"
-              onChangeText={text => this.setState({ phone: text })}
-            />*/}
+            
             <TextInputMask
               type={"custom"}
               customTextInput={Input}
@@ -285,6 +276,7 @@ class SignIn extends Component {
                 });
               }}
             />
+
             <Input
               placeholder="Nombre y apellido"
               leftIcon={<Icon name="person" size={24} color="black" style={styles.Icon} />}
