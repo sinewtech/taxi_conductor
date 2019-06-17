@@ -131,6 +131,7 @@ class SignIn extends Component {
         .createUserWithEmailAndPassword(this.state.mail, this.state.password)
         .then(async userdata => {
           //drivers database
+
           await firebase
             .firestore()
             .collection("drivers")
@@ -187,6 +188,9 @@ class SignIn extends Component {
             .catch(error => {
               console.log("error3", error);
             });
+          await userdata.user.updateProfile({ displayName: this.state.name });
+
+          await userdata.user.sendEmailVerification();
         })
         .catch(error => {
           switch (error.code) {
@@ -208,7 +212,9 @@ class SignIn extends Component {
     const userIcon = <Icon name="directions-car" size={24} color="black" style={styles.Icon} />;
     const phoneIcon = <Icon name="phone" size={24} color="black" style={styles.Icon} />;
     const idIcon = <Icon name="credit-card" size={24} color="black" style={styles.Icon} />;
-    const plateIcon = <Icon type="material-community" name="steering" size={24} color="black" style={styles.Icon} />;
+    const plateIcon = (
+      <Icon type="material-community" name="steering" size={24} color="black" style={styles.Icon} />
+    );
 
     return (
       <ScrollView contentContainerStyle={styles.SignUpView}>
@@ -255,7 +261,7 @@ class SignIn extends Component {
               secureTextEntry
               onChangeText={text => this.setState({ password: text })}
             />
-            
+
             <TextInputMask
               type={"custom"}
               customTextInput={Input}
