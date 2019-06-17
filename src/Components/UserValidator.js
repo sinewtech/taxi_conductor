@@ -21,9 +21,8 @@ class UserValidator extends Component {
                 this.props.navigation.navigate("App");
               }
             });
-        } else {
+        } else if (user.metadata.creationTime + 5 * 60 < new Date().getTime()) {
           console.log("no esta verificado");
-
           Alert.alert("Confirmacion", "Por favor verique su correo.");
           firebase
             .auth()
