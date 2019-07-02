@@ -148,7 +148,7 @@ class Home extends Component {
           .ref()
           .child("locations/" + firebase.auth().currentUser.uid + "/status")
           .on("value", snap => {
-            this.setState({ driverStatus: snap.exportVal() });
+            this.setState({ driverStatus: snap.exportVal(), selectedIndex: snap.exportVal() });
           });
       } else {
         this.updateUser(null);
@@ -192,14 +192,6 @@ class Home extends Component {
     } else {
       Alert.alert("Servicios GPS", "Por favor activa los servicios de GPS para continuar.");
     }
-
-    firebase
-      .database()
-      .ref()
-      .child("locations/" + firebase.auth().currentUser.uid + "/status")
-      .once("value", snap => {
-        this.setState({ selectedIndex: snap.exportVal() });
-      });
   };
 
   getPoly = async (origin, destination) => {
