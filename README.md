@@ -2,7 +2,7 @@
 
 La aplicacion para el conductor del sistema.
 
-## Motivation
+## Motivacion
 
 Para poder distribuir las ordenes.
 
@@ -15,7 +15,7 @@ Estamos usando [Expo's](https://github.com/expo) eslint-config-universe para lin
 ### Eslint
 
 ```js
-This is the .eslintrc.js
+Este es .eslintrc.js
 module.exports = {
   extends: ["universe/native", "prettier"],
   parserOptions: {
@@ -27,7 +27,7 @@ module.exports = {
 ### Prettier
 
 ```json
-this is the .prettierrc
+Este es .prettierrc
 {
   "printWidth": 100,
   "tabWidth": 2,
