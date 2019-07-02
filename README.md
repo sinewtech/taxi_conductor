@@ -2,11 +2,11 @@
 
 La aplicacion para el conductor del sistema.
 
-## motivation
+## Motivation
 
 Para poder distribuir las ordenes.
 
-## Code style
+## Estilo de codigo
 
 Estamos usando [Expo's](https://github.com/expo) eslint-config-universe para linting y prettier para style.
 
@@ -39,7 +39,7 @@ this is the .prettierrc
 
 ## Commits
 
-Inspired by [dannyfritz/commit-message-emoji](https://github.com/dannyfritz/commit-message-emoji)
+Inspirado en [dannyfritz/commit-message-emoji](https://github.com/dannyfritz/commit-message-emoji)
 
 | Commit type              | Emoji                                                     |
 | :----------------------- | :-------------------------------------------------------- |
