@@ -8,7 +8,7 @@ Para poder distribuir las ordenes.
 
 ## Estilo de codigo
 
-Estamos usando [Expo's](https://github.com/expo) eslint-config-universe para linting y prettier para style.
+Estamos usando el estilo de programacion de [Expo](https://github.com/expo) eslint-config-universe para linting y prettier para style.
 
 ![Style](https://img.shields.io/badge/Coding_Style-eslint--config--unverse-blue.svg)
 
