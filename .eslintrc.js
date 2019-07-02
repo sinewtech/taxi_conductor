@@ -1,5 +1,5 @@
 module.exports = {
-  extends: ["universe/web", "prettier"],
+  extends: ["universe/native", "prettier"],
   parserOptions: {
     es6: true,
   },
