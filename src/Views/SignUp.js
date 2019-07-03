@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   Text,
   Alert,
-  ScrollView,
 } from "react-native";
 import firebase from "../../firebase";
 import { Input, Button, Icon, Image } from "react-native-elements";
@@ -15,6 +14,8 @@ import * as ImagePicker from "expo-image-picker";
 import Waiting from "../Components/Waiting";
 import { TextInputMask } from "react-native-masked-text";
 
+const FLOW_USER_STATE = 0;
+const FLOW_CAR_STATE = 1;
 class SignIn extends Component {
   constructor(props) {
     super(props);
@@ -27,10 +28,12 @@ class SignIn extends Component {
       perfil: "",
       perfilcarro: "",
       name: "",
+      lastname: "",
       phone: "",
       id: "",
       descripcion: "",
       Registrando: false,
+      context: 0,
     };
   }
   _pickImage = async id => {
@@ -49,7 +52,226 @@ class SignIn extends Component {
       }
     }
   };
+  getContext = () => {
+    const userIcon = <Icon name="directions-car" size={24} color="black" style={styles.Icon} />;
+    const phoneIcon = <Icon name="phone" size={24} color="black" style={styles.Icon} />;
+    const idIcon = <Icon name="credit-card" size={24} color="black" style={styles.Icon} />;
+    const plateIcon = (
+      <Icon type="material-community" name="steering" size={24} color="black" style={styles.Icon} />
+    );
+    switch (this.state.context) {
+      case FLOW_USER_STATE: {
+        return (
+          <KeyboardAvoidingView behavior="padding">
+            <Icon name="person" color="white" size={Dimensions.get("window").width * 0.5} />
+            <Input
+              placeholder="Correo"
+              leftIcon={<Icon name="mail" size={24} color="black" style={styles.Icon} />}
+              inputContainerStyle={styles.Input}
+              leftIconContainerStyle={{ marginRight: 15 }}
+              autoCapitalize="none"
+              autoComplete="email"
+              keyboardType="email-address"
+              onChangeText={text => this.setState({ mail: text })}
+            />
 
+            <TextInputMask
+              type={"custom"}
+              customTextInput={Input}
+              customTextInputProps={{
+                inputContainerStyle: styles.Input,
+                placeholder: "Código de Unidad (A3)",
+                leftIcon: userIcon,
+                leftIconContainerStyle: { marginRight: 15 },
+                autoCapitalize: "characters",
+              }}
+              options={{
+                mask: "A999",
+              }}
+              value={this.state.username}
+              onChangeText={text => {
+                this.setState({
+                  username: text,
+                });
+              }}
+            />
+
+            <Input
+              placeholder="Contraseña"
+              leftIcon={<Icon name="vpn-key" size={24} color="black" style={styles.Icon} />}
+              inputContainerStyle={styles.Input}
+              leftIconContainerStyle={{ marginRight: 15 }}
+              autoComplete="password"
+              secureTextEntry
+              onChangeText={text => this.setState({ password: text })}
+            />
+
+            <TextInputMask
+              type={"custom"}
+              customTextInput={Input}
+              customTextInputProps={{
+                inputContainerStyle: styles.Input,
+                placeholder: "Número de Teléfono",
+                leftIcon: phoneIcon,
+                keyboardType: "phone-pad",
+                leftIconContainerStyle: { marginRight: 15 },
+              }}
+              options={{
+                mask: "+504 9999-9999",
+              }}
+              value={this.state.phone}
+              onChangeText={text => {
+                this.setState({
+                  phone: text,
+                });
+              }}
+            />
+
+            <Input
+              placeholder="Nombre"
+              leftIcon={<Icon name="person" size={24} color="black" style={styles.Icon} />}
+              inputContainerStyle={styles.Input}
+              leftIconContainerStyle={{ marginRight: 15 }}
+              autoCapitalize="words"
+              onChangeText={text => this.setState({ name: text })}
+            />
+            <Input
+              placeholder="Apellido"
+              leftIcon={<Icon name="person" size={24} color="black" style={styles.Icon} />}
+              inputContainerStyle={styles.Input}
+              leftIconContainerStyle={{ marginRight: 15 }}
+              autoCapitalize="words"
+              onChangeText={text => this.setState({ lastname: text })}
+            />
+
+            <TextInputMask
+              type={"custom"}
+              customTextInput={Input}
+              customTextInputProps={{
+                inputContainerStyle: styles.Input,
+                placeholder: "Identidad",
+                leftIcon: idIcon,
+                keyboardType: "number-pad",
+                leftIconContainerStyle: { marginRight: 15 },
+              }}
+              options={{
+                mask: "9999-9999-99999",
+              }}
+              value={this.state.id}
+              onChangeText={text => {
+                this.setState({
+                  id: text,
+                });
+              }}
+            />
+          </KeyboardAvoidingView>
+        );
+      }
+
+      case FLOW_CAR_STATE: {
+        return (
+          <KeyboardAvoidingView behavior="padding">
+            <Icon
+              name="steering"
+              type="material-community"
+              color="white"
+              size={Dimensions.get("window").width * 0.5}
+            />
+            <TextInputMask
+              type={"custom"}
+              customTextInput={Input}
+              customTextInputProps={{
+                inputContainerStyle: styles.Input,
+                placeholder: "Placa del Vehículo",
+                leftIcon: plateIcon,
+                leftIconContainerStyle: { marginRight: 15 },
+                autoCapitalize: "characters",
+              }}
+              options={{
+                mask: "AAA 9999",
+              }}
+              value={this.state.placa}
+              onChangeText={text => {
+                this.setState({
+                  placa: text,
+                });
+              }}
+            />
+
+            <Input
+              placeholder="Descripción del Vehículo (Honda Civic 2007 Rojo)"
+              multiline
+              leftIcon={
+                <Icon name="chat-bubble-outline" size={24} color="black" style={styles.Icon} />
+              }
+              keyboardType="default"
+              inputContainerStyle={styles.Input}
+              leftIconContainerStyle={{ marginRight: 15 }}
+              autoCapitalize="words"
+              onChangeText={text => this.setState({ descripcion: text })}
+            />
+            <View style={styles.imageSelectRow}>
+              <TouchableOpacity
+                onPress={() => {
+                  this._pickImage(0);
+                }}
+                style={styles.imageTouchable}>
+                <Image
+                  source={{ uri: this.state.perfilcarro }}
+                  style={styles.image}
+                  PlaceholderContent={
+                    <View style={styles.imageSelectView}>
+                      <Icon name="camera" size={50} style={styles.imageSelectIcon} />
+                      <Text style={styles.imageSelectText}>Imagen de perfil del carro</Text>
+                    </View>
+                  }
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  this._pickImage(1);
+                }}
+                style={styles.imageTouchable}>
+                <Image
+                  source={{ uri: this.state.carro }}
+                  style={styles.image}
+                  PlaceholderContent={
+                    <View style={styles.imageSelectView}>
+                      <Icon name="camera" size={50} style={styles.imageSelectIcon} />
+                      <Text style={styles.imageSelectText}>Imagen lateral del carro</Text>
+                    </View>
+                  }
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  this._pickImage(2);
+                }}
+                style={styles.imageTouchable}>
+                <Image
+                  source={{ uri: this.state.perfil }}
+                  style={styles.image}
+                  PlaceholderContent={
+                    <View style={styles.imageSelectView}>
+                      <Icon name="camera" size={50} style={styles.imageSelectIcon} />
+                      <Text style={styles.imageSelectText}>Imagen de perfil</Text>
+                    </View>
+                  }
+                />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.buttonRow}>
+              <Button title="Registrate" onPress={this.handleSignIn} />
+            </View>
+          </KeyboardAvoidingView>
+        );
+      }
+
+      default:
+        break;
+    }
+  };
   urlToBlob = url => {
     return new Promise((resolve, reject) => {
       var xhr = new XMLHttpRequest();
@@ -209,199 +431,33 @@ class SignIn extends Component {
       return <Waiting />;
     }
 
-    const userIcon = <Icon name="directions-car" size={24} color="black" style={styles.Icon} />;
-    const phoneIcon = <Icon name="phone" size={24} color="black" style={styles.Icon} />;
-    const idIcon = <Icon name="credit-card" size={24} color="black" style={styles.Icon} />;
-    const plateIcon = (
-      <Icon type="material-community" name="steering" size={24} color="black" style={styles.Icon} />
-    );
-
     return (
-      <ScrollView contentContainerStyle={styles.SignUpView}>
-        <View style={styles.credentialsView}>
-          <KeyboardAvoidingView behavior="padding">
-            <Input
-              placeholder="Correo"
-              leftIcon={<Icon name="mail" size={24} color="black" style={styles.Icon} />}
-              inputContainerStyle={styles.Input}
-              leftIconContainerStyle={{ marginRight: 15 }}
-              autoCapitalize="none"
-              autoComplete="email"
-              keyboardType="email-address"
-              onChangeText={text => this.setState({ mail: text })}
-            />
-
-            <TextInputMask
-              type={"custom"}
-              customTextInput={Input}
-              customTextInputProps={{
-                inputContainerStyle: styles.Input,
-                placeholder: "Código de Unidad (A3)",
-                leftIcon: userIcon,
-                leftIconContainerStyle: { marginRight: 15 },
-                autoCapitalize: "characters",
-              }}
-              options={{
-                mask: "A999",
-              }}
-              value={this.state.username}
-              onChangeText={text => {
-                this.setState({
-                  username: text,
-                });
-              }}
-            />
-
-            <Input
-              placeholder="Contraseña"
-              leftIcon={<Icon name="vpn-key" size={24} color="black" style={styles.Icon} />}
-              inputContainerStyle={styles.Input}
-              leftIconContainerStyle={{ marginRight: 15 }}
-              autoComplete="password"
-              secureTextEntry
-              onChangeText={text => this.setState({ password: text })}
-            />
-
-            <TextInputMask
-              type={"custom"}
-              customTextInput={Input}
-              customTextInputProps={{
-                inputContainerStyle: styles.Input,
-                placeholder: "Número de Teléfono",
-                leftIcon: phoneIcon,
-                keyboardType: "phone-pad",
-                leftIconContainerStyle: { marginRight: 15 },
-              }}
-              options={{
-                mask: "+504 9999-9999",
-              }}
-              value={this.state.phone}
-              onChangeText={text => {
-                this.setState({
-                  phone: text,
-                });
-              }}
-            />
-
-            <Input
-              placeholder="Nombre y apellido"
-              leftIcon={<Icon name="person" size={24} color="black" style={styles.Icon} />}
-              inputContainerStyle={styles.Input}
-              leftIconContainerStyle={{ marginRight: 15 }}
-              autoCapitalize="words"
-              onChangeText={text => this.setState({ name: text })}
-            />
-
-            <TextInputMask
-              type={"custom"}
-              customTextInput={Input}
-              customTextInputProps={{
-                inputContainerStyle: styles.Input,
-                placeholder: "Identidad",
-                leftIcon: idIcon,
-                keyboardType: "number-pad",
-                leftIconContainerStyle: { marginRight: 15 },
-              }}
-              options={{
-                mask: "9999-9999-99999",
-              }}
-              value={this.state.id}
-              onChangeText={text => {
-                this.setState({
-                  id: text,
-                });
-              }}
-            />
-
-            <TextInputMask
-              type={"custom"}
-              customTextInput={Input}
-              customTextInputProps={{
-                inputContainerStyle: styles.Input,
-                placeholder: "Placa del Vehículo",
-                leftIcon: plateIcon,
-                leftIconContainerStyle: { marginRight: 15 },
-                autoCapitalize: "characters",
-              }}
-              options={{
-                mask: "AAA 9999",
-              }}
-              value={this.state.placa}
-              onChangeText={text => {
-                this.setState({
-                  placa: text,
-                });
-              }}
-            />
-
-            <Input
-              placeholder="Descripción del Vehículo (Honda Civic 2007 Rojo)"
-              multiline
-              leftIcon={
-                <Icon name="chat-bubble-outline" size={24} color="black" style={styles.Icon} />
-              }
-              keyboardType="default"
-              inputContainerStyle={styles.Input}
-              leftIconContainerStyle={{ marginRight: 15 }}
-              autoCapitalize="words"
-              onChangeText={text => this.setState({ descripcion: text })}
-            />
-          </KeyboardAvoidingView>
-          <View style={styles.imageSelectRow}>
-            <TouchableOpacity
-              onPress={() => {
-                this._pickImage(0);
-              }}
-              style={styles.imageTouchable}>
-              <Image
-                source={{ uri: this.state.perfilcarro }}
-                style={styles.image}
-                PlaceholderContent={
-                  <View style={styles.imageSelectView}>
-                    <Icon name="camera" size={50} style={styles.imageSelectIcon} />
-                    <Text style={styles.imageSelectText}>Imagen de perfil del carro</Text>
-                  </View>
-                }
-              />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => {
-                this._pickImage(1);
-              }}
-              style={styles.imageTouchable}>
-              <Image
-                source={{ uri: this.state.carro }}
-                style={styles.image}
-                PlaceholderContent={
-                  <View style={styles.imageSelectView}>
-                    <Icon name="camera" size={50} style={styles.imageSelectIcon} />
-                    <Text style={styles.imageSelectText}>Imagen lateral del carro</Text>
-                  </View>
-                }
-              />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => {
-                this._pickImage(2);
-              }}
-              style={styles.imageTouchable}>
-              <Image
-                source={{ uri: this.state.perfil }}
-                style={styles.image}
-                PlaceholderContent={
-                  <View style={styles.imageSelectView}>
-                    <Icon name="camera" size={50} style={styles.imageSelectIcon} />
-                    <Text style={styles.imageSelectText}>Imagen de perfil</Text>
-                  </View>
-                }
-              />
-            </TouchableOpacity>
-          </View>
+      <View style={styles.SignUpView}>
+        <View style={styles.credentialsView}>{this.getContext()}</View>
+        <View
+          style={{
+            flex: 1,
+            flexDirection: "row",
+            alignItems: "flex-end",
+            justifyContent: "space-evenly",
+            width: Dimensions.get("window").width * 0.8,
+          }}>
+          <TouchableOpacity
+            onPress={() => {
+              this.setState({ context: 0 });
+            }}
+            disabled={this.state.context === 0 ? true : false}>
+            <Icon reverse name="arrow-back" size={24} color="white" reverseColor="#FF9800" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => {
+              this.setState({ context: 1 });
+            }}
+            disabled={this.state.context === 1 ? true : false}>
+            <Icon reverse name="arrow-forward" size={24} color="white" reverseColor="#FF9800" />
+          </TouchableOpacity>
         </View>
-        <View style={styles.buttonRow}>
-          <Button title="Registrate" onPress={this.handleSignIn} />
-        </View>
-      </ScrollView>
+      </View>
     );
   }
 }
