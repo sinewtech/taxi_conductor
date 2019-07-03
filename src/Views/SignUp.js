@@ -75,27 +75,6 @@ class SignIn extends Component {
               onChangeText={text => this.setState({ mail: text })}
             />
 
-            <TextInputMask
-              type={"custom"}
-              customTextInput={Input}
-              customTextInputProps={{
-                inputContainerStyle: styles.Input,
-                placeholder: "Código de Unidad (A3)",
-                leftIcon: userIcon,
-                leftIconContainerStyle: { marginRight: 15 },
-                autoCapitalize: "characters",
-              }}
-              options={{
-                mask: "A999",
-              }}
-              value={this.state.username}
-              onChangeText={text => {
-                this.setState({
-                  username: text,
-                });
-              }}
-            />
-
             <Input
               placeholder="Contraseña"
               leftIcon={<Icon name="vpn-key" size={24} color="black" style={styles.Icon} />}
@@ -176,6 +155,27 @@ class SignIn extends Component {
               type="material-community"
               color="white"
               size={Dimensions.get("window").width * 0.5}
+            />
+
+            <TextInputMask
+              type={"custom"}
+              customTextInput={Input}
+              customTextInputProps={{
+                inputContainerStyle: styles.Input,
+                placeholder: "Código de Unidad (A3)",
+                leftIcon: userIcon,
+                leftIconContainerStyle: { marginRight: 15 },
+                autoCapitalize: "characters",
+              }}
+              options={{
+                mask: "A999",
+              }}
+              value={this.state.username}
+              onChangeText={text => {
+                this.setState({
+                  username: text,
+                });
+              }}
             />
             <TextInputMask
               type={"custom"}
