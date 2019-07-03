@@ -411,7 +411,7 @@ class SignIn extends Component {
             .catch(error => {
               console.log("error3", error);
             });
-          await userdata.user.updateProfile({ displayName: this.state.name });
+          await userdata.user.updateProfile({ displayName: this.state.name + this.state.lastname });
 
           await userdata.user.sendEmailVerification();
         })
