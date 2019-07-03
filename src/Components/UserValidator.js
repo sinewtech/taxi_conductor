@@ -56,8 +56,7 @@ class UserValidator extends Component {
             { cancelable: false }
           );
         } else {
-          Alert.alert("Confirmacion", "Por favor verique su correo.");
-          this.props.navigation.navigate("Auth");
+          this.props.navigation.navigate("App");
         }
       } else {
         this.props.navigation.navigate("Auth");
