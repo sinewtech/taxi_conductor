@@ -359,10 +359,11 @@ class SignIn extends Component {
             .collection("drivers")
             .doc(userdata.user.uid)
             .set({
-              email: userdata.user.email,
+              mail: userdata.user.email,
               username: this.state.username,
               plate: this.state.placa,
-              name: this.state.name,
+              firstName: this.state.name,
+              lastName: this.state.lastname,
               phone: this.state.phone,
               id: this.state.id,
               description: this.state.descripcion,
