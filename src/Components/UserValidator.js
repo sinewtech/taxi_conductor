@@ -22,10 +22,12 @@ class UserValidator extends Component {
                 this.props.navigation.navigate("App");
               }
             });
-        } else if (
+        }
+        if (
           user.emailVerified === false &&
           new Date(user.metadata.creationTime).getTime() + 5 * 60 < new Date().getTime()
         ) {
+          console.log("wenas");
           console.log("no esta verificado");
           Alert.alert(
             "Confirmacion",
@@ -53,9 +55,11 @@ class UserValidator extends Component {
             ],
             { cancelable: false }
           );
+        } else {
+          Alert.alert("Confirmacion", "Por favor verique su correo.");
+          this.props.navigation.navigate("Auth");
         }
       } else {
-        Alert.alert("Confirmacion", "Por favor verique su correo.");
         this.props.navigation.navigate("Auth");
       }
     });
