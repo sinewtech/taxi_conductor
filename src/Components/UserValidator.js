@@ -20,6 +20,18 @@ class UserValidator extends Component {
               console.log("existe", snap.exists);
               if (snap.exists) {
                 this.props.navigation.navigate("App");
+              } else {
+                Alert.alert(
+                  "Usuario no encontrado",
+                  "No hemos encontrado este usuario en el sistema. Por favor intenta de nuevo.",
+                  [
+                    {
+                      text: "Ok",
+                    },
+                  ]
+                );
+                firebase.auth().signOut();
+                this.props.navigation.navigate("Auth");
               }
             });
         }
