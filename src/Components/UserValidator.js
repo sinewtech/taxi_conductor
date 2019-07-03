@@ -7,10 +7,7 @@ class UserValidator extends Component {
   componentDidMount() {
     firebase.auth().onAuthStateChanged(user => {
       if (user) {
-        console.log("hay usuario");
-        console.log(user.emailVerified);
         if (user.emailVerified === true) {
-          console.log("esta verificado");
           firebase
             .firestore()
             .collection("drivers")
@@ -34,40 +31,8 @@ class UserValidator extends Component {
                 this.props.navigation.navigate("Auth");
               }
             });
-        }
-        if (
-          user.emailVerified === false &&
-          new Date(user.metadata.creationTime).getTime() + 5 * 60 < new Date().getTime()
-        ) {
-          console.log("wenas");
-          console.log("no esta verificado");
-          Alert.alert(
-            "Confirmacion",
-            "Por favor verique su correo.",
-            [
-              {
-                text: "OK",
-                onPress: () => {
-                  firebase
-                    .auth()
-                    .currentUser.sendEmailVerification()
-                    .then(value => {
-                      firebase.auth().signOut();
-                      console.log(value);
-                    });
-                  this.props.navigation.navigate("Auth");
-                },
-              },
-              {
-                text: "Cancel",
-                onPress: () => {
-                  this.props.navigation.navigate("Auth");
-                },
-              },
-            ],
-            { cancelable: false }
-          );
         } else {
+          firebase.auth().currentUser.sendEmailVerification();
           this.props.navigation.navigate("App");
         }
       } else {
