@@ -521,7 +521,6 @@ class Home extends Component {
               order: data,
               orderuid: notification.data.order.uid,
               isManual: notification.data.order.manual,
-              driverState: Constants.DRIVER_STATE_ASKING,
             });
             this.updateDriverStatus(Constants.DRIVER_STATUS_CONFIRMING_DRIVE);
 
