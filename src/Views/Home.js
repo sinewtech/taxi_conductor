@@ -11,45 +11,9 @@ import Driver from "../Components/Driver";
 import Briefing from "../Components/Briefing";
 import Asking from "../Components/Asking";
 import firebase from "../../firebase";
-import {
-  TouchableOpacity,
-  TouchableNativeFeedback,
-  TouchableHighlight,
-} from "react-native-gesture-handler";
-
-const INITIAL_REGION = {
-  latitude: 14.0723,
-  longitude: -87.1921,
-  latitudeDelta: 0.1,
-  longitudeDelta: 0.1,
-};
-
-const DEBUG_MODE = false;
-
-const API_KEY = "AIzaSyApNgtxFBp0SXSHljP_xku6peNCzjTFWM4";
+import { TouchableHighlight } from "react-native-gesture-handler";
+import * as Constants from "../Constants";
 const decodePolyline = require("decode-google-map-polyline");
-
-const DRIVER_STATE_NONE = 0;
-const DRIVER_STATE_ASKING = 1;
-const DRIVER_STATE_GOING_TO_CLIENT = 2;
-const DRIVER_STATE_CLIENT_IS_WITH_HIM = 3;
-const DRIVER_STATE_GOING_TO_DESTINATION = 4;
-
-const DRIVER_NOTIFICATION_ADS = 0;
-const DRIVER_NOTIFICATION_CONFIRMING = 2;
-const DRIVER_NOTIFICATION_CONFIRMED = 3;
-
-const DRIVER_STATUS_NOT_WORKING = 0;
-const DRIVER_STATUS_LOOKING_FOR_DRIVE = 1;
-const DRIVER_STATUS_ON_A_DRIVE = 2;
-const DRIVER_STATUS_CONFIRMING_DRIVE = 3;
-
-const STATE_HEIGHT = {
-  0: "25%",
-  1: "50%",
-};
-
-const LOCATION_TASK_NAME = "TAXI_DRIVER_LOCATION";
 
 let db = firebase.firestore();
 async function registerForPushNotificationsAsync() {
@@ -94,15 +58,15 @@ class Home extends Component {
   constructor() {
     super();
     this.state = {
-      driverState: DRIVER_STATE_NONE,
+      driverState: Constants.DRIVER_STATE_NONE,
       selectedIndex: 0,
       user: {},
       order: { origin: {}, destination: {}, manual: true },
       polyline: [],
     };
 
-    if (DEBUG_MODE) {
-      this.state.driverState = DRIVER_STATE_ASKING;
+    if (Constants.DEBUG_MODE) {
+      this.state.driverState = Constants.DRIVER_STATE_ASKING;
       this.state.order = {
         origin: {
           name: "Universidad Tecnológica Centroamericana",
@@ -124,7 +88,7 @@ class Home extends Component {
     userdata === null ? this.setState({ userUID: null }) : this.setState(userdata);
   };
   componentWillUnmount = async () => {
-    Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME).then(value => {
+    Location.stopLocationUpdatesAsync(Constants.LOCATION_TASK_NAME).then(value => {
       console.log(value);
     });
   };
@@ -164,7 +128,7 @@ class Home extends Component {
     let tiene = await Location.getProviderStatusAsync();
 
     if (tiene.gpsAvailable) {
-      await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+      await Location.startLocationUpdatesAsync(Constants.LOCATION_TASK_NAME, {
         accuracy: Location.Accuracy.High,
         timeInterval: 6000,
         distanceInterval: 2,
@@ -223,7 +187,7 @@ class Home extends Component {
 
   clear = () => {
     this.setState({
-      driverState: DRIVER_STATE_NONE,
+      driverState: Constants.DRIVER_STATE_NONE,
       order: { origin: {}, destination: {} },
       polyline: [],
     });
@@ -231,10 +195,10 @@ class Home extends Component {
 
   getState = () => {
     switch (this.state.driverState) {
-      case DRIVER_STATE_NONE: {
+      case Constants.DRIVER_STATE_NONE: {
         return <Briefing />;
       }
-      case DRIVER_STATE_ASKING: {
+      case Constants.DRIVER_STATE_ASKING: {
         return (
           <Asking
             price={this.state.order.price}
@@ -245,7 +209,7 @@ class Home extends Component {
                 {
                   text: "OK",
                   onPress: () => {
-                    this.updateDriverStatus(DRIVER_STATUS_ON_A_DRIVE);
+                    this.updateDriverStatus(Constants.DRIVER_STATUS_ON_A_DRIVE);
                     firebase
                       .database()
                       .ref()
@@ -256,7 +220,7 @@ class Home extends Component {
                     }
 
                     this.setState({
-                      driverState: DRIVER_STATE_GOING_TO_CLIENT,
+                      driverState: Constants.DRIVER_STATE_GOING_TO_CLIENT,
                     });
                   },
                 },
@@ -278,9 +242,9 @@ class Home extends Component {
                       this.setState({
                         order: { origin: {}, destination: {} },
                         polyline: [],
-                        driverState: DRIVER_STATE_NONE,
+                        driverState: Constants.DRIVER_STATE_NONE,
                       });
-                      this.updateDriverStatus(DRIVER_STATUS_LOOKING_FOR_DRIVE);
+                      this.updateDriverStatus(Constants.DRIVER_STATUS_LOOKING_FOR_DRIVE);
                     },
                   },
                   {
@@ -293,8 +257,8 @@ class Home extends Component {
           />
         );
       }
-      case DRIVER_STATE_GOING_TO_CLIENT: {
-        this.updateDriverStatus(DRIVER_STATUS_ON_A_DRIVE);
+      case Constants.DRIVER_STATE_GOING_TO_CLIENT: {
+        this.updateDriverStatus(Constants.DRIVER_STATUS_ON_A_DRIVE);
         return (
           <View
             style={{
@@ -341,7 +305,7 @@ class Home extends Component {
                             .catch(e => console.error(e));
 
                           this.setState({
-                            driverState: DRIVER_STATE_CLIENT_IS_WITH_HIM,
+                            driverState: Constants.DRIVER_STATE_CLIENT_IS_WITH_HIM,
                           });
                         },
                       },
@@ -356,7 +320,7 @@ class Home extends Component {
         );
       }
 
-      case DRIVER_STATE_CLIENT_IS_WITH_HIM: {
+      case Constants.DRIVER_STATE_CLIENT_IS_WITH_HIM: {
         return (
           <View
             style={{
@@ -409,7 +373,7 @@ class Home extends Component {
                   console.log("destination", this.state.destination);
 
                   this.setState({
-                    driverState: DRIVER_STATE_GOING_TO_DESTINATION,
+                    driverState: Constants.DRIVER_STATE_GOING_TO_DESTINATION,
                   });
                   if (!this.state.isManual) {
                     this.getPoly(this.state.driverposition, this.state.order.destination);
@@ -421,7 +385,7 @@ class Home extends Component {
         );
       }
 
-      case DRIVER_STATE_GOING_TO_DESTINATION: {
+      case Constants.DRIVER_STATE_GOING_TO_DESTINATION: {
         return (
           <View
             style={{
@@ -460,7 +424,7 @@ class Home extends Component {
                       {
                         text: "Sí",
                         onPress: () => {
-                          this.updateDriverStatus(DRIVER_STATUS_LOOKING_FOR_DRIVE);
+                          this.updateDriverStatus(Constants.DRIVER_STATUS_LOOKING_FOR_DRIVE);
 
                           firebase
                             .database()
@@ -545,7 +509,7 @@ class Home extends Component {
     console.log("Notificación recibida", notification);
 
     if (notification.data) {
-      if (notification.data.id === DRIVER_NOTIFICATION_CONFIRMING) {
+      if (notification.data.id === Constants.DRIVER_NOTIFICATION_CONFIRMING) {
         firebase
           .database()
           .ref()
@@ -557,7 +521,7 @@ class Home extends Component {
               orderuid: notification.data.order.uid,
               isManual: notification.data.order.manual,
             });
-            this.updateDriverStatus(DRIVER_STATUS_CONFIRMING_DRIVE);
+            this.updateDriverStatus(Constants.DRIVER_STATUS_CONFIRMING_DRIVE);
 
             console.log("Estado", this.state);
 
@@ -571,7 +535,7 @@ class Home extends Component {
             }
           });
       } else if (
-        notification.data.id === DRIVER_NOTIFICATION_CONFIRMING &&
+        notification.data.id === Constants.DRIVER_NOTIFICATION_CONFIRMING &&
         notification.order.manual
       ) {
         firebase
@@ -585,9 +549,9 @@ class Home extends Component {
               orderuid: notification.data.order.uid,
               isManual: notification.data.order.manual,
             });
-            this.updateDriverStatus(DRIVER_STATUS_CONFIRMING_DRIVE);
+            this.updateDriverStatus(Constants.DRIVER_STATUS_CONFIRMING_DRIVE);
           });
-      } else if (notification.data.id === DRIVER_NOTIFICATION_CONFIRMED) {
+      } else if (notification.data.id === Constants.DRIVER_NOTIFICATION_CONFIRMED) {
         if (this.state.order.manual)
           firebase
             .database()
@@ -601,11 +565,11 @@ class Home extends Component {
                 order: data,
                 orderuid: notification.data.order.uid,
                 isManual: notification.data.order.manual,
-                driverState: DRIVER_STATE_ASKING,
+                driverState: Constants.DRIVER_STATE_ASKING,
               });
-              this.updateDriverStatus(DRIVER_STATUS_CONFIRMING_DRIVE);
+              this.updateDriverStatus(Constants.DRIVER_STATUS_CONFIRMING_DRIVE);
             });
-        else this.setState({ driverState: DRIVER_STATE_ASKING });
+        else this.setState({ driverState: Constants.DRIVER_STATE_ASKING });
       }
     }
   };
@@ -689,7 +653,7 @@ class Home extends Component {
           showsUserLocation
           showsMyLocationButton
           loadingBackgroundColor="#FF9800"
-          initialRegion={INITIAL_REGION}
+          initialRegion={Constants.INITIAL_REGION}
           ref={ref => (this.map = ref)}
           mapPadding={{
             /*bottom:
@@ -709,9 +673,9 @@ class Home extends Component {
           style={styles.stateContainer}
           //height={STATE_HEIGHT[this.state.driverState]}
           maxHeight={
-            STATE_HEIGHT[this.state.driverState]
+            Constants.STATE_HEIGHT[this.state.driverState]
               ? Dimensions.get("window").height *
-                (Number.parseFloat(STATE_HEIGHT[this.state.driverState]) / 100)
+                (Number.parseFloat(Constants.STATE_HEIGHT[this.state.driverState]) / 100)
               : null
           }
           elevation={3}>
@@ -736,7 +700,7 @@ class Home extends Component {
         <Driver
           elevation={3}
           avatar={this.state.user.profile}
-          name={this.state.user.name}
+          name={this.state.user.firstName + " " + this.state.user.lastName}
           username={this.state.user.username}
           signOut={firebase.auth().signOut}
           status={this.state.driverStatus}
@@ -783,7 +747,7 @@ const styles = StyleSheet.create({
 });
 
 export default Home;
-TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data: { locations }, error }) => {
+TaskManager.defineTask(Constants.LOCATION_TASK_NAME, async ({ data: { locations }, error }) => {
   if (error) {
     return;
   } else {
