@@ -214,7 +214,7 @@ class Home extends Component {
                       .database()
                       .ref()
                       .child("/quotes/" + this.state.orderuid + "/status")
-                      .set(3);
+                      .set(constants.QUOTE_STATUS_DRIVER_GOING_TO_CLIENT);
                     if (!this.state.isManual) {
                       this.getPoly(this.state.driverposition, this.state.order.origin);
                     }
@@ -238,7 +238,7 @@ class Home extends Component {
                         .database()
                         .ref()
                         .child("/quotes/" + this.state.orderuid + "/status")
-                        .set(4);
+                        .set(constants.QUOTE_STATUS_DRIVER_DENNIED);
                       this.setState({
                         order: { origin: {}, destination: {} },
                         polyline: [],
@@ -300,7 +300,7 @@ class Home extends Component {
                             .database()
                             .ref()
                             .child("/quotes/" + this.state.orderuid + "/status")
-                            .set(5)
+                            .set(constants.QUOTE_STATUS_WAITING_CLIENT)
                             .then(() => console.log("Status enviado"))
                             .catch(e => console.error(e));
 
@@ -362,7 +362,7 @@ class Home extends Component {
                             .database()
                             .ref()
                             .child("/quotes/" + this.state.orderuid + "/status")
-                            .set(6)
+                            .set(constants.QUOTE_STATUS_CLIENT_ABORDED)
                             .then(() => console.log("Status enviado"))
                             .catch(e => console.error(e));
                         },
@@ -430,7 +430,7 @@ class Home extends Component {
                             .database()
                             .ref()
                             .child("/quotes/" + this.state.orderuid + "/status")
-                            .set(7)
+                            .set(Constants.QUOTE_STATUS_FINISHED)
                             .then(() => console.log("Status enviado"))
                             .catch(e => console.error(e));
 
