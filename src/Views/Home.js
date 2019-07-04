@@ -161,7 +161,7 @@ class Home extends Component {
   getPoly = async (origin, destination) => {
     await fetch(
       "https://maps.googleapis.com/maps/api/directions/json?key=" +
-        API_KEY +
+        Constants.API_KEY +
         "&origin=" +
         origin.lat +
         "," +
@@ -214,7 +214,7 @@ class Home extends Component {
                       .database()
                       .ref()
                       .child("/quotes/" + this.state.orderuid + "/status")
-                      .set(constants.QUOTE_STATUS_DRIVER_GOING_TO_CLIENT);
+                      .set(Constants.QUOTE_STATUS_DRIVER_GOING_TO_CLIENT);
                     if (!this.state.isManual) {
                       this.getPoly(this.state.driverposition, this.state.order.origin);
                     }
@@ -238,7 +238,7 @@ class Home extends Component {
                         .database()
                         .ref()
                         .child("/quotes/" + this.state.orderuid + "/status")
-                        .set(constants.QUOTE_STATUS_DRIVER_DENNIED);
+                        .set(Constants.QUOTE_STATUS_DRIVER_DENNIED);
                       this.setState({
                         order: { origin: {}, destination: {} },
                         polyline: [],
@@ -300,7 +300,7 @@ class Home extends Component {
                             .database()
                             .ref()
                             .child("/quotes/" + this.state.orderuid + "/status")
-                            .set(constants.QUOTE_STATUS_WAITING_CLIENT)
+                            .set(Constants.QUOTE_STATUS_WAITING_CLIENT)
                             .then(() => console.log("Status enviado"))
                             .catch(e => console.error(e));
 
@@ -362,7 +362,7 @@ class Home extends Component {
                             .database()
                             .ref()
                             .child("/quotes/" + this.state.orderuid + "/status")
-                            .set(constants.QUOTE_STATUS_CLIENT_ABORDED)
+                            .set(Constants.QUOTE_STATUS_CLIENT_ABORDED)
                             .then(() => console.log("Status enviado"))
                             .catch(e => console.error(e));
                         },
@@ -509,21 +509,21 @@ class Home extends Component {
     console.log("Notificación recibida", notification);
 
     if (notification.data) {
+      console.log("notification id", notification.data.id);
       if (notification.data.id === Constants.DRIVER_NOTIFICATION_CONFIRMING) {
         firebase
           .database()
           .ref()
           .child("quotes/" + notification.data.order.uid + "/")
-          .once("value", snap => {
+          .once("value", async snap => {
             let data = snap.exportVal();
-            this.setState({
+            await this.setState({
               order: data,
               orderuid: notification.data.order.uid,
               isManual: notification.data.order.manual,
+              driverState: Constants.DRIVER_STATE_ASKING,
             });
             this.updateDriverStatus(Constants.DRIVER_STATUS_CONFIRMING_DRIVE);
-
-            console.log("Estado", this.state);
 
             if (
               !this.state.isManual &&
@@ -542,9 +542,9 @@ class Home extends Component {
           .database()
           .ref()
           .child("quotes/" + notification.data.order.uid + "/")
-          .once("value", snap => {
+          .once("value", async snap => {
             let data = snap.exportVal();
-            this.setState({
+            await this.setState({
               order: data,
               orderuid: notification.data.order.uid,
               isManual: notification.data.order.manual,
@@ -557,11 +557,11 @@ class Home extends Component {
             .database()
             .ref()
             .child("quotes/" + notification.data.order.uid + "/")
-            .once("value", snap => {
+            .once("value", async snap => {
               let data = snap.exportVal();
               console.log("Orden manual recibida:", data);
 
-              this.setState({
+              await this.setState({
                 order: data,
                 orderuid: notification.data.order.uid,
                 isManual: notification.data.order.manual,
