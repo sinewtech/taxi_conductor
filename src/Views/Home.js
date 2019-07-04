@@ -680,7 +680,7 @@ class Home extends Component {
           elevation={3}>
           {this.getState()}
         </View>
-        <View style={styles.centerNavigationView}>
+        {/*<View style={styles.centerNavigationView}>
           <TouchableHighlight
             flex={1}
             onPress={() => {
@@ -695,7 +695,7 @@ class Home extends Component {
             }}>
             <Text>Olo</Text>
           </TouchableHighlight>
-        </View>
+          </View>*/}
         <Driver
           elevation={3}
           avatar={this.state.user.profile}
