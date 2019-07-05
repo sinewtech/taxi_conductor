@@ -68,10 +68,33 @@ class Home extends Component {
     super();
     this.state = {
       driverState: Constants.DRIVER_STATE_NONE,
+      //driverState: Constants.DRIVER_STATE_GOING_TO_CLIENT,
       selectedIndex: 0,
       user: {},
       order: { origin: {}, destination: {}, manual: true },
+      /*order: {
+        destination: {
+          address: "UNAH, Tegucigalpa, Honduras",
+          lat: 14.0846099,
+          lng: -87.16208569999999,
+          name: "Universidad Nacional Autónoma de Honduras",
+          placeId: "ChIJAAAAAAAAAAARSMV-oKtMiMk",
+        },
+        dispatchdatetime: "Thu Jul 04 2019 22:26:09 GMT-0600 (Central Standard Time)",
+        driver: "ttYjTWJG29Xf7NhYs1IhcnJlvm32",
+        origin: {
+          address: "Santa Lucia, Honduras",
+          lat: 14.1156621,
+          lng: -87.1030485,
+          name: "Cerca de Santa Lucia",
+        },
+        price: 123,
+        status: 7,
+        userUid: "icZlnhSMmsTgQV1r5XAzgZ2OKmi1",
+        usingGps: true,
+      },*/
       polyline: [],
+      navigating: false,
     };
 
     if (Constants.DEBUG_MODE) {
@@ -96,6 +119,7 @@ class Home extends Component {
   updateUser = userdata => {
     userdata === null ? this.setState({ userUID: null }) : this.setState(userdata);
   };
+
   componentWillUnmount = async () => {
     Location.stopLocationUpdatesAsync(Constants.LOCATION_TASK_NAME).then(value => {
       console.log(value);
@@ -135,11 +159,11 @@ class Home extends Component {
       Alert.alert("Servicios GPS", "Por favor activa los servicios de GPS para continuar.");
     }
 
-    let tiene = await Location.getProviderStatusAsync();
+    let loc = await Location.getProviderStatusAsync();
 
-    if (tiene.gpsAvailable) {
+    if (loc.gpsAvailable) {
       await Location.startLocationUpdatesAsync(Constants.LOCATION_TASK_NAME, {
-        accuracy: Location.Accuracy.High,
+        accuracy: Location.Accuracy.Balanced,
         timeInterval: 6000,
         distanceInterval: 2,
         foregroundService: {
@@ -151,16 +175,28 @@ class Home extends Component {
 
       await Location.watchPositionAsync(
         {
-          accuracy: Location.Accuracy.Balanced,
+          accuracy: Location.Accuracy.BestForNavigation,
         },
 
-        location => {
-          this.setState({
-            driverposition: {
+        async location => {
+          await this.setState({
+            driverPosition: {
               lat: location.coords.latitude,
               lng: location.coords.longitude,
             },
           });
+
+          if (this.state.navigating) {
+            //console.log("Animando camara", this.map);
+
+            this.map.animateCamera({
+              latitude: location.coords.latitude,
+              longitude: location.coords.longitude,
+              heading: location.coords.heading,
+              pitch: 70,
+              zoom: 50
+            });  
+          }
         }
       );
     } else {
@@ -226,11 +262,12 @@ class Home extends Component {
                       .child("/quotes/" + this.state.orderuid + "/status")
                       .set(Constants.QUOTE_STATUS_DRIVER_GOING_TO_CLIENT);
                     if (!this.state.isManual) {
-                      this.getPoly(this.state.driverposition, this.state.order.origin);
+                      this.getPoly(this.state.driverPosition, this.state.order.origin);
                     }
 
                     this.setState({
                       driverState: Constants.DRIVER_STATE_GOING_TO_CLIENT,
+                      navigating: true,
                     });
                   },
                 },
@@ -386,7 +423,7 @@ class Home extends Component {
                     driverState: Constants.DRIVER_STATE_GOING_TO_DESTINATION,
                   });
                   if (!this.state.isManual) {
-                    this.getPoly(this.state.driverposition, this.state.order.destination);
+                    this.getPoly(this.state.driverPosition, this.state.order.destination);
                   }
                 }}
               />
@@ -434,6 +471,14 @@ class Home extends Component {
                       {
                         text: "Sí",
                         onPress: () => {
+                          this.setState({navigating: false, order: null});
+                          this.map.animateCamera({
+                            latitude: Constants.INITIAL_REGION.latitude,
+                            longitude: Constants.INITIAL_REGION.longitude,
+                            heading: 0,
+                            pitch: 0,
+                            zoom: 10
+                          })
                           this.updateDriverStatus(Constants.DRIVER_STATUS_LOOKING_FOR_DRIVE);
 
                           firebase
@@ -840,7 +885,7 @@ TaskManager.defineTask(Constants.LOCATION_TASK_NAME, async ({ data: { locations 
     })
       .then(res => res.text())
       .then(Response => {
-        console.log("success:", Response);
+        console.log("Location task response:", Response);
       })
       .catch(error => console.log(error));
   }

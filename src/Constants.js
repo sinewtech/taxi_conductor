@@ -14,6 +14,7 @@ export const STATE_HEIGHT = {
 export const LOCATION_TASK_NAME = "TAXI_DRIVER_LOCATION";
 
 export const API_KEY = "AIzaSyApNgtxFBp0SXSHljP_xku6peNCzjTFWM4";
+
 //estados para el card
 export const DRIVER_STATE_NONE = 0;
 export const DRIVER_STATE_ASKING = 1;
