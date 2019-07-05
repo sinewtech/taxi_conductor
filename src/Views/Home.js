@@ -599,6 +599,8 @@ class Home extends Component {
               this.updateDriverStatus(Constants.DRIVER_STATUS_CONFIRMING_DRIVE);
             });
         else this.setState({ driverState: Constants.DRIVER_STATE_ASKING });
+      } else if (notification.data.id === Constants.QUOTE_STATUS_CLIENT_CANCELED) {
+        this.updateDriverStatus(Constants.DRIVER_STATUS_LOOKING_FOR_DRIVE);
       }
     }
   };
