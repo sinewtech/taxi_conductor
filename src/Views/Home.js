@@ -96,6 +96,19 @@ class Home extends Component {
   updateUser = userdata => {
     userdata === null ? this.setState({ userUID: null }) : this.setState(userdata);
   };
+
+  //Cambia el valor de devMode en el state this.state.user.dev te dice si el usuario tiene permiso de dev, this.state.dev te dice si esta activo
+  devToggle = () => {
+    if (this.state.userUID !== null && this.state.user.dev) {
+      userdata = this.state;
+      userdata.dev = !userdata.dev;
+      this.setState({ userdata });
+      this.state.dev === true
+        ? console.log("DEV MODE: ON")
+        : (ToastAndroid.show("User Mode", ToastAndroid.LONG), console.log("DEV MODE: OFF"));
+    }
+  };
+
   componentWillUnmount = async () => {
     Location.stopLocationUpdatesAsync(Constants.LOCATION_TASK_NAME).then(value => {
       console.log(value);
@@ -113,7 +126,13 @@ class Home extends Component {
           .then(value => {
             let data = value.data();
             console.log(data);
-            this.updateUser({ user: data, userUID: user.uid });
+            console.log("\nDEV: " + data.dev);
+            //mira si tiene el campo de "dev", y si lo tiene hace el dev mode true
+            if (data.dev) {
+              this.updateUser({ user: data, userUID: user.uid, dev: true });
+            } else {
+              this.updateUser({ user: data, userUID: user.uid, dev: false });
+            }
             this.registerPush();
           });
 
@@ -653,7 +672,7 @@ class Home extends Component {
       }
     }
 
-    if (this.state.user.dev) {
+    if (this.state.dev) {
       return (
         <View style={{ flex: 1 }}>
           {/* <KeepAwake /> */}
@@ -715,6 +734,7 @@ class Home extends Component {
             signOut={firebase.auth().signOut}
             status={this.state.driverStatus}
             updateDriverStatus={this.updateDriverStatus}
+            devToggle={this.devToggle}
           />
           {ToastAndroid.show("Dev mode", ToastAndroid.LONG)}
         </View>
@@ -781,6 +801,7 @@ class Home extends Component {
             signOut={firebase.auth().signOut}
             status={this.state.driverStatus}
             updateDriverStatus={this.updateDriverStatus}
+            devToggle={this.devToggle}
           />
         </View>
       );
