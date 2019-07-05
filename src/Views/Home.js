@@ -105,7 +105,8 @@ class Home extends Component {
       this.setState({ userdata });
       this.state.dev === true
         ? console.log("DEV MODE: ON")
-        : (ToastAndroid.show("User Mode", ToastAndroid.LONG), console.log("DEV MODE: OFF"));
+        : (Platform.OS === "android" ? ToastAndroid.show("User Mode", ToastAndroid.LONG) : null,
+          console.log("DEV MODE: OFF"));
     }
   };
 
@@ -736,7 +737,7 @@ class Home extends Component {
             updateDriverStatus={this.updateDriverStatus}
             devToggle={this.devToggle}
           />
-          {ToastAndroid.show("Dev mode", ToastAndroid.LONG)}
+          {Platform.OS === "android" ? ToastAndroid.show("Dev mode", ToastAndroid.LONG) : null}
         </View>
       );
     } else {
