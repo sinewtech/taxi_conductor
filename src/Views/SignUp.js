@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Text,
   Alert,
+  ScrollView,
 } from "react-native";
 import firebase from "../../firebase";
 import { Input, Button, Icon, Image } from "react-native-elements";
@@ -63,7 +64,6 @@ class SignIn extends Component {
       case FLOW_USER_STATE: {
         return (
           <KeyboardAvoidingView behavior="padding">
-            <Icon name="person" color="white" size={Dimensions.get("window").width * 0.5} />
             <Input
               placeholder="Correo"
               leftIcon={<Icon name="mail" size={24} color="black" style={styles.Icon} />}
@@ -73,6 +73,7 @@ class SignIn extends Component {
               autoComplete="email"
               keyboardType="email-address"
               onChangeText={text => this.setState({ mail: text })}
+              value={this.state.mail}
             />
 
             <Input
@@ -83,6 +84,7 @@ class SignIn extends Component {
               autoComplete="password"
               secureTextEntry
               onChangeText={text => this.setState({ password: text })}
+              value={this.state.password}
             />
 
             <TextInputMask
@@ -113,6 +115,7 @@ class SignIn extends Component {
               leftIconContainerStyle={{ marginRight: 15 }}
               autoCapitalize="words"
               onChangeText={text => this.setState({ name: text })}
+              value={this.state.name}
             />
             <Input
               placeholder="Apellido"
@@ -121,6 +124,7 @@ class SignIn extends Component {
               leftIconContainerStyle={{ marginRight: 15 }}
               autoCapitalize="words"
               onChangeText={text => this.setState({ lastname: text })}
+              value={this.state.lastname}
             />
 
             <TextInputMask
@@ -149,14 +153,7 @@ class SignIn extends Component {
 
       case FLOW_CAR_STATE: {
         return (
-          <KeyboardAvoidingView behavior="padding">
-            <Icon
-              name="steering"
-              type="material-community"
-              color="white"
-              size={Dimensions.get("window").width * 0.5}
-            />
-
+          <KeyboardAvoidingView style={styles.credentialsView} behavior="padding">
             <TextInputMask
               type={"custom"}
               customTextInput={Input}
@@ -209,6 +206,7 @@ class SignIn extends Component {
               leftIconContainerStyle={{ marginRight: 15 }}
               autoCapitalize="words"
               onChangeText={text => this.setState({ descripcion: text })}
+              value={this.state.descripcion}
             />
             <View style={styles.imageSelectRow}>
               <TouchableOpacity
@@ -433,14 +431,24 @@ class SignIn extends Component {
     }
 
     return (
-      <View style={styles.SignUpView}>
+      <ScrollView contentContainerStyle={styles.SignUpView}>
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+          <Text
+            style={{
+              color: "white",
+              fontWeight: "bold",
+              fontSize: 16,
+            }}>
+            {this.state.context === 0 ? "Datos Personales" : "Datos de tu carro"}
+          </Text>
+        </View>
         <View style={styles.credentialsView}>{this.getContext()}</View>
         <View
           style={{
             flex: 1,
             flexDirection: "row",
             alignItems: "flex-end",
-            justifyContent: "space-evenly",
+            justifyContent: "space-between",
             width: Dimensions.get("window").width * 0.8,
           }}>
           <TouchableOpacity
@@ -458,7 +466,7 @@ class SignIn extends Component {
             <Icon reverse name="arrow-forward" size={24} color="white" reverseColor="#FF9800" />
           </TouchableOpacity>
         </View>
-      </View>
+      </ScrollView>
     );
   }
 }

@@ -1,11 +1,7 @@
 import React, { Component } from "react";
 import { LogIn } from "./src/Views/LogIn";
 import UserValidator from "./src/Components/UserValidator";
-import {
-  createStackNavigator,
-  createSwitchNavigator,
-  createAppContainer
-} from "react-navigation";
+import { createStackNavigator, createSwitchNavigator, createAppContainer } from "react-navigation";
 import Home from "./src/Views/Home";
 import SignUp from "./src/Views/SignUp";
 import firebase from "firebase";
@@ -45,25 +41,25 @@ const AppStack = createStackNavigator({
   Home: {
     screen: Home,
     navigationOptions: {
-      header: null
-    }
-  }
+      header: null,
+    },
+  },
 });
 
 const AuthStack = createStackNavigator({
   LogIn: {
     screen: LogIn,
     navigationOptions: {
-      header: null
-    }
+      header: null,
+    },
   },
-  SignIn: {
+  SignUp: {
     screen: SignUp,
     navigationOptions: {
-      header: null
-    }
+      header: null,
+    },
   },
-  initialRouteName: "SignUp"
+  initialRouteName: "SignUp",
 });
 
 const MyApp = createAppContainer(
@@ -71,10 +67,10 @@ const MyApp = createAppContainer(
     {
       AuthLoading: UserValidator,
       App: AppStack,
-      Auth: AuthStack
+      Auth: AuthStack,
     },
     {
-      initialRouteName: "AuthLoading"
+      initialRouteName: "AuthLoading",
     }
   )
 );

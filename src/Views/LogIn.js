@@ -87,14 +87,15 @@ export class LogIn extends React.Component {
       <KeyboardAvoidingView behavior={"padding"} style={styles.SignUpView}>
         <View style={styles.credentialsView}>
           <Input
-            placeholder="Usuario"
-            leftIcon={<Icon name="person" size={24} color="black" style={styles.Icon} />}
+            placeholder="Correo"
+            leftIcon={<Icon name="mail" size={24} color="black" style={styles.Icon} />}
             inputContainerStyle={styles.Input}
             leftIconContainerStyle={{ marginRight: 15 }}
             autoCapitalize="none"
             autoComplete="email"
             keyboardType="email-address"
             onChangeText={text => this.setState({ mail: text })}
+            value={this.state.mail}
           />
           <Input
             placeholder="Contraseña"
@@ -104,6 +105,7 @@ export class LogIn extends React.Component {
             autoComplete="password"
             secureTextEntry={true}
             onChangeText={text => this.setState({ password: text })}
+            value={this.state.password}
           />
         </View>
         <View style={styles.buttonRow}>
@@ -111,7 +113,7 @@ export class LogIn extends React.Component {
         </View>
         <TouchableOpacity
           onPress={() => {
-            this.props.navigation.navigate("SignIn");
+            this.props.navigation.navigate("SignUp");
           }}
           style={{ marginTop: 5 }}>
           <Text style={{ color: "white", textDecorationLine: "underline" }}>Registrarse</Text>
