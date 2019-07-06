@@ -11,7 +11,7 @@ import {
   ToastAndroid,
 } from "react-native";
 import { Notifications } from "expo";
-// import KeepAwake from "expo-keep-awake";
+import KeepAwake from "expo-keep-awake";
 import * as Location from "expo-location";
 import MapView from "react-native-maps";
 import * as TaskManager from "expo-task-manager";
@@ -116,6 +116,17 @@ class Home extends Component {
     }
   }
 
+  goToUserLocation = () => {
+    if (this.map && this.state.driverPosition) {
+      this.map.animateToRegion({
+        latitude: this.state.driverPosition.lat,
+        longitude: this.state.driverPosition.lng,
+        latitudeDelta: 0.02,
+        longitudeDelta: 0.02,
+      });
+    }
+  };
+
   updateUser = userdata => {
     userdata === null ? this.setState({ userUID: null }) : this.setState(userdata);
   };
@@ -179,7 +190,7 @@ class Home extends Component {
         },
 
         async location => {
-          await this.setState({
+          this.setState({
             driverPosition: {
               lat: location.coords.latitude,
               lng: location.coords.longitude,
@@ -187,15 +198,14 @@ class Home extends Component {
           });
 
           if (this.state.navigating) {
-            //console.log("Animando camara", this.map);
-
+            this.goToUserLocation();
             this.map.animateCamera({
-              latitude: location.coords.latitude,
-              longitude: location.coords.longitude,
+              //latitude: location.coords.latitude,
+              //longitude: location.coords.longitude,
               heading: location.coords.heading,
               pitch: 70,
               zoom: 50
-            });  
+            });
           }
         }
       );
@@ -471,14 +481,14 @@ class Home extends Component {
                       {
                         text: "Sí",
                         onPress: () => {
-                          this.setState({navigating: false, order: null});
+                          this.setState({ navigating: false, order: null });
                           this.map.animateCamera({
                             latitude: Constants.INITIAL_REGION.latitude,
                             longitude: Constants.INITIAL_REGION.longitude,
                             heading: 0,
                             pitch: 0,
-                            zoom: 10
-                          })
+                            zoom: 10,
+                          });
                           this.updateDriverStatus(Constants.DRIVER_STATUS_LOOKING_FOR_DRIVE);
 
                           firebase
@@ -698,45 +708,44 @@ class Home extends Component {
       }
     }
 
-    if (this.state.user.dev) {
-      return (
-        <View style={{ flex: 1 }}>
-          {/* <KeepAwake /> */}
-          <MapView
-            style={{ flex: 1 }}
-            showsTraffic
-            showsUserLocation
-            showsMyLocationButton
-            loadingBackgroundColor="#FF9800"
-            initialRegion={Constants.INITIAL_REGION}
-            ref={ref => (this.map = ref)}
-            mapPadding={{
-              /*bottom:
+    return (
+      <View style={{ flex: 1 }}>
+        <KeepAwake />
+        <MapView
+          style={{ flex: 1 }}
+          onMapReady={() => this.goToUserLocation()}
+          showsTraffic
+          showsUserLocation
+          loadingBackgroundColor="#FF9800"
+          initialRegion={Constants.INITIAL_REGION}
+          ref={ref => (this.map = ref)}
+          mapPadding={{
+            /*bottom:
                 Dimensions.get("window").height *
                 (Number.parseFloat(STATE_HEIGHT[this.state.driverState]) / 100),*/
-              top: Dimensions.get("window").height * 0.1,
-              left: 0,
-              right: 0,
-            }}>
-            {this.state.order.origin.lat && this.state.order.origin.lng ? originMarker : null}
-            {this.state.order.destination.lat && this.state.order.destination.lng
-              ? destinationMarker
-              : null}
-            {this.state.polyline.length > 0 ? polyline : null}
-          </MapView>
-          <View
-            style={styles.stateContainer}
-            //height={STATE_HEIGHT[this.state.driverState]}
-            maxHeight={
-              Constants.STATE_HEIGHT[this.state.driverState]
-                ? Dimensions.get("window").height *
-                  (Number.parseFloat(Constants.STATE_HEIGHT[this.state.driverState]) / 100)
-                : null
-            }
-            elevation={3}>
-            {this.getState()}
-          </View>
-          {/*<View style={styles.centerNavigationView}>
+            top: Dimensions.get("window").height * 0.1,
+            left: 0,
+            right: 0,
+          }}>
+          {this.state.order.origin.lat && this.state.order.origin.lng ? originMarker : null}
+          {this.state.order.destination.lat && this.state.order.destination.lng
+            ? destinationMarker
+            : null}
+          {this.state.polyline.length > 0 ? polyline : null}
+        </MapView>
+
+        <View
+          style={styles.stateContainer}
+          maxHeight={
+            Constants.STATE_HEIGHT[this.state.driverState]
+              ? Dimensions.get("window").height *
+                (Number.parseFloat(Constants.STATE_HEIGHT[this.state.driverState]) / 100)
+              : null
+          }
+          elevation={3}>
+          {this.getState()}
+        </View>
+        {/*<View style={styles.centerNavigationView}>
             <TouchableHighlight
               flex={1}
               onPress={() => {
@@ -752,87 +761,41 @@ class Home extends Component {
               <Text>Olo</Text>
             </TouchableHighlight>
             </View>*/}
-          <Driver
-            elevation={3}
-            avatar={this.state.user.profile}
-            name={this.state.user.firstName + " " + this.state.user.lastName}
-            username={this.state.user.username}
-            signOut={firebase.auth().signOut}
-            status={this.state.driverStatus}
-            updateDriverStatus={this.updateDriverStatus}
-          />
-          {ToastAndroid.show("Dev mode", ToastAndroid.LONG)}
-        </View>
-      );
-    } else {
-      return (
-        <View style={{ flex: 1 }}>
-          {/* <KeepAwake /> */}
-          <MapView
-            style={{ flex: 1 }}
-            showsTraffic
-            showsUserLocation
-            showsMyLocationButton
-            loadingBackgroundColor="#FF9800"
-            initialRegion={Constants.INITIAL_REGION}
-            ref={ref => (this.map = ref)}
-            mapPadding={{
-              /*bottom:
-                Dimensions.get("window").height *
-                (Number.parseFloat(STATE_HEIGHT[this.state.driverState]) / 100),*/
-              top: Dimensions.get("window").height * 0.1,
-              left: 0,
-              right: 0,
-            }}>
-            {this.state.order.origin.lat && this.state.order.origin.lng ? originMarker : null}
-            {this.state.order.destination.lat && this.state.order.destination.lng
-              ? destinationMarker
-              : null}
-            {this.state.polyline.length > 0 ? polyline : null}
-          </MapView>
-          <View
-            style={styles.stateContainer}
-            //height={STATE_HEIGHT[this.state.driverState]}
-            maxHeight={
-              Constants.STATE_HEIGHT[this.state.driverState]
-                ? Dimensions.get("window").height *
-                  (Number.parseFloat(Constants.STATE_HEIGHT[this.state.driverState]) / 100)
-                : null
-            }
-            elevation={3}>
-            {this.getState()}
-          </View>
-          {/*<View style={styles.centerNavigationView}>
-            <TouchableHighlight
-              flex={1}
-              onPress={() => {
-                if (this.map) {
-                  this.map.animateCamera({
-                    pitch: 90,
-                    heading: 180,
-                    altitude: 10,
-                    zoom: 60,
-                  });
-                }
-              }}>
-              <Text>Olo</Text>
-            </TouchableHighlight>
-            </View>*/}
-          <Driver
-            elevation={3}
-            avatar={this.state.user.profile}
-            name={this.state.user.firstName + " " + this.state.user.lastName}
-            username={this.state.user.username}
-            signOut={firebase.auth().signOut}
-            status={this.state.driverStatus}
-            updateDriverStatus={this.updateDriverStatus}
+        <Driver
+          elevation={3}
+          avatar={this.state.user.profile}
+          name={this.state.user.firstName + " " + this.state.user.lastName}
+          username={this.state.user.username}
+          signOut={firebase.auth().signOut}
+          status={this.state.driverStatus}
+          updateDriverStatus={this.updateDriverStatus}
+        />
+        <View style={styles.locationButtonView}>
+          <Icon
+            name="gps-fixed"
+            reverse
+            raised
+            containerStyle={styles.locationButton}
+            color={Constants.COLOR_ORANGE}
+            onPress={() => this.goToUserLocation()}
           />
         </View>
-      );
-    }
+        {this.state.user.dev ? ToastAndroid.show("Dev mode", ToastAndroid.LONG) : null}
+      </View>
+    );
   }
 }
 const styles = StyleSheet.create({
+  locationButton: {
+    elevation: 3,
+  },
+
+  locationButtonView: {
+    position: "absolute",
+    top: "10%",
+    right: "2%",
+  },
+
   avatar: {
     backgroundColor: "gray",
     justifyContent: "center",
