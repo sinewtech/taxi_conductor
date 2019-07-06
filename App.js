@@ -10,6 +10,7 @@ import {
 import Home from "./src/Views/Home";
 import SignUp from "./src/Views/SignUp";
 import firebase from "firebase";
+import LogOut from "./src/Components/LogOut";
 
 // Ignorar los warnings de firebase
 
@@ -45,9 +46,17 @@ class App extends Component {
 const AppStack = createDrawerNavigator({
   Home: {
     screen: Home,
-    navigationOptions: {
-      header: null,
-    },
+    navigationOptions: ({ navigation }) => ({
+      title: "Inicio",
+      // drawerIcon: logoutIcon,
+    }),
+  },
+  UserValidator: {
+    screen: LogOut,
+    navigationOptions: ({ navigation }) => ({
+      title: "Cerrar sesión",
+      // drawerIcon: logoutIcon,
+    }),
   },
 });
 
