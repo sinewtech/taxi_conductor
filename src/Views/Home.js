@@ -66,6 +66,7 @@ async function registerForPushNotificationsAsync() {
 class Home extends Component {
   constructor() {
     super();
+
     this.state = {
       driverState: Constants.DRIVER_STATE_NONE,
       selectedIndex: 0,
@@ -738,6 +739,10 @@ class Home extends Component {
             status={this.state.driverStatus}
             updateDriverStatus={this.updateDriverStatus}
             devToggle={this.devToggle}
+            openDrawer={() => {
+              this.props.navigation.openDrawer();
+              console.log("drawer");
+            }}
           />
           {Platform.OS === "android" ? ToastAndroid.show("Dev mode", ToastAndroid.LONG) : null}
         </View>
@@ -805,6 +810,10 @@ class Home extends Component {
             status={this.state.driverStatus}
             updateDriverStatus={this.updateDriverStatus}
             devToggle={this.devToggle}
+            openDrawer={() => {
+              this.props.navigation.openDrawer();
+              console.log("drawer");
+            }}
           />
         </View>
       );

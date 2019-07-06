@@ -1,7 +1,12 @@
 import React, { Component } from "react";
 import { LogIn } from "./src/Views/LogIn";
 import UserValidator from "./src/Components/UserValidator";
-import { createStackNavigator, createSwitchNavigator, createAppContainer } from "react-navigation";
+import {
+  createStackNavigator,
+  createDrawerNavigator,
+  createSwitchNavigator,
+  createAppContainer,
+} from "react-navigation";
 import Home from "./src/Views/Home";
 import SignUp from "./src/Views/SignUp";
 import firebase from "firebase";
@@ -37,7 +42,7 @@ class App extends Component {
   }
 }
 
-const AppStack = createStackNavigator({
+const AppStack = createDrawerNavigator({
   Home: {
     screen: Home,
     navigationOptions: {

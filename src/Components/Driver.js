@@ -99,7 +99,9 @@ export default class Driver extends Component {
     return (
       <View style={styles.driverContainer} elevation={this.props.elevation}>
         <View style={styles.avatarView}>
-          <TouchableNativeFeedback onLongPress={this.props.devToggle}>
+          <TouchableNativeFeedback
+            onPress={this.props.openDrawer}
+            onLongPress={this.props.devToggle}>
             <Avatar
               containerStyle={styles.avatarContainer}
               imageProps={{ resizeMode: "cover" }}
