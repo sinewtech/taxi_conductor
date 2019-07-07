@@ -23,7 +23,6 @@ import firebase from "../../firebase";
 import * as Constants from "../Constants";
 const decodePolyline = require("decode-google-map-polyline");
 
-let db = firebase.firestore();
 async function registerForPushNotificationsAsync() {
   const { status: existingStatus } = await Permissions.getAsync(Permissions.NOTIFICATIONS);
   let finalStatus = existingStatus;
@@ -152,12 +151,13 @@ class Home extends Component {
             snap.forEach(datasnap => {
               let order = datasnap.exportVal();
               if (order.driver === user.uid) {
+                console.log(order);
                 switch (order.status) {
                   case Constants.QUOTE_STATUS_PRICE_ACCEPTED: {
                     this.setState({
                       order: order,
                       orderuid: datasnap.key,
-                      driverState: 1,
+                      driverState: Constants.DRIVER_STATE_ASKING,
                       destination: order.destination,
                       origin: order.origin,
                     });
@@ -167,7 +167,7 @@ class Home extends Component {
                     this.setState({
                       order: order,
                       orderuid: datasnap.key,
-                      driverState: 2,
+                      driverState: Constants.DRIVER_STATE_GOING_TO_CLIENT,
                       destination: order.destination,
                       origin: order.origin,
                     });
@@ -177,7 +177,7 @@ class Home extends Component {
                     this.setState({
                       order: order,
                       orderuid: datasnap.key,
-                      driverState: 3,
+                      driverState: Constants.DRIVER_STATE_CLIENT_IS_WITH_HIM,
                       destination: order.destination,
                       origin: order.origin,
                     });
@@ -188,7 +188,7 @@ class Home extends Component {
                     this.setState({
                       order: order,
                       orderuid: datasnap.key,
-                      driverState: 4,
+                      driverState: Constants.DRIVER_STATE_GOING_TO_DESTINATION,
                       destination: order.destination,
                       origin: order.origin,
                     });
@@ -279,8 +279,15 @@ class Home extends Component {
     });
   };
 
+  updateOrderStatus = status => {
+    firebase
+      .database()
+      .ref()
+      .child("/quotes/" + this.state.orderuid + "/status")
+      .set(status);
+  };
+
   getState = () => {
-    console.log("el Driver state esta en", this.state.driverState);
     switch (this.state.driverState) {
       case Constants.DRIVER_STATE_NONE: {
         return <Briefing />;
@@ -297,11 +304,7 @@ class Home extends Component {
                   text: "OK",
                   onPress: () => {
                     this.updateDriverStatus(Constants.DRIVER_STATUS_ON_A_DRIVE);
-                    firebase
-                      .database()
-                      .ref()
-                      .child("/quotes/" + this.state.orderuid + "/status")
-                      .set(Constants.QUOTE_STATUS_DRIVER_GOING_TO_CLIENT);
+                    this.updateOrderStatus(Constants.QUOTE_STATUS_DRIVER_GOING_TO_CLIENT);
                     if (!this.state.isManual) {
                       this.getPoly(this.state.driverposition, this.state.order.origin);
                     }
@@ -321,11 +324,8 @@ class Home extends Component {
                   {
                     text: "OK",
                     onPress: () => {
-                      firebase
-                        .database()
-                        .ref()
-                        .child("/quotes/" + this.state.orderuid + "/status")
-                        .set(Constants.QUOTE_STATUS_DRIVER_DENNIED);
+                      this.updateOrderStatus(Constants.QUOTE_STATUS_DRIVER_DENNIED);
+
                       this.setState({
                         order: { origin: {}, destination: {} },
                         polyline: [],
@@ -383,14 +383,7 @@ class Home extends Component {
                       {
                         text: "ok",
                         onPress: () => {
-                          firebase
-                            .database()
-                            .ref()
-                            .child("/quotes/" + this.state.orderuid + "/status")
-                            .set(Constants.QUOTE_STATUS_WAITING_CLIENT)
-                            .then(() => console.log("Status enviado"))
-                            .catch(e => console.error(e));
-
+                          this.updateOrderStatus(Constants.QUOTE_STATUS_WAITING_CLIENT);
                           this.setState({
                             driverState: Constants.DRIVER_STATE_CLIENT_IS_WITH_HIM,
                           });
@@ -445,13 +438,7 @@ class Home extends Component {
                       {
                         text: "ok",
                         onPress: () => {
-                          firebase
-                            .database()
-                            .ref()
-                            .child("/quotes/" + this.state.orderuid + "/status")
-                            .set(Constants.QUOTE_STATUS_CLIENT_ABORDED)
-                            .then(() => console.log("Status enviado"))
-                            .catch(e => console.error(e));
+                          this.updateOrderStatus(Constants.QUOTE_STATUS_CLIENT_ABORDED);
                         },
                       },
                     ],
@@ -512,14 +499,7 @@ class Home extends Component {
                         text: "Sí",
                         onPress: () => {
                           this.updateDriverStatus(Constants.DRIVER_STATUS_LOOKING_FOR_DRIVE);
-
-                          firebase
-                            .database()
-                            .ref()
-                            .child("/quotes/" + this.state.orderuid + "/status")
-                            .set(Constants.QUOTE_STATUS_FINISHED)
-                            .then(() => console.log("Status enviado"))
-                            .catch(e => console.error(e));
+                          this.updateOrderStatus(Constants.QUOTE_STATUS_FINISHED);
 
                           this.clear();
 
@@ -546,7 +526,9 @@ class Home extends Component {
       .then(pushToken => {
         console.log(pushToken);
         if (pushToken) {
-          db.collection("drivers")
+          firebase
+            .firestore()
+            .collection("drivers")
             .doc(this.state.userUID)
             .get()
             .then(DocumentSnapshot => {
@@ -565,7 +547,9 @@ class Home extends Component {
               } else {
                 pushTokens.push(pushToken);
               }
-              db.collection("drivers")
+              firebase
+                .firestore()
+                .collection("drivers")
                 .doc(this.state.userUID)
                 .update({
                   pushDevices: pushTokens,
