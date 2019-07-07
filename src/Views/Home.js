@@ -62,8 +62,8 @@ async function registerForPushNotificationsAsync() {
 }
 
 class Home extends Component {
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
 
     this.state = {
       driverState: Constants.DRIVER_STATE_NONE,
@@ -125,7 +125,6 @@ class Home extends Component {
           .get()
           .then(value => {
             let data = value.data();
-            console.log(data);
             console.log("\nDEV: " + data.dev);
             //mira si tiene el campo de "dev", y si lo tiene hace el dev mode true
             if (data.dev) {
@@ -151,7 +150,6 @@ class Home extends Component {
             snap.forEach(datasnap => {
               let order = datasnap.exportVal();
               if (order.driver === user.uid) {
-                console.log(order);
                 switch (order.status) {
                   case Constants.QUOTE_STATUS_PRICE_ACCEPTED: {
                     this.setState({
@@ -160,7 +158,11 @@ class Home extends Component {
                       driverState: Constants.DRIVER_STATE_ASKING,
                       destination: order.destination,
                       origin: order.origin,
+                      isManual: !order.usingGps,
                     });
+                    if (order.usingGps) {
+                      this.getPoly(order.origin, order.destination);
+                    }
                     break;
                   }
                   case Constants.QUOTE_STATUS_DRIVER_GOING_TO_CLIENT: {
@@ -170,7 +172,11 @@ class Home extends Component {
                       driverState: Constants.DRIVER_STATE_GOING_TO_CLIENT,
                       destination: order.destination,
                       origin: order.origin,
+                      isManual: !order.usingGps,
                     });
+                    if (order.usingGps) {
+                      this.getPoly(this.state.driverposition, order.origin);
+                    }
                     break;
                   }
                   case Constants.QUOTE_STATUS_WAITING_CLIENT: {
@@ -179,9 +185,9 @@ class Home extends Component {
                       orderuid: datasnap.key,
                       driverState: Constants.DRIVER_STATE_CLIENT_IS_WITH_HIM,
                       destination: order.destination,
+                      isManual: !order.usingGps,
                       origin: order.origin,
                     });
-
                     break;
                   }
                   case Constants.QUOTE_STATUS_CLIENT_ABORDED: {
@@ -191,7 +197,12 @@ class Home extends Component {
                       driverState: Constants.DRIVER_STATE_GOING_TO_DESTINATION,
                       destination: order.destination,
                       origin: order.origin,
+                      isManual: !order.usingGps,
                     });
+                    if (order.usingGps) {
+                      this.getPoly(this.state.driverposition, order.destination);
+                    }
+
                     break;
                   }
                   default:
