@@ -20,7 +20,6 @@ import Driver from "../Components/Driver";
 import Briefing from "../Components/Briefing";
 import Asking from "../Components/Asking";
 import firebase from "../../firebase";
-import { TouchableHighlight } from "react-native-gesture-handler";
 import * as Constants from "../Constants";
 const decodePolyline = require("decode-google-map-polyline");
 
@@ -145,6 +144,62 @@ class Home extends Component {
           .on("value", snap => {
             this.setState({ driverStatus: snap.exportVal(), selectedIndex: snap.exportVal() });
           });
+        firebase
+          .database()
+          .ref()
+          .child("quotes/")
+          .once("value", snap => {
+            snap.forEach(datasnap => {
+              let order = datasnap.exportVal();
+              if (order.driver === user.uid) {
+                switch (order.status) {
+                  case Constants.QUOTE_STATUS_PRICE_ACCEPTED: {
+                    this.setState({
+                      order: order,
+                      orderuid: datasnap.key,
+                      driverState: 1,
+                      destination: order.destination,
+                      origin: order.origin,
+                    });
+                    break;
+                  }
+                  case Constants.QUOTE_STATUS_DRIVER_GOING_TO_CLIENT: {
+                    this.setState({
+                      order: order,
+                      orderuid: datasnap.key,
+                      driverState: 2,
+                      destination: order.destination,
+                      origin: order.origin,
+                    });
+                    break;
+                  }
+                  case Constants.QUOTE_STATUS_WAITING_CLIENT: {
+                    this.setState({
+                      order: order,
+                      orderuid: datasnap.key,
+                      driverState: 3,
+                      destination: order.destination,
+                      origin: order.origin,
+                    });
+
+                    break;
+                  }
+                  case Constants.QUOTE_STATUS_CLIENT_ABORDED: {
+                    this.setState({
+                      order: order,
+                      orderuid: datasnap.key,
+                      driverState: 4,
+                      destination: order.destination,
+                      origin: order.origin,
+                    });
+                    break;
+                  }
+                  default:
+                    break;
+                }
+              }
+            });
+          });
       } else {
         this.updateUser(null);
       }
@@ -225,6 +280,7 @@ class Home extends Component {
   };
 
   getState = () => {
+    console.log("el Driver state esta en", this.state.driverState);
     switch (this.state.driverState) {
       case Constants.DRIVER_STATE_NONE: {
         return <Briefing />;
