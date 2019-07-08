@@ -1,3 +1,12 @@
+//Colores
+export const COLOR_AMBER = "#FFC107";
+export const COLOR_ORANGE = "#FF9800";
+export const COLOR_GREEN = "#4CAF50";
+export const COLOR_LIGHTGREEN = "#8BC34A";
+export const COLOR_BLUE = "#2196F3";
+export const COLOR_LIGHTBLUE = "#03A9F4";
+export const COLOR_RED = "#f44336";
+
 export const INITIAL_REGION = {
   latitude: 14.0723,
   longitude: -87.1921,
@@ -14,6 +23,7 @@ export const STATE_HEIGHT = {
 export const LOCATION_TASK_NAME = "TAXI_DRIVER_LOCATION";
 
 export const API_KEY = "AIzaSyApNgtxFBp0SXSHljP_xku6peNCzjTFWM4";
+
 //estados para el card
 export const DRIVER_STATE_NONE = 0;
 export const DRIVER_STATE_ASKING = 1;
