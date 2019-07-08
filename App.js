@@ -1,10 +1,20 @@
 import React, { Component } from "react";
 import { LogIn } from "./src/Views/LogIn";
 import UserValidator from "./src/Components/UserValidator";
-import { createStackNavigator, createSwitchNavigator, createAppContainer } from "react-navigation";
+import {
+  createStackNavigator,
+  createDrawerNavigator,
+  createSwitchNavigator,
+  createAppContainer,
+  DrawerItems,
+  SafeAreaView,
+} from "react-navigation";
 import Home from "./src/Views/Home";
 import SignUp from "./src/Views/SignUp";
-import firebase from "firebase";
+import firebase from "./firebase";
+import { Icon, Avatar } from "react-native-elements";
+import { View, StyleSheet, Text, ScrollView } from "react-native";
+import LogOut from "./src/Components/LogOut";
 
 // Ignorar los warnings de firebase
 
@@ -36,15 +46,49 @@ class App extends Component {
     return <MyApp />;
   }
 }
+const drawerContent = props => (
+  <SafeAreaView forceInset={{ top: "always", horizontal: "never" }}>
+    <View style={styles.drawerHeaderView}>
+      <View style={styles.avatarView}>
+        <Avatar rounded title="B" />
+      </View>
+      <View style={styles.headerInfo}>
+        <Text style={styles.title}>Bienvenido</Text>
+        <Text style={styles.subtitle}>
+          {firebase.auth().currentUser ? firebase.auth().currentUser.displayName : "Nombre"}
+        </Text>
+      </View>
+    </View>
+    <ScrollView>
+      <DrawerItems {...props} />
+    </ScrollView>
+  </SafeAreaView>
+);
 
-const AppStack = createStackNavigator({
-  Home: {
-    screen: Home,
-    navigationOptions: {
-      header: null,
+const homeIcon = <Icon name="home" color="#616161" />;
+const logoutIcon = <Icon name="logout" type="material-community" color="#616161" />;
+
+const AppStack = createDrawerNavigator(
+  {
+    Home: {
+      screen: Home,
+      navigationOptions: ({ navigation }) => ({
+        title: "Inicio",
+        drawerIcon: homeIcon,
+      }),
+    },
+    UserValidator: {
+      screen: LogOut,
+      navigationOptions: ({ navigation }) => ({
+        title: "Cerrar sesión",
+        drawerIcon: logoutIcon,
+      }),
     },
   },
-});
+  {
+    contentComponent: drawerContent,
+  }
+);
 
 const AuthStack = createStackNavigator({
   LogIn: {
@@ -74,5 +118,38 @@ const MyApp = createAppContainer(
     }
   )
 );
+const styles = StyleSheet.create({
+  drawerHeaderView: {
+    height: "20%",
+    flexDirection: "row",
+    marginBottom: 10,
+  },
 
+  title: {
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+
+  subtitle: {
+    fontSize: 16,
+  },
+
+  headerInfo: {
+    flex: 3,
+    justifyContent: "center",
+  },
+
+  avatarView: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    height: "100%",
+    width: "100%",
+  },
+
+  avatar: {
+    height: 25,
+    width: 25,
+  },
+});
 export default App;

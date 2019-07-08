@@ -20,11 +20,9 @@ import Driver from "../Components/Driver";
 import Briefing from "../Components/Briefing";
 import Asking from "../Components/Asking";
 import firebase from "../../firebase";
-import { TouchableHighlight } from "react-native-gesture-handler";
 import * as Constants from "../Constants";
 const decodePolyline = require("decode-google-map-polyline");
 
-let db = firebase.firestore();
 async function registerForPushNotificationsAsync() {
   const { status: existingStatus } = await Permissions.getAsync(Permissions.NOTIFICATIONS);
   let finalStatus = existingStatus;
@@ -64,8 +62,9 @@ async function registerForPushNotificationsAsync() {
 }
 
 class Home extends Component {
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
+
     this.state = {
       driverState: Constants.DRIVER_STATE_NONE,
       //driverState: Constants.DRIVER_STATE_GOING_TO_CLIENT,
@@ -131,6 +130,19 @@ class Home extends Component {
     userdata === null ? this.setState({ userUID: null }) : this.setState(userdata);
   };
 
+  //Cambia el valor de devMode en el state this.state.user.dev te dice si el usuario tiene permiso de dev, this.state.dev te dice si esta activo
+  devToggle = () => {
+    if (this.state.userUID !== null && this.state.user.dev) {
+      userdata = this.state;
+      userdata.dev = !userdata.dev;
+      this.setState({ userdata });
+      this.state.dev === true
+        ? console.log("DEV MODE: ON")
+        : (Platform.OS === "android" ? ToastAndroid.show("User Mode", ToastAndroid.LONG) : null,
+          console.log("DEV MODE: OFF"));
+    }
+  };
+
   componentWillUnmount = async () => {
     Location.stopLocationUpdatesAsync(Constants.LOCATION_TASK_NAME).then(value => {
       console.log(value);
@@ -147,8 +159,13 @@ class Home extends Component {
           .get()
           .then(value => {
             let data = value.data();
-            console.log(data);
-            this.updateUser({ user: data, userUID: user.uid });
+            console.log("\nDEV: " + data.dev);
+            //mira si tiene el campo de "dev", y si lo tiene hace el dev mode true
+            if (data.dev) {
+              this.updateUser({ user: data, userUID: user.uid, dev: true });
+            } else {
+              this.updateUser({ user: data, userUID: user.uid, dev: false });
+            }
             this.registerPush();
           });
 
@@ -158,6 +175,78 @@ class Home extends Component {
           .child("locations/" + firebase.auth().currentUser.uid + "/status")
           .on("value", snap => {
             this.setState({ driverStatus: snap.exportVal(), selectedIndex: snap.exportVal() });
+          });
+        firebase
+          .database()
+          .ref()
+          .child("quotes/")
+          .once("value", snap => {
+            snap.forEach(datasnap => {
+              let order = datasnap.exportVal();
+              if (order.driver === user.uid) {
+                switch (order.status) {
+                  case Constants.QUOTE_STATUS_PRICE_ACCEPTED: {
+                    this.setState({
+                      order: order,
+                      orderuid: datasnap.key,
+                      driverState: Constants.DRIVER_STATE_ASKING,
+                      destination: order.destination,
+                      origin: order.origin,
+                      isManual: !order.usingGps,
+                    });
+                    if (order.usingGps) {
+                      this.getPoly(order.origin, order.destination);
+                    }
+                    break;
+                  }
+                  case Constants.QUOTE_STATUS_DRIVER_GOING_TO_CLIENT: {
+                    this.setState({
+                      order: order,
+                      orderuid: datasnap.key,
+                      driverState: Constants.DRIVER_STATE_GOING_TO_CLIENT,
+                      destination: order.destination,
+                      origin: order.origin,
+                      isManual: !order.usingGps,
+                    });
+                    if (order.usingGps) {
+                      this.getPoly(this.state.driverp
+                                   
+                                   
+                                   tion, order.origin);
+                    }
+                    break;
+                  }
+                  case Constants.QUOTE_STATUS_WAITING_CLIENT: {
+                    this.setState({
+                      order: order,
+                      orderuid: datasnap.key,
+                      driverState: Constants.DRIVER_STATE_CLIENT_IS_WITH_HIM,
+                      destination: order.destination,
+                      isManual: !order.usingGps,
+                      origin: order.origin,
+                    });
+                    break;
+                  }
+                  case Constants.QUOTE_STATUS_CLIENT_ABORDED: {
+                    this.setState({
+                      order: order,
+                      orderuid: datasnap.key,
+                      driverState: Constants.DRIVER_STATE_GOING_TO_DESTINATION,
+                      destination: order.destination,
+                      origin: order.origin,
+                      isManual: !order.usingGps,
+                    });
+                    if (order.usingGps) {
+                      this.getPoly(this.state.driverposition, order.destination);
+                    }
+
+                    break;
+                  }
+                  default:
+                    break;
+                }
+              }
+            });
           });
       } else {
         this.updateUser(null);
@@ -249,6 +338,14 @@ class Home extends Component {
     });
   };
 
+  updateOrderStatus = status => {
+    firebase
+      .database()
+      .ref()
+      .child("/quotes/" + this.state.orderuid + "/status")
+      .set(status);
+  };
+
   getState = () => {
     switch (this.state.driverState) {
       case Constants.DRIVER_STATE_NONE: {
@@ -266,11 +363,7 @@ class Home extends Component {
                   text: "OK",
                   onPress: () => {
                     this.updateDriverStatus(Constants.DRIVER_STATUS_ON_A_DRIVE);
-                    firebase
-                      .database()
-                      .ref()
-                      .child("/quotes/" + this.state.orderuid + "/status")
-                      .set(Constants.QUOTE_STATUS_DRIVER_GOING_TO_CLIENT);
+                    this.updateOrderStatus(Constants.QUOTE_STATUS_DRIVER_GOING_TO_CLIENT);
                     if (!this.state.isManual) {
                       this.getPoly(this.state.driverPosition, this.state.order.origin);
                     }
@@ -291,11 +384,8 @@ class Home extends Component {
                   {
                     text: "OK",
                     onPress: () => {
-                      firebase
-                        .database()
-                        .ref()
-                        .child("/quotes/" + this.state.orderuid + "/status")
-                        .set(Constants.QUOTE_STATUS_DRIVER_DENNIED);
+                      this.updateOrderStatus(Constants.QUOTE_STATUS_DRIVER_DENNIED);
+
                       this.setState({
                         order: { origin: {}, destination: {} },
                         polyline: [],
@@ -353,14 +443,7 @@ class Home extends Component {
                       {
                         text: "ok",
                         onPress: () => {
-                          firebase
-                            .database()
-                            .ref()
-                            .child("/quotes/" + this.state.orderuid + "/status")
-                            .set(Constants.QUOTE_STATUS_WAITING_CLIENT)
-                            .then(() => console.log("Status enviado"))
-                            .catch(e => console.error(e));
-
+                          this.updateOrderStatus(Constants.QUOTE_STATUS_WAITING_CLIENT);
                           this.setState({
                             driverState: Constants.DRIVER_STATE_CLIENT_IS_WITH_HIM,
                           });
@@ -415,13 +498,7 @@ class Home extends Component {
                       {
                         text: "ok",
                         onPress: () => {
-                          firebase
-                            .database()
-                            .ref()
-                            .child("/quotes/" + this.state.orderuid + "/status")
-                            .set(Constants.QUOTE_STATUS_CLIENT_ABORDED)
-                            .then(() => console.log("Status enviado"))
-                            .catch(e => console.error(e));
+                          this.updateOrderStatus(Constants.QUOTE_STATUS_CLIENT_ABORDED);
                         },
                       },
                     ],
@@ -490,14 +567,7 @@ class Home extends Component {
                             zoom: 10,
                           });
                           this.updateDriverStatus(Constants.DRIVER_STATUS_LOOKING_FOR_DRIVE);
-
-                          firebase
-                            .database()
-                            .ref()
-                            .child("/quotes/" + this.state.orderuid + "/status")
-                            .set(Constants.QUOTE_STATUS_FINISHED)
-                            .then(() => console.log("Status enviado"))
-                            .catch(e => console.error(e));
+                          this.updateOrderStatus(Constants.QUOTE_STATUS_FINISHED);
 
                           this.clear();
 
@@ -524,7 +594,9 @@ class Home extends Component {
       .then(pushToken => {
         console.log(pushToken);
         if (pushToken) {
-          db.collection("drivers")
+          firebase
+            .firestore()
+            .collection("drivers")
             .doc(this.state.userUID)
             .get()
             .then(DocumentSnapshot => {
@@ -543,7 +615,9 @@ class Home extends Component {
               } else {
                 pushTokens.push(pushToken);
               }
-              db.collection("drivers")
+              firebase
+                .firestore()
+                .collection("drivers")
                 .doc(this.state.userUID)
                 .update({
                   pushDevices: pushTokens,
@@ -634,6 +708,8 @@ class Home extends Component {
               this.updateDriverStatus(Constants.DRIVER_STATUS_CONFIRMING_DRIVE);
             });
         else this.setState({ driverState: Constants.DRIVER_STATE_ASKING });
+      } else if (notification.data.id === Constants.QUOTE_STATUS_CLIENT_CANCELED) {
+        this.updateDriverStatus(Constants.DRIVER_STATUS_LOOKING_FOR_DRIVE);
       }
     }
   };
@@ -762,13 +838,18 @@ class Home extends Component {
             </TouchableHighlight>
             </View>*/}
         <Driver
-          elevation={3}
-          avatar={this.state.user.profile}
-          name={this.state.user.firstName + " " + this.state.user.lastName}
-          username={this.state.user.username}
-          signOut={firebase.auth().signOut}
-          status={this.state.driverStatus}
-          updateDriverStatus={this.updateDriverStatus}
+            elevation={3}
+            avatar={this.state.user.profile}
+            name={this.state.user.firstName + " " + this.state.user.lastName}
+            username={this.state.user.username}
+            signOut={firebase.auth().signOut}
+            status={this.state.driverStatus}
+            updateDriverStatus={this.updateDriverStatus}
+            devToggle={this.devToggle}
+            openDrawer={() => {
+              this.props.navigation.openDrawer();
+              console.log("drawer");
+            }}
         />
         <View style={styles.locationButtonView}>
           <Icon
@@ -780,7 +861,7 @@ class Home extends Component {
             onPress={() => this.goToUserLocation()}
           />
         </View>
-        {this.state.user.dev ? ToastAndroid.show("Dev mode", ToastAndroid.LONG) : null}
+        {Platform.OS === "android" && this.state.user.dev ? ToastAndroid.show("Dev mode", ToastAndroid.LONG) : null}
       </View>
     );
   }

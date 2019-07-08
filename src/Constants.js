@@ -35,6 +35,7 @@ export const DRIVER_STATE_GOING_TO_DESTINATION = 4;
 export const DRIVER_NOTIFICATION_ADS = 0;
 export const DRIVER_NOTIFICATION_CONFIRMING = 2;
 export const DRIVER_NOTIFICATION_CONFIRMED = 3;
+export const DRIVER_NOTIFICATION_ORDER_CANCELED = 4;
 
 //estados en el que puede estar un conductor
 export const DRIVER_STATUS_NOT_WORKING = 0;
@@ -43,6 +44,7 @@ export const DRIVER_STATUS_ON_A_DRIVE = 2;
 export const DRIVER_STATUS_CONFIRMING_DRIVE = 3;
 
 //estados de una orden
+export const QUOTE_STATUS_CLIENT_CANCELED = -1;
 export const QUOTE_STATUS_NO_ANSWER = 0;
 export const QUOTE_STATUS_SETTING_PRICE = 1;
 export const QUOTE_STATUS_PRICE_ACCEPTED = 2;

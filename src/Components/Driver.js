@@ -99,12 +99,16 @@ export default class Driver extends Component {
     return (
       <View style={styles.driverContainer} elevation={this.props.elevation}>
         <View style={styles.avatarView}>
-          <Avatar
-            containerStyle={styles.avatarContainer}
-            imageProps={{ resizeMode: "cover" }}
-            source={{ uri: this.props.avatar }}
-            activeOpacity={0.7}
-          />
+          <TouchableNativeFeedback
+            onPress={this.props.openDrawer}
+            onLongPress={this.props.devToggle}>
+            <Avatar
+              containerStyle={styles.avatarContainer}
+              imageProps={{ resizeMode: "cover" }}
+              source={{ uri: this.props.avatar }}
+              activeOpacity={0.7}
+            />
+          </TouchableNativeFeedback>
         </View>
         <View style={styles.driverInfo}>
           <Text style={styles.driverCode}>{this.props.username ? this.props.username : "-"}</Text>
