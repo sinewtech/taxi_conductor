@@ -11,7 +11,7 @@ import {
   ToastAndroid,
 } from "react-native";
 import { Notifications } from "expo";
-// import KeepAwake from "expo-keep-awake";
+import KeepAwake from "expo-keep-awake";
 import * as Location from "expo-location";
 import MapView from "react-native-maps";
 import * as TaskManager from "expo-task-manager";
@@ -67,10 +67,33 @@ class Home extends Component {
 
     this.state = {
       driverState: Constants.DRIVER_STATE_NONE,
+      //driverState: Constants.DRIVER_STATE_GOING_TO_CLIENT,
       selectedIndex: 0,
       user: {},
       order: { origin: {}, destination: {}, manual: true },
+      /*order: {
+        destination: {
+          address: "UNAH, Tegucigalpa, Honduras",
+          lat: 14.0846099,
+          lng: -87.16208569999999,
+          name: "Universidad Nacional Autónoma de Honduras",
+          placeId: "ChIJAAAAAAAAAAARSMV-oKtMiMk",
+        },
+        dispatchdatetime: "Thu Jul 04 2019 22:26:09 GMT-0600 (Central Standard Time)",
+        driver: "ttYjTWJG29Xf7NhYs1IhcnJlvm32",
+        origin: {
+          address: "Santa Lucia, Honduras",
+          lat: 14.1156621,
+          lng: -87.1030485,
+          name: "Cerca de Santa Lucia",
+        },
+        price: 123,
+        status: 7,
+        userUid: "icZlnhSMmsTgQV1r5XAzgZ2OKmi1",
+        usingGps: true,
+      },*/
       polyline: [],
+      navigating: false,
     };
 
     if (Constants.DEBUG_MODE) {
@@ -91,6 +114,17 @@ class Home extends Component {
       };
     }
   }
+
+  goToUserLocation = () => {
+    if (this.map && this.state.driverPosition) {
+      this.map.animateToRegion({
+        latitude: this.state.driverPosition.lat,
+        longitude: this.state.driverPosition.lng,
+        latitudeDelta: 0.02,
+        longitudeDelta: 0.02,
+      });
+    }
+  };
 
   updateUser = userdata => {
     userdata === null ? this.setState({ userUID: null }) : this.setState(userdata);
@@ -175,7 +209,10 @@ class Home extends Component {
                       isManual: !order.usingGps,
                     });
                     if (order.usingGps) {
-                      this.getPoly(this.state.driverposition, order.origin);
+                      this.getPoly(this.state.driverp
+                                   
+                                   
+                                   tion, order.origin);
                     }
                     break;
                   }
@@ -222,11 +259,11 @@ class Home extends Component {
       Alert.alert("Servicios GPS", "Por favor activa los servicios de GPS para continuar.");
     }
 
-    let tiene = await Location.getProviderStatusAsync();
+    let loc = await Location.getProviderStatusAsync();
 
-    if (tiene.gpsAvailable) {
+    if (loc.gpsAvailable) {
       await Location.startLocationUpdatesAsync(Constants.LOCATION_TASK_NAME, {
-        accuracy: Location.Accuracy.High,
+        accuracy: Location.Accuracy.Balanced,
         timeInterval: 6000,
         distanceInterval: 2,
         foregroundService: {
@@ -238,16 +275,27 @@ class Home extends Component {
 
       await Location.watchPositionAsync(
         {
-          accuracy: Location.Accuracy.Balanced,
+          accuracy: Location.Accuracy.BestForNavigation,
         },
 
-        location => {
+        async location => {
           this.setState({
-            driverposition: {
+            driverPosition: {
               lat: location.coords.latitude,
               lng: location.coords.longitude,
             },
           });
+
+          if (this.state.navigating) {
+            this.goToUserLocation();
+            this.map.animateCamera({
+              //latitude: location.coords.latitude,
+              //longitude: location.coords.longitude,
+              heading: location.coords.heading,
+              pitch: 70,
+              zoom: 50
+            });
+          }
         }
       );
     } else {
@@ -317,11 +365,12 @@ class Home extends Component {
                     this.updateDriverStatus(Constants.DRIVER_STATUS_ON_A_DRIVE);
                     this.updateOrderStatus(Constants.QUOTE_STATUS_DRIVER_GOING_TO_CLIENT);
                     if (!this.state.isManual) {
-                      this.getPoly(this.state.driverposition, this.state.order.origin);
+                      this.getPoly(this.state.driverPosition, this.state.order.origin);
                     }
 
                     this.setState({
                       driverState: Constants.DRIVER_STATE_GOING_TO_CLIENT,
+                      navigating: true,
                     });
                   },
                 },
@@ -461,7 +510,7 @@ class Home extends Component {
                     driverState: Constants.DRIVER_STATE_GOING_TO_DESTINATION,
                   });
                   if (!this.state.isManual) {
-                    this.getPoly(this.state.driverposition, this.state.order.destination);
+                    this.getPoly(this.state.driverPosition, this.state.order.destination);
                   }
                 }}
               />
@@ -509,6 +558,14 @@ class Home extends Component {
                       {
                         text: "Sí",
                         onPress: () => {
+                          this.setState({ navigating: false, order: null });
+                          this.map.animateCamera({
+                            latitude: Constants.INITIAL_REGION.latitude,
+                            longitude: Constants.INITIAL_REGION.longitude,
+                            heading: 0,
+                            pitch: 0,
+                            zoom: 10,
+                          });
                           this.updateDriverStatus(Constants.DRIVER_STATUS_LOOKING_FOR_DRIVE);
                           this.updateOrderStatus(Constants.QUOTE_STATUS_FINISHED);
 
@@ -727,45 +784,44 @@ class Home extends Component {
       }
     }
 
-    if (this.state.dev) {
-      return (
-        <View style={{ flex: 1 }}>
-          {/* <KeepAwake /> */}
-          <MapView
-            style={{ flex: 1 }}
-            showsTraffic
-            showsUserLocation
-            showsMyLocationButton
-            loadingBackgroundColor="#FF9800"
-            initialRegion={Constants.INITIAL_REGION}
-            ref={ref => (this.map = ref)}
-            mapPadding={{
-              /*bottom:
+    return (
+      <View style={{ flex: 1 }}>
+        <KeepAwake />
+        <MapView
+          style={{ flex: 1 }}
+          onMapReady={() => this.goToUserLocation()}
+          showsTraffic
+          showsUserLocation
+          loadingBackgroundColor="#FF9800"
+          initialRegion={Constants.INITIAL_REGION}
+          ref={ref => (this.map = ref)}
+          mapPadding={{
+            /*bottom:
                 Dimensions.get("window").height *
                 (Number.parseFloat(STATE_HEIGHT[this.state.driverState]) / 100),*/
-              top: Dimensions.get("window").height * 0.1,
-              left: 0,
-              right: 0,
-            }}>
-            {this.state.order.origin.lat && this.state.order.origin.lng ? originMarker : null}
-            {this.state.order.destination.lat && this.state.order.destination.lng
-              ? destinationMarker
-              : null}
-            {this.state.polyline.length > 0 ? polyline : null}
-          </MapView>
-          <View
-            style={styles.stateContainer}
-            //height={STATE_HEIGHT[this.state.driverState]}
-            maxHeight={
-              Constants.STATE_HEIGHT[this.state.driverState]
-                ? Dimensions.get("window").height *
-                  (Number.parseFloat(Constants.STATE_HEIGHT[this.state.driverState]) / 100)
-                : null
-            }
-            elevation={3}>
-            {this.getState()}
-          </View>
-          {/*<View style={styles.centerNavigationView}>
+            top: Dimensions.get("window").height * 0.1,
+            left: 0,
+            right: 0,
+          }}>
+          {this.state.order.origin.lat && this.state.order.origin.lng ? originMarker : null}
+          {this.state.order.destination.lat && this.state.order.destination.lng
+            ? destinationMarker
+            : null}
+          {this.state.polyline.length > 0 ? polyline : null}
+        </MapView>
+
+        <View
+          style={styles.stateContainer}
+          maxHeight={
+            Constants.STATE_HEIGHT[this.state.driverState]
+              ? Dimensions.get("window").height *
+                (Number.parseFloat(Constants.STATE_HEIGHT[this.state.driverState]) / 100)
+              : null
+          }
+          elevation={3}>
+          {this.getState()}
+        </View>
+        {/*<View style={styles.centerNavigationView}>
             <TouchableHighlight
               flex={1}
               onPress={() => {
@@ -781,7 +837,7 @@ class Home extends Component {
               <Text>Olo</Text>
             </TouchableHighlight>
             </View>*/}
-          <Driver
+        <Driver
             elevation={3}
             avatar={this.state.user.profile}
             name={this.state.user.firstName + " " + this.state.user.lastName}
@@ -794,84 +850,33 @@ class Home extends Component {
               this.props.navigation.openDrawer();
               console.log("drawer");
             }}
-          />
-          {Platform.OS === "android" ? ToastAndroid.show("Dev mode", ToastAndroid.LONG) : null}
-        </View>
-      );
-    } else {
-      return (
-        <View style={{ flex: 1 }}>
-          {/* <KeepAwake /> */}
-          <MapView
-            style={{ flex: 1 }}
-            showsTraffic
-            showsUserLocation
-            showsMyLocationButton
-            loadingBackgroundColor="#FF9800"
-            initialRegion={Constants.INITIAL_REGION}
-            ref={ref => (this.map = ref)}
-            mapPadding={{
-              /*bottom:
-                Dimensions.get("window").height *
-                (Number.parseFloat(STATE_HEIGHT[this.state.driverState]) / 100),*/
-              top: Dimensions.get("window").height * 0.1,
-              left: 0,
-              right: 0,
-            }}>
-            {this.state.order.origin.lat && this.state.order.origin.lng ? originMarker : null}
-            {this.state.order.destination.lat && this.state.order.destination.lng
-              ? destinationMarker
-              : null}
-            {this.state.polyline.length > 0 ? polyline : null}
-          </MapView>
-          <View
-            style={styles.stateContainer}
-            //height={STATE_HEIGHT[this.state.driverState]}
-            maxHeight={
-              Constants.STATE_HEIGHT[this.state.driverState]
-                ? Dimensions.get("window").height *
-                  (Number.parseFloat(Constants.STATE_HEIGHT[this.state.driverState]) / 100)
-                : null
-            }
-            elevation={3}>
-            {this.getState()}
-          </View>
-          {/*<View style={styles.centerNavigationView}>
-            <TouchableHighlight
-              flex={1}
-              onPress={() => {
-                if (this.map) {
-                  this.map.animateCamera({
-                    pitch: 90,
-                    heading: 180,
-                    altitude: 10,
-                    zoom: 60,
-                  });
-                }
-              }}>
-              <Text>Olo</Text>
-            </TouchableHighlight>
-            </View>*/}
-          <Driver
-            elevation={3}
-            avatar={this.state.user.profile}
-            name={this.state.user.firstName + " " + this.state.user.lastName}
-            username={this.state.user.username}
-            signOut={firebase.auth().signOut}
-            status={this.state.driverStatus}
-            updateDriverStatus={this.updateDriverStatus}
-            devToggle={this.devToggle}
-            openDrawer={() => {
-              this.props.navigation.openDrawer();
-              console.log("drawer");
-            }}
+        />
+        <View style={styles.locationButtonView}>
+          <Icon
+            name="gps-fixed"
+            reverse
+            raised
+            containerStyle={styles.locationButton}
+            color={Constants.COLOR_ORANGE}
+            onPress={() => this.goToUserLocation()}
           />
         </View>
-      );
-    }
+        {Platform.OS === "android" && this.state.user.dev ? ToastAndroid.show("Dev mode", ToastAndroid.LONG) : null}
+      </View>
+    );
   }
 }
 const styles = StyleSheet.create({
+  locationButton: {
+    elevation: 3,
+  },
+
+  locationButtonView: {
+    position: "absolute",
+    top: "10%",
+    right: "2%",
+  },
+
   avatar: {
     backgroundColor: "gray",
     justifyContent: "center",
@@ -924,7 +929,7 @@ TaskManager.defineTask(Constants.LOCATION_TASK_NAME, async ({ data: { locations 
     })
       .then(res => res.text())
       .then(Response => {
-        console.log("success:", Response);
+        console.log("Location task response:", Response);
       })
       .catch(error => console.log(error));
   }
