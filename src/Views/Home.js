@@ -67,6 +67,7 @@ class Home extends Component {
 
     this.state = {
       driverState: Constants.DRIVER_STATE_NONE,
+      //driverState: Constants.DRIVER_STATE_ASKING,
       //driverState: Constants.DRIVER_STATE_GOING_TO_CLIENT,
       selectedIndex: 0,
       user: {},
@@ -93,7 +94,8 @@ class Home extends Component {
         usingGps: true,
       },*/
       polyline: [],
-      navigating: false,
+      navigating: true,
+      navigationCentered: true,
     };
 
     if (Constants.DEBUG_MODE) {
@@ -209,10 +211,7 @@ class Home extends Component {
                       isManual: !order.usingGps,
                     });
                     if (order.usingGps) {
-                      this.getPoly(this.state.driverp
-                                   
-                                   
-                                   tion, order.origin);
+                      this.getPoly(this.state.driverpostion, order.origin);
                     }
                     break;
                   }
@@ -237,7 +236,7 @@ class Home extends Component {
                       isManual: !order.usingGps,
                     });
                     if (order.usingGps) {
-                      this.getPoly(this.state.driverposition, order.destination);
+                      this.getPoly(this.state.driverPosition, order.destination);
                     }
 
                     break;
@@ -286,14 +285,19 @@ class Home extends Component {
             },
           });
 
-          if (this.state.navigating) {
-            this.goToUserLocation();
+          //console.log("Navigating", this.state.navigating);
+          //console.log("Centered", this.state.navigationCentered);
+
+          if (this.state.navigating && this.state.navigationCentered) {
+            //this.goToUserLocation();
             this.map.animateCamera({
-              //latitude: location.coords.latitude,
-              //longitude: location.coords.longitude,
+              center: {
+                latitude: location.coords.latitude,
+                longitude: location.coords.longitude,
+              },
               heading: location.coords.heading,
               pitch: 70,
-              zoom: 50
+              zoom: 50,
             });
           }
         }
@@ -790,6 +794,7 @@ class Home extends Component {
         <MapView
           style={{ flex: 1 }}
           onMapReady={() => this.goToUserLocation()}
+          onPanDrag={() => this.setState({navigationCentered: false})}
           showsTraffic
           showsUserLocation
           loadingBackgroundColor="#FF9800"
@@ -803,9 +808,15 @@ class Home extends Component {
             left: 0,
             right: 0,
           }}>
-          {this.state.order.origin.lat && this.state.order.origin.lng ? originMarker : null}
-          {this.state.order.destination.lat && this.state.order.destination.lng
-            ? destinationMarker
+          {this.state.order
+            ? this.state.order.origin.lat && this.state.order.origin.lng
+              ? originMarker
+              : null
+            : null}
+          {this.state.order
+            ? this.state.order.destination.lat && this.state.order.destination.lng
+              ? destinationMarker
+              : null
             : null}
           {this.state.polyline.length > 0 ? polyline : null}
         </MapView>
@@ -838,18 +849,18 @@ class Home extends Component {
             </TouchableHighlight>
             </View>*/}
         <Driver
-            elevation={3}
-            avatar={this.state.user.profile}
-            name={this.state.user.firstName + " " + this.state.user.lastName}
-            username={this.state.user.username}
-            signOut={firebase.auth().signOut}
-            status={this.state.driverStatus}
-            updateDriverStatus={this.updateDriverStatus}
-            devToggle={this.devToggle}
-            openDrawer={() => {
-              this.props.navigation.openDrawer();
-              console.log("drawer");
-            }}
+          elevation={3}
+          avatar={this.state.user.profile}
+          name={this.state.user.firstName + " " + this.state.user.lastName}
+          username={this.state.user.username}
+          signOut={firebase.auth().signOut}
+          status={this.state.driverStatus}
+          updateDriverStatus={this.updateDriverStatus}
+          devToggle={this.devToggle}
+          openDrawer={() => {
+            this.props.navigation.openDrawer();
+            console.log("drawer");
+          }}
         />
         <View style={styles.locationButtonView}>
           <Icon
@@ -858,10 +869,15 @@ class Home extends Component {
             raised
             containerStyle={styles.locationButton}
             color={Constants.COLOR_ORANGE}
-            onPress={() => this.goToUserLocation()}
+            onPress={() => {
+              if (this.state.navigating) this.setState({navigationCentered: true});
+              else this.goToUserLocation();
+            }}
           />
         </View>
-        {Platform.OS === "android" && this.state.user.dev ? ToastAndroid.show("Dev mode", ToastAndroid.LONG) : null}
+        {Platform.OS === "android" && this.state.user.dev
+          ? ToastAndroid.show("Dev mode", ToastAndroid.LONG)
+          : null}
       </View>
     );
   }
