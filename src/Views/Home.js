@@ -727,45 +727,44 @@ class Home extends Component {
       }
     }
 
-    if (this.state.dev) {
-      return (
-        <View style={{ flex: 1 }}>
-          {/* <KeepAwake /> */}
-          <MapView
-            style={{ flex: 1 }}
-            showsTraffic
-            showsUserLocation
-            showsMyLocationButton
-            loadingBackgroundColor="#FF9800"
-            initialRegion={Constants.INITIAL_REGION}
-            ref={ref => (this.map = ref)}
-            mapPadding={{
-              /*bottom:
+    return (
+      <View style={{ flex: 1 }}>
+        {/* <KeepAwake /> */}
+        <MapView
+          style={{ flex: 1 }}
+          showsTraffic
+          showsUserLocation
+          showsMyLocationButton
+          loadingBackgroundColor="#FF9800"
+          initialRegion={Constants.INITIAL_REGION}
+          ref={ref => (this.map = ref)}
+          mapPadding={{
+            /*bottom:
                 Dimensions.get("window").height *
                 (Number.parseFloat(STATE_HEIGHT[this.state.driverState]) / 100),*/
-              top: Dimensions.get("window").height * 0.1,
-              left: 0,
-              right: 0,
-            }}>
-            {this.state.order.origin.lat && this.state.order.origin.lng ? originMarker : null}
-            {this.state.order.destination.lat && this.state.order.destination.lng
-              ? destinationMarker
-              : null}
-            {this.state.polyline.length > 0 ? polyline : null}
-          </MapView>
-          <View
-            style={styles.stateContainer}
-            //height={STATE_HEIGHT[this.state.driverState]}
-            maxHeight={
-              Constants.STATE_HEIGHT[this.state.driverState]
-                ? Dimensions.get("window").height *
-                  (Number.parseFloat(Constants.STATE_HEIGHT[this.state.driverState]) / 100)
-                : null
-            }
-            elevation={3}>
-            {this.getState()}
-          </View>
-          {/*<View style={styles.centerNavigationView}>
+            top: Dimensions.get("window").height * 0.1,
+            left: 0,
+            right: 0,
+          }}>
+          {this.state.order.origin.lat && this.state.order.origin.lng ? originMarker : null}
+          {this.state.order.destination.lat && this.state.order.destination.lng
+            ? destinationMarker
+            : null}
+          {this.state.polyline.length > 0 ? polyline : null}
+        </MapView>
+        <View
+          style={styles.stateContainer}
+          //height={STATE_HEIGHT[this.state.driverState]}
+          maxHeight={
+            Constants.STATE_HEIGHT[this.state.driverState]
+              ? Dimensions.get("window").height *
+                (Number.parseFloat(Constants.STATE_HEIGHT[this.state.driverState]) / 100)
+              : null
+          }
+          elevation={3}>
+          {this.getState()}
+        </View>
+        {/*<View style={styles.centerNavigationView}>
             <TouchableHighlight
               flex={1}
               onPress={() => {
@@ -781,94 +780,25 @@ class Home extends Component {
               <Text>Olo</Text>
             </TouchableHighlight>
             </View>*/}
-          <Driver
-            elevation={3}
-            avatar={this.state.user.profile}
-            name={this.state.user.firstName + " " + this.state.user.lastName}
-            username={this.state.user.username}
-            signOut={firebase.auth().signOut}
-            status={this.state.driverStatus}
-            updateDriverStatus={this.updateDriverStatus}
-            devToggle={this.devToggle}
-            openDrawer={() => {
-              this.props.navigation.openDrawer();
-              console.log("drawer");
-            }}
-          />
-          {Platform.OS === "android" ? ToastAndroid.show("Dev mode", ToastAndroid.LONG) : null}
-        </View>
-      );
-    } else {
-      return (
-        <View style={{ flex: 1 }}>
-          {/* <KeepAwake /> */}
-          <MapView
-            style={{ flex: 1 }}
-            showsTraffic
-            showsUserLocation
-            showsMyLocationButton
-            loadingBackgroundColor="#FF9800"
-            initialRegion={Constants.INITIAL_REGION}
-            ref={ref => (this.map = ref)}
-            mapPadding={{
-              /*bottom:
-                Dimensions.get("window").height *
-                (Number.parseFloat(STATE_HEIGHT[this.state.driverState]) / 100),*/
-              top: Dimensions.get("window").height * 0.1,
-              left: 0,
-              right: 0,
-            }}>
-            {this.state.order.origin.lat && this.state.order.origin.lng ? originMarker : null}
-            {this.state.order.destination.lat && this.state.order.destination.lng
-              ? destinationMarker
-              : null}
-            {this.state.polyline.length > 0 ? polyline : null}
-          </MapView>
-          <View
-            style={styles.stateContainer}
-            //height={STATE_HEIGHT[this.state.driverState]}
-            maxHeight={
-              Constants.STATE_HEIGHT[this.state.driverState]
-                ? Dimensions.get("window").height *
-                  (Number.parseFloat(Constants.STATE_HEIGHT[this.state.driverState]) / 100)
-                : null
-            }
-            elevation={3}>
-            {this.getState()}
-          </View>
-          {/*<View style={styles.centerNavigationView}>
-            <TouchableHighlight
-              flex={1}
-              onPress={() => {
-                if (this.map) {
-                  this.map.animateCamera({
-                    pitch: 90,
-                    heading: 180,
-                    altitude: 10,
-                    zoom: 60,
-                  });
-                }
-              }}>
-              <Text>Olo</Text>
-            </TouchableHighlight>
-            </View>*/}
-          <Driver
-            elevation={3}
-            avatar={this.state.user.profile}
-            name={this.state.user.firstName + " " + this.state.user.lastName}
-            username={this.state.user.username}
-            signOut={firebase.auth().signOut}
-            status={this.state.driverStatus}
-            updateDriverStatus={this.updateDriverStatus}
-            devToggle={this.devToggle}
-            openDrawer={() => {
-              this.props.navigation.openDrawer();
-              console.log("drawer");
-            }}
-          />
-        </View>
-      );
-    }
+        <Driver
+          elevation={3}
+          avatar={this.state.user.profile}
+          name={this.state.user.firstName + " " + this.state.user.lastName}
+          username={this.state.user.username}
+          signOut={firebase.auth().signOut}
+          status={this.state.driverStatus}
+          updateDriverStatus={this.updateDriverStatus}
+          devToggle={this.devToggle}
+          openDrawer={() => {
+            this.props.navigation.openDrawer();
+            console.log("drawer");
+          }}
+        />
+        {this.state.dev && Platform.OS === "android"
+          ? ToastAndroid.show("Dev mode", ToastAndroid.LONG)
+          : null}
+      </View>
+    );
   }
 }
 const styles = StyleSheet.create({
