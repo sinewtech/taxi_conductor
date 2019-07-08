@@ -94,8 +94,8 @@ class Home extends Component {
         usingGps: true,
       },*/
       polyline: [],
-      navigating: true,
-      navigationCentered: true,
+      navigating: false,
+      navigationCentered: false,
     };
 
     if (Constants.DEBUG_MODE) {
@@ -375,6 +375,7 @@ class Home extends Component {
                     this.setState({
                       driverState: Constants.DRIVER_STATE_GOING_TO_CLIENT,
                       navigating: true,
+                      navigationCentered: true,
                     });
                   },
                 },
@@ -562,7 +563,11 @@ class Home extends Component {
                       {
                         text: "Sí",
                         onPress: () => {
-                          this.setState({ navigating: false, order: null });
+                          this.setState({
+                            navigating: false,
+                            navigationCentered: false,
+                            order: null,
+                          });
                           this.map.animateCamera({
                             latitude: Constants.INITIAL_REGION.latitude,
                             longitude: Constants.INITIAL_REGION.longitude,
@@ -794,7 +799,7 @@ class Home extends Component {
         <MapView
           style={{ flex: 1 }}
           onMapReady={() => this.goToUserLocation()}
-          onPanDrag={() => this.setState({navigationCentered: false})}
+          onPanDrag={() => this.setState({ navigationCentered: false })}
           showsTraffic
           showsUserLocation
           loadingBackgroundColor="#FF9800"
@@ -870,7 +875,7 @@ class Home extends Component {
             containerStyle={styles.locationButton}
             color={Constants.COLOR_ORANGE}
             onPress={() => {
-              if (this.state.navigating) this.setState({navigationCentered: true});
+              if (this.state.navigating) this.setState({ navigationCentered: true });
               else this.goToUserLocation();
             }}
           />
