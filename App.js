@@ -55,7 +55,7 @@ const drawerContent = props => (
       <View style={styles.headerInfo}>
         <Text style={styles.title}>Bienvenido</Text>
         <Text style={styles.subtitle}>
-          {firebase.auth().currentUser ? firebase.auth().currentUser.displayName : "Nombre"}
+          {firebase.auth().currentUser ? firebase.auth().currentUser.displayName : "Conductor"}
         </Text>
       </View>
     </View>
