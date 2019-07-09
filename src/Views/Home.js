@@ -71,7 +71,7 @@ class Home extends Component {
       //driverState: Constants.DRIVER_STATE_GOING_TO_CLIENT,
       selectedIndex: 0,
       user: {},
-      order: { origin: {}, destination: {}, manual: true },
+      order: { origin: {}, destination: {}, price: -1, manual: true },
       /*order: {
         destination: {
           address: "UNAH, Tegucigalpa, Honduras",
@@ -337,7 +337,7 @@ class Home extends Component {
   clear = () => {
     this.setState({
       driverState: Constants.DRIVER_STATE_NONE,
-      order: { origin: {}, destination: {} },
+      order: { origin: {}, destination: {}, price: -1 },
       polyline: [],
     });
   };
@@ -358,7 +358,6 @@ class Home extends Component {
       case Constants.DRIVER_STATE_ASKING: {
         return (
           <Asking
-            price={this.state.order.price}
             isManual={this.state.isManual}
             order={this.state.order}
             onAccept={() => {
@@ -392,7 +391,7 @@ class Home extends Component {
                       this.updateOrderStatus(Constants.QUOTE_STATUS_DRIVER_DENNIED);
 
                       this.setState({
-                        order: { origin: {}, destination: {} },
+                        order: { origin: {}, destination: {}, price: -1 },
                         polyline: [],
                         driverState: Constants.DRIVER_STATE_NONE,
                       });
@@ -474,6 +473,20 @@ class Home extends Component {
               alignItems: "center",
             }}>
             <Icon name="local-taxi" size={100} color="#4CAF50" />
+            <Text
+              style={{
+                textAlign: "center",
+                fontSize: 16,
+              }}>
+              {"Estás esperando a " + this.state.order.userName}
+            </Text>
+            <Text
+              style={{
+                textAlign: "center",
+                fontSize: 14,
+              }}>
+              {"Puedes llamarle al " + this.state.order.userPhone}
+            </Text>
             <Text
               style={{
                 textAlign: "center",
@@ -650,14 +663,17 @@ class Home extends Component {
   };
 
   deactivate = () => {
-    this.setState({ order: { origin: {}, destination: {} } });
+    this.setState({ order: { origin: {}, destination: {}, price: -1 } });
   };
 
-  _handleNotification = notification => {
+  _handleNotification = async notification => {
     console.log("Notificación recibida", notification);
 
     if (notification.data) {
+      await this.setState({order: notification.data.order});
+
       console.log("notification id", notification.data.id);
+
       if (notification.data.id === Constants.DRIVER_NOTIFICATION_CONFIRMING) {
         firebase
           .database()
@@ -699,6 +715,8 @@ class Home extends Component {
             this.updateDriverStatus(Constants.DRIVER_STATUS_CONFIRMING_DRIVE);
           });
       } else if (notification.data.id === Constants.DRIVER_NOTIFICATION_CONFIRMED) {
+        console.log("Verificando si orden es manual:", this.state.order);
+
         if (this.state.order.manual)
           firebase
             .database()
@@ -709,7 +727,7 @@ class Home extends Component {
               console.log("Orden manual recibida:", data);
 
               await this.setState({
-                order: data,
+                //order: data,
                 orderuid: notification.data.order.uid,
                 isManual: notification.data.order.manual,
                 driverState: Constants.DRIVER_STATE_ASKING,
@@ -756,34 +774,38 @@ class Home extends Component {
     let polyline = null;
 
     if (this.state.order) {
-      if (this.state.isManual === false) {
+      if (this.state.order.origin && this.state.order.destination) {
         console.log("Preparando componentes para marcadores...", this.state.order);
 
-        originMarker = (
-          <MapView.Marker
-            title="Origen"
-            description="Donde ese encuentra el cliente."
-            pinColor="#4CAF50"
-            coordinate={{
-              latitude: this.state.order.origin.lat,
-              longitude: this.state.order.origin.lng,
-            }}
-          />
-        );
+        if (this.state.order.origin.lat && this.state.order.origin.lng) {
+          originMarker = (
+            <MapView.Marker
+              title="Origen"
+              description="Donde ese encuentra el cliente."
+              pinColor="#4CAF50"
+              coordinate={{
+                latitude: this.state.order.origin.lat,
+                longitude: this.state.order.origin.lng,
+              }}
+            />
+          ); 
+        }
 
-        destinationMarker = (
-          <MapView.Marker
-            title="Destino"
-            description="Lleva al cliente acá."
-            pinColor="#FF9800"
-            coordinate={{
-              latitude: this.state.order.destination.lat,
-              longitude: this.state.order.destination.lng,
-            }}
-          />
-        );
+        if (this.state.order.destination.lat && this.state.order.destination.lng) {
+          destinationMarker = (
+            <MapView.Marker
+              title="Destino"
+              description="Lleva al cliente acá."
+              pinColor="#FF9800"
+              coordinate={{
+                latitude: this.state.order.destination.lat,
+                longitude: this.state.order.destination.lng,
+              }}
+            />
+          );
+        }
 
-        polyline = (
+        if (originMarker && destinationMarker) polyline = (
           <MapView.Polyline
             strokeWidth={4}
             strokeColor="#03A9F4"
@@ -813,16 +835,8 @@ class Home extends Component {
             left: 0,
             right: 0,
           }}>
-          {this.state.order
-            ? this.state.order.origin.lat && this.state.order.origin.lng
-              ? originMarker
-              : null
-            : null}
-          {this.state.order
-            ? this.state.order.destination.lat && this.state.order.destination.lng
-              ? destinationMarker
-              : null
-            : null}
+          {originMarker}
+          {destinationMarker}
           {this.state.polyline.length > 0 ? polyline : null}
         </MapView>
 

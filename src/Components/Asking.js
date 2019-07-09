@@ -4,14 +4,6 @@ import { Icon, Button } from "react-native-elements";
 
 class Asking extends Component {
   render() {
-    let precio = this.props.price;
-
-    if (precio === undefined) {
-      precio = null;
-    } else {
-      precio = precio.toFixed(2);
-    }
-
     console.log("Orden recibida", this.props.order);
 
     return (
