@@ -9,6 +9,7 @@ import {
   Platform,
   Dimensions,
   ToastAndroid,
+  AppState,
 } from "react-native";
 import { Notifications } from "expo";
 import KeepAwake from "expo-keep-awake";
@@ -694,7 +695,6 @@ class Home extends Component {
       await this.setState({ order: notification.data.order });
 
       console.log("notification id", notification.data.id);
-
       if (notification.data.id === Constants.DRIVER_NOTIFICATION_CONFIRMING) {
         firebase
           .database()
@@ -760,6 +760,10 @@ class Home extends Component {
         this.updateDriverStatus(Constants.DRIVER_STATUS_LOOKING_FOR_DRIVE);
       }
     }
+    console.log("se mandaron", AppState.currentState);
+    if (Platform.OS === "android" && AppState.currentState === "active") {
+      await Notifications.dismissAllNotificationsAsync();
+    }
   };
   static getcurrentuser = () => {
     return firebase.auth().currentUser.uid;
@@ -793,7 +797,6 @@ class Home extends Component {
     let originMarker = null;
     let destinationMarker = null;
     let polyline = null;
-
     if (this.state.order) {
       if (this.state.order.origin && this.state.order.destination) {
         console.log("Preparando componentes para marcadores...", this.state.order);
