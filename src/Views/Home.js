@@ -421,6 +421,20 @@ class Home extends Component {
             <Text
               style={{
                 textAlign: "center",
+                fontSize: 16,
+              }}>
+              {"LLama a " + this.state.order.userName}
+            </Text>
+            <Text
+              style={{
+                textAlign: "center",
+                fontSize: 14,
+              }}>
+              {" al " + this.state.order.userPhone + " y dile que pronto llegaras"}
+            </Text>
+            <Text
+              style={{
+                textAlign: "center",
                 fontWeight: "bold",
                 fontSize: 25,
               }}>
@@ -670,7 +684,7 @@ class Home extends Component {
     console.log("Notificación recibida", notification);
 
     if (notification.data) {
-      await this.setState({order: notification.data.order});
+      await this.setState({ order: notification.data.order });
 
       console.log("notification id", notification.data.id);
 
@@ -788,7 +802,7 @@ class Home extends Component {
                 longitude: this.state.order.origin.lng,
               }}
             />
-          ); 
+          );
         }
 
         if (this.state.order.destination.lat && this.state.order.destination.lng) {
@@ -805,13 +819,14 @@ class Home extends Component {
           );
         }
 
-        if (originMarker && destinationMarker) polyline = (
-          <MapView.Polyline
-            strokeWidth={4}
-            strokeColor="#03A9F4"
-            coordinates={this.drawPolyline()}
-          />
-        );
+        if (originMarker && destinationMarker)
+          polyline = (
+            <MapView.Polyline
+              strokeWidth={4}
+              strokeColor="#03A9F4"
+              coordinates={this.drawPolyline()}
+            />
+          );
       }
     }
 
