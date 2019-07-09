@@ -67,8 +67,6 @@ class Home extends Component {
 
     this.state = {
       driverState: Constants.DRIVER_STATE_NONE,
-      //driverState: Constants.DRIVER_STATE_ASKING,
-      //driverState: Constants.DRIVER_STATE_GOING_TO_CLIENT,
       selectedIndex: 0,
       user: {},
       order: { origin: {}, destination: {}, price: -1, manual: true },
@@ -349,6 +347,13 @@ class Home extends Component {
       .child("/quotes/" + this.state.orderuid + "/status")
       .set(status);
   };
+  updateTimeStamps = dateTime => {
+    firebase
+      .database()
+      .ref()
+      .child("quotes/" + this.state.orderuid + "/timeStamps/" + dateTime)
+      .set(new Date().toString());
+  };
 
   getState = () => {
     switch (this.state.driverState) {
@@ -367,10 +372,10 @@ class Home extends Component {
                   onPress: () => {
                     this.updateDriverStatus(Constants.DRIVER_STATUS_ON_A_DRIVE);
                     this.updateOrderStatus(Constants.QUOTE_STATUS_DRIVER_GOING_TO_CLIENT);
+                    this.updateTimeStamps("acceptedOrder");
                     if (!this.state.isManual) {
                       this.getPoly(this.state.driverPosition, this.state.order.origin);
                     }
-
                     this.setState({
                       driverState: Constants.DRIVER_STATE_GOING_TO_CLIENT,
                       navigating: true,
@@ -462,6 +467,7 @@ class Home extends Component {
                         text: "ok",
                         onPress: () => {
                           this.updateOrderStatus(Constants.QUOTE_STATUS_WAITING_CLIENT);
+                          this.updateTimeStamps("driverArrived");
                           this.setState({
                             driverState: Constants.DRIVER_STATE_CLIENT_IS_WITH_HIM,
                           });
@@ -531,19 +537,19 @@ class Home extends Component {
                         text: "ok",
                         onPress: () => {
                           this.updateOrderStatus(Constants.QUOTE_STATUS_CLIENT_ABORDED);
+                          this.updateTimeStamps("clientAborded");
+                          this.setState({
+                            driverState: Constants.DRIVER_STATE_GOING_TO_DESTINATION,
+                          });
+                          if (!this.state.isManual) {
+                            this.getPoly(this.state.driverPosition, this.state.order.destination);
+                          }
                         },
                       },
                     ],
                     { cancelable: false }
                   );
                   console.log("destination", this.state.destination);
-
-                  this.setState({
-                    driverState: Constants.DRIVER_STATE_GOING_TO_DESTINATION,
-                  });
-                  if (!this.state.isManual) {
-                    this.getPoly(this.state.driverPosition, this.state.order.destination);
-                  }
                 }}
               />
             </View>
@@ -604,6 +610,7 @@ class Home extends Component {
                           });
                           this.updateDriverStatus(Constants.DRIVER_STATUS_LOOKING_FOR_DRIVE);
                           this.updateOrderStatus(Constants.QUOTE_STATUS_FINISHED);
+                          this.updateTimeStamps("clientArrived");
 
                           this.clear();
 
@@ -843,9 +850,6 @@ class Home extends Component {
           initialRegion={Constants.INITIAL_REGION}
           ref={ref => (this.map = ref)}
           mapPadding={{
-            /*bottom:
-                Dimensions.get("window").height *
-                (Number.parseFloat(STATE_HEIGHT[this.state.driverState]) / 100),*/
             top: Dimensions.get("window").height * 0.1,
             left: 0,
             right: 0,
@@ -866,22 +870,6 @@ class Home extends Component {
           elevation={3}>
           {this.getState()}
         </View>
-        {/*<View style={styles.centerNavigationView}>
-            <TouchableHighlight
-              flex={1}
-              onPress={() => {
-                if (this.map) {
-                  this.map.animateCamera({
-                    pitch: 90,
-                    heading: 180,
-                    altitude: 10,
-                    zoom: 60,
-                  });
-                }
-              }}>
-              <Text>Olo</Text>
-            </TouchableHighlight>
-            </View>*/}
         <Driver
           elevation={3}
           avatar={this.state.user.profile}
@@ -909,9 +897,9 @@ class Home extends Component {
             }}
           />
         </View>
-        {Platform.OS === "android" && this.state.user.dev
+        {/* {Platform.OS === "android" && this.state.user.dev
           ? ToastAndroid.show("Dev mode", ToastAndroid.LONG)
-          : null}
+          : null} */}
       </View>
     );
   }
