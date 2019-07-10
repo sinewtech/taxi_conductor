@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import { Text, View, StyleSheet } from "react-native";
-import { Icon, Button } from "react-native-elements";
+import { Icon, Button, Divider } from "react-native-elements";
+import * as Constants from "../Constants";
 
 class Asking extends Component {
   render() {
@@ -22,13 +23,13 @@ class Asking extends Component {
           </View>
           <Text style={styles.title}>{this.props.order.destination.name}</Text>
           <Text style={styles.subtitle}>{this.props.order.destination.address}</Text>
-          <Text style={styles.price}>Por L. {this.props.order.price.toFixed(2)}</Text>
         </View>
+        <Text style={styles.price}>Por L. {this.props.order.price.toFixed(2)}</Text>
         <View style={styles.buttonView}>
           <Button
-            containerStyle={{ flex: 1 }}
+            containerStyle={{ flex: 2 }}
             buttonStyle={styles.buttonReject}
-            title="X"
+            title="Rechazar"
             onPress={this.props.onReject}
           />
           <Button
@@ -45,14 +46,20 @@ class Asking extends Component {
 
 const styles = StyleSheet.create({
   heading: {
-    fontSize: 25,
+    fontSize: 28,
     flex: 1,
     fontWeight: "bold",
+    textAlign: "center",
+    width: "100%",
+    paddingTop: 5,
+    paddingBottom: 5,
+    backgroundColor: Constants.COLOR_ORANGE,
+    color: "white"
   },
 
   title: {
     fontSize: 22,
-    //fontWeight: "bold",
+    fontWeight: "bold",
     flex: 1,
     textAlign: "center",
   },
@@ -61,21 +68,27 @@ const styles = StyleSheet.create({
     fontSize: 18,
     flex: 1,
     textAlign: "center",
-    display: "none",
   },
 
   price: {
-    marginBottom: 7,
+    paddingBottom: 7,
+    paddingTop: 7,
     fontSize: 22,
     fontWeight: "bold",
     textAlign: "center",
+    width: "100%",
     flex: 1,
+    borderTopColor: "lightgray",
+    borderTopWidth: 1,
   },
 
   textView: {
     paddingLeft: 15,
     paddingRight: 15,
     flex: 3,
+    width: "100%",
+    paddingBottom: 10,
+    paddingTop: 10,
   },
 
   buttonView: {

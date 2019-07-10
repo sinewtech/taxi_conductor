@@ -22,6 +22,12 @@ import Briefing from "../Components/Briefing";
 import Asking from "../Components/Asking";
 import firebase from "../../firebase";
 import * as Constants from "../Constants";
+import {
+  NavigatingToClient,
+  WaitingClient,
+  NavigatingToDestination,
+} from "../Components/Navigating";
+
 const decodePolyline = require("decode-google-map-polyline");
 
 async function registerForPushNotificationsAsync() {
@@ -68,30 +74,10 @@ class Home extends Component {
 
     this.state = {
       driverState: Constants.DRIVER_STATE_NONE,
+      //driverState: Constants.DRIVER_STATE_GOING_TO_CLIENT,
       selectedIndex: 0,
       user: {},
       order: { origin: {}, destination: {}, price: -1, manual: true },
-      /*order: {
-        destination: {
-          address: "UNAH, Tegucigalpa, Honduras",
-          lat: 14.0846099,
-          lng: -87.16208569999999,
-          name: "Universidad Nacional Autónoma de Honduras",
-          placeId: "ChIJAAAAAAAAAAARSMV-oKtMiMk",
-        },
-        dispatchdatetime: "Thu Jul 04 2019 22:26:09 GMT-0600 (Central Standard Time)",
-        driver: "ttYjTWJG29Xf7NhYs1IhcnJlvm32",
-        origin: {
-          address: "Santa Lucia, Honduras",
-          lat: 14.1156621,
-          lng: -87.1030485,
-          name: "Cerca de Santa Lucia",
-        },
-        price: 123,
-        status: 7,
-        userUid: "icZlnhSMmsTgQV1r5XAzgZ2OKmi1",
-        usingGps: true,
-      },*/
       polyline: [],
       navigating: false,
       navigationCentered: false,
@@ -362,11 +348,28 @@ class Home extends Component {
         return <Briefing />;
       }
       case Constants.DRIVER_STATE_ASKING: {
+        if (!this.state.order.userName) {
+          console.log("Nombre del cliente no recuperado.");
+
+          firebase
+            .database()
+            .ref()
+            .child("quotes/" + this.state.orderuid + "/")
+            .once("value", async snap => {
+              let data = snap.exportVal();
+
+              await this.setState({
+                order: data,
+              });
+            });
+        }
+
         return (
           <Asking
             isManual={this.state.isManual}
             order={this.state.order}
             onAccept={() => {
+              this.map.fitToElements(true);
               Alert.alert("Navegación", "Vamos hacia el cliente", [
                 {
                   text: "OK",
@@ -379,8 +382,8 @@ class Home extends Component {
                     }
                     this.setState({
                       driverState: Constants.DRIVER_STATE_GOING_TO_CLIENT,
-                      navigating: true,
-                      navigationCentered: true,
+                      //navigating: true,
+                      //navigationCentered: true,
                     });
                   },
                 },
@@ -416,223 +419,141 @@ class Home extends Component {
       }
       case Constants.DRIVER_STATE_GOING_TO_CLIENT: {
         this.updateDriverStatus(Constants.DRIVER_STATUS_ON_A_DRIVE);
-        return (
-          <View
-            style={{
-              flex: 1,
-              justifyContent: "center",
-              alignItems: "center",
-            }}>
-            <Icon name="local-taxi" size={100} color="#4CAF50" />
-            <Text
-              style={{
-                textAlign: "center",
-                fontSize: 16,
-              }}>
-              {"LLama a " + this.state.order.userName}
-            </Text>
-            <Text
-              style={{
-                textAlign: "center",
-                fontSize: 14,
-              }}>
-              {" al " + this.state.order.userPhone + " y dile que pronto llegaras"}
-            </Text>
-            <Text
-              style={{
-                textAlign: "center",
-                fontWeight: "bold",
-                fontSize: 25,
-              }}>
-              ¿Llegaste a la ubicación del cliente?
-            </Text>
-            <View
-              style={{
-                flex: 1,
-                justifyContent: "center",
-                alignItems: "center",
-                flexDirection: "row",
-              }}>
-              <Button
-                containerStyle={{ flex: 1, marginRight: 5 }}
-                buttonStyle={{ height: 75 }}
-                title="Si"
-                onPress={() => {
-                  console.log("Confirmando status para orden", this.state.orderuid);
 
-                  Alert.alert(
-                    "Notificando al cliente",
-                    "Le notificaremos tu llegada al cliente.",
-                    [
-                      {
-                        text: "ok",
-                        onPress: () => {
-                          this.updateOrderStatus(Constants.QUOTE_STATUS_WAITING_CLIENT);
-                          this.updateTimeStamps("driverArrived");
-                          this.setState({
-                            driverState: Constants.DRIVER_STATE_CLIENT_IS_WITH_HIM,
-                          });
+        return (
+          <NavigatingToClient
+            order={this.state.order}
+            next={() =>
+              Alert.alert("Confirma tu llegada", "¿Ya estás esperando al cliente?", [
+                { text: "No" },
+                {
+                  text: "Sí",
+                  onPress: () => {
+                    this.goToUserLocation();
+
+                    console.log("Confirmando status para orden", this.state.orderuid);
+
+                    Alert.alert(
+                      "Notificando al cliente",
+                      this.state.order.manual
+                        ? "Por favor llama al cliente y notificale tu llegada."
+                        : "Le notificaremos tu llegada al cliente.",
+                      [
+                        {
+                          text: "ok",
+                          onPress: () => {
+                            this.updateOrderStatus(Constants.QUOTE_STATUS_WAITING_CLIENT);
+                            this.updateTimeStamps("driverArrived");
+                            this.setState({
+                              driverState: Constants.DRIVER_STATE_CLIENT_IS_WITH_HIM,
+                            });
+                          },
                         },
-                      },
-                    ],
-                    { cancelable: false }
-                  );
-                  console.log("destination", this.state.destination);
-                }}
-              />
-            </View>
-          </View>
+                      ],
+                      { cancelable: false }
+                    );
+                    console.log("destination", this.state.destination);
+                  },
+                },
+              ])
+            }
+          />
         );
       }
 
       case Constants.DRIVER_STATE_CLIENT_IS_WITH_HIM: {
         return (
-          <View
-            style={{
-              flex: 1,
-              justifyContent: "center",
-              alignItems: "center",
-            }}>
-            <Icon name="local-taxi" size={100} color="#4CAF50" />
-            <Text
-              style={{
-                textAlign: "center",
-                fontSize: 16,
-              }}>
-              {"Estás esperando a " + this.state.order.userName}
-            </Text>
-            <Text
-              style={{
-                textAlign: "center",
-                fontSize: 14,
-              }}>
-              {"Puedes llamarle al " + this.state.order.userPhone}
-            </Text>
-            <Text
-              style={{
-                textAlign: "center",
-                fontWeight: "bold",
-                fontSize: 25,
-              }}>
-              {"¿El cliente ya abordó a la unidad?"}
-            </Text>
-            <View
-              style={{
-                flex: 1,
-                justifyContent: "center",
-                alignItems: "center",
-                flexDirection: "row",
-              }}>
-              <Button
-                containerStyle={{ flex: 1, marginRight: 5 }}
-                buttonStyle={{ height: 75 }}
-                title="Si"
-                onPress={() => {
-                  console.log("Confirmando status para orden", this.state.orderuid);
+          <WaitingClient
+            order={this.state.order}
+            next={() =>
+              Alert.alert("Confirma el abordaje", "¿El cliente ya abordó la unidad?", [
+                { text: "No" },
+                {
+                  text: "Sí",
+                  onPress: () => {
+                    this.map.fitToElements(true);
+                    console.log("Confirmando status para orden", this.state.orderuid);
 
-                  Alert.alert(
-                    "Navegacion",
-                    "Vamos hacia el destino del cliente.",
-                    [
-                      {
-                        text: "ok",
-                        onPress: () => {
-                          this.updateOrderStatus(Constants.QUOTE_STATUS_CLIENT_ABORDED);
-                          this.updateTimeStamps("clientAborded");
-                          this.setState({
-                            driverState: Constants.DRIVER_STATE_GOING_TO_DESTINATION,
-                          });
-                          if (!this.state.isManual) {
-                            this.getPoly(this.state.driverPosition, this.state.order.destination);
-                          }
+                    Alert.alert(
+                      "Navegación",
+                      "Vamos hacia el destino del cliente.",
+                      [
+                        {
+                          text: "ok",
+                          onPress: () => {
+                            this.updateOrderStatus(Constants.QUOTE_STATUS_CLIENT_ABORDED);
+                            this.updateTimeStamps("clientAborded");
+                            this.setState({
+                              driverState: Constants.DRIVER_STATE_GOING_TO_DESTINATION,
+                            });
+                            if (!this.state.isManual) {
+                              this.getPoly(this.state.driverPosition, this.state.order.destination);
+                            }
+                          },
                         },
-                      },
-                    ],
-                    { cancelable: false }
-                  );
-                  console.log("destination", this.state.destination);
-                }}
-              />
-            </View>
-          </View>
+                      ],
+                      { cancelable: false }
+                    );
+                    console.log("destination", this.state.destination);
+                  },
+                },
+              ])
+            }
+          />
         );
       }
 
       case Constants.DRIVER_STATE_GOING_TO_DESTINATION: {
         return (
-          <View
-            style={{
-              flex: 1,
-              justifyContent: "center",
-              alignItems: "center",
-            }}>
-            <Icon name="local-taxi" size={100} color="#4CAF50" />
-            <Text
-              style={{
-                textAlign: "center",
-                fontWeight: "bold",
-                fontSize: 25,
-              }}>
-              ¿Haz terminado tu desplazamiento?
-            </Text>
-            <View
-              style={{
-                flex: 1,
-                justifyContent: "center",
-                alignItems: "center",
-                flexDirection: "row",
-              }}>
-              <Button
-                containerStyle={{ flex: 1, marginRight: 5 }}
-                buttonStyle={{ height: 75 }}
-                title="Si"
-                onPress={() => {
-                  Alert.alert(
-                    "Terminando Desplazamiento",
-                    "¿Has terminado la carrera?",
-                    [
-                      {
-                        text: "No",
-                      },
-                      {
-                        text: "Sí",
-                        onPress: () => {
-                          this.setState({
-                            navigating: false,
-                            navigationCentered: false,
-                            order: null,
-                          });
-                          this.map.animateCamera({
-                            latitude: Constants.INITIAL_REGION.latitude,
-                            longitude: Constants.INITIAL_REGION.longitude,
-                            heading: 0,
-                            pitch: 0,
-                            zoom: 10,
-                          });
-                          this.updateDriverStatus(Constants.DRIVER_STATUS_LOOKING_FOR_DRIVE);
-                          this.updateOrderStatus(Constants.QUOTE_STATUS_FINISHED);
-                          this.updateTimeStamps("clientArrived");
+          <NavigatingToDestination
+            order={this.state.order}
+            next={() => {
+              Alert.alert(
+                "Terminando Desplazamiento",
+                "¿Has terminado la carrera?",
+                [
+                  {
+                    text: "No",
+                  },
+                  {
+                    text: "Sí",
+                    onPress: () => {
+                      this.setState({
+                        navigating: false,
+                        navigationCentered: false,
+                        order: null,
+                      });
 
-                          this.clear();
-
-                          Alert.alert(
-                            "Carrera terminada",
-                            "Gracias por cuidar a nuestro cliente.",
-                            [{ text: "Cerrar" }]
-                          );
+                      this.map.animateCamera({
+                        center: {
+                          latitude: Constants.INITIAL_REGION.latitude,
+                          longitude: Constants.INITIAL_REGION.longitude,
                         },
-                      },
-                    ],
-                    { cancelable: true }
-                  );
-                }}
-              />
-            </View>
-          </View>
+                        heading: 0,
+                        pitch: 0,
+                        zoom: 12,
+                      });
+                      this.updateDriverStatus(Constants.DRIVER_STATUS_LOOKING_FOR_DRIVE);
+                      this.updateOrderStatus(Constants.QUOTE_STATUS_FINISHED);
+                      this.updateTimeStamps("clientArrived");
+
+                      this.clear();
+
+                      Alert.alert("Carrera terminada", "Gracias por cuidar a nuestro cliente.", [
+                        { text: "Cerrar" },
+                      ]);
+                    },
+                  },
+                ],
+                { cancelable: true }
+              );
+            }}
+          />
         );
       }
     }
   };
+
   registerPush = () => {
     registerForPushNotificationsAsync()
       .then(pushToken => {
@@ -691,8 +612,9 @@ class Home extends Component {
   _handleNotification = async notification => {
     console.log("Notificación recibida", notification);
 
-    if (notification.data) {
-      await this.setState({ order: notification.data.order });
+    if (notification.data.order) {
+      if (notification.data.order.manual) await this.setState({ order: notification.data.order });
+      //await this.setState({ order: notification.data.order });
 
       console.log("notification id", notification.data.id);
       if (notification.data.id === Constants.DRIVER_NOTIFICATION_CONFIRMING) {
@@ -707,7 +629,9 @@ class Home extends Component {
               orderuid: notification.data.order.uid,
               isManual: notification.data.order.manual,
             });
+
             this.updateDriverStatus(Constants.DRIVER_STATUS_CONFIRMING_DRIVE);
+            this.map.fitToElements(true);
 
             if (
               !this.state.isManual &&
@@ -738,7 +662,7 @@ class Home extends Component {
       } else if (notification.data.id === Constants.DRIVER_NOTIFICATION_CONFIRMED) {
         console.log("Verificando si orden es manual:", this.state.order);
 
-        if (this.state.order.manual)
+        if (this.state.order.manual) {
           firebase
             .database()
             .ref()
@@ -753,9 +677,10 @@ class Home extends Component {
                 isManual: notification.data.order.manual,
                 driverState: Constants.DRIVER_STATE_ASKING,
               });
+
               this.updateDriverStatus(Constants.DRIVER_STATUS_CONFIRMING_DRIVE);
             });
-        else this.setState({ driverState: Constants.DRIVER_STATE_ASKING });
+        } else this.setState({ driverState: Constants.DRIVER_STATE_ASKING });
       } else if (notification.data.id === Constants.QUOTE_STATUS_CLIENT_CANCELED) {
         this.updateDriverStatus(Constants.DRIVER_STATUS_LOOKING_FOR_DRIVE);
       }
@@ -799,14 +724,14 @@ class Home extends Component {
     let polyline = null;
     if (this.state.order) {
       if (this.state.order.origin && this.state.order.destination) {
-        console.log("Preparando componentes para marcadores...", this.state.order);
+        //console.log("Preparando componentes para marcadores...", this.state.order);
 
         if (this.state.order.origin.lat && this.state.order.origin.lng) {
           originMarker = (
             <MapView.Marker
               title="Origen"
               description="Donde ese encuentra el cliente."
-              pinColor="#4CAF50"
+              pinColor={Constants.COLOR_BLUE}
               coordinate={{
                 latitude: this.state.order.origin.lat,
                 longitude: this.state.order.origin.lng,
@@ -820,7 +745,7 @@ class Home extends Component {
             <MapView.Marker
               title="Destino"
               description="Lleva al cliente acá."
-              pinColor="#FF9800"
+              pinColor={Constants.COLOR_RED}
               coordinate={{
                 latitude: this.state.order.destination.lat,
                 longitude: this.state.order.destination.lng,
@@ -854,8 +779,9 @@ class Home extends Component {
           ref={ref => (this.map = ref)}
           mapPadding={{
             top: Dimensions.get("window").height * 0.1,
-            left: 0,
-            right: 0,
+            bottom: Dimensions.get("window").height * 0.4,
+            left: Dimensions.get("window").width * 0.1,
+            right: Dimensions.get("window").width * 0.1,
           }}>
           {originMarker}
           {destinationMarker}
@@ -907,6 +833,7 @@ class Home extends Component {
     );
   }
 }
+
 const styles = StyleSheet.create({
   locationButton: {
     elevation: 3,
