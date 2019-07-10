@@ -53,7 +53,7 @@ export default class Driver extends Component {
         case Constants.DRIVER_STATUS_NOT_WORKING:
           this.setState({
             statusColor: "#f44336",
-            statusText: "Fuera de T.",
+            statusText: "Fuera de Trabajo",
             loading: false,
             prevStatus: props.status,
           });
@@ -93,7 +93,11 @@ export default class Driver extends Component {
     let driverStatusContent = <ActivityIndicator color="white" />;
 
     if (!this.state.loading) {
-      driverStatusContent = <Text style={styles.driverStatusText}>{this.state.statusText}</Text>;
+      driverStatusContent = (
+        <Text style={styles.driverStatusText} numberOfLines={1}>
+          {this.state.statusText}
+        </Text>
+      );
     }
 
     return (
@@ -111,8 +115,12 @@ export default class Driver extends Component {
           </TouchableNativeFeedback>
         </View>
         <View style={styles.driverInfo}>
-          <Text style={styles.driverCode}>{this.props.username ? this.props.username : "-"}</Text>
-          <Text style={styles.driverName}>{this.props.name ? this.props.name : "Cargando..."}</Text>
+          <Text style={styles.driverCode} numberOfLines={1}>
+            {this.props.username ? this.props.username : "-"}
+          </Text>
+          <Text style={styles.driverName} numberOfLines={1}>
+            {this.props.name ? this.props.name : "Cargando..."}
+          </Text>
         </View>
         <TouchableNativeFeedback
           background={TouchableNativeFeedback.SelectableBackground()}
@@ -180,13 +188,13 @@ const styles = StyleSheet.create({
 
   driverCode: {
     fontWeight: "bold",
-    flex: 1,
+    flex: 2,
     textAlign: "center",
     fontSize: 20,
   },
 
   driverName: {
-    flex: 4,
+    flex: 5,
     textAlign: "left",
     fontSize: 15,
   },
@@ -197,6 +205,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     flexDirection: "row",
+    paddingLeft: 3,
+    paddingRight: 3,
   },
 
   driverStatusText: {
