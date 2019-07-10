@@ -27,6 +27,7 @@ import {
   WaitingClient,
   NavigatingToDestination,
 } from "../Components/Navigating";
+import ThreeAxisSensor from "expo-sensors/build/ThreeAxisSensor";
 
 const decodePolyline = require("decode-google-map-polyline");
 
@@ -73,8 +74,8 @@ class Home extends Component {
     super(props);
 
     this.state = {
-      driverState: Constants.DRIVER_STATE_NONE,
-      //driverState: Constants.DRIVER_STATE_GOING_TO_CLIENT,
+      //driverState: Constants.DRIVER_STATE_NONE,
+      driverState: Constants.DRIVER_STATE_GOING_TO_CLIENT,
       selectedIndex: 0,
       user: {},
       order: { origin: {}, destination: {}, price: -1, manual: true },
@@ -248,47 +249,96 @@ class Home extends Component {
     if (loc.gpsAvailable) {
       await Location.startLocationUpdatesAsync(Constants.LOCATION_TASK_NAME, {
         accuracy: Location.Accuracy.Balanced,
-        timeInterval: 6000,
-        distanceInterval: 2,
+        timeInterval: 5000,
+        distanceInterval: 10,
         foregroundService: {
           notificationTitle: "Servicios de Ubicación",
           notificationBody: "Tu ubicación está siendo monitoreada por la central.",
           notificationColor: "#FF9800",
         },
       });
-
-      await Location.watchPositionAsync(
-        {
-          accuracy: Location.Accuracy.BestForNavigation,
-        },
-
-        async location => {
-          this.setState({
-            driverPosition: {
-              lat: location.coords.latitude,
-              lng: location.coords.longitude,
-            },
-          });
-
-          //console.log("Navigating", this.state.navigating);
-          //console.log("Centered", this.state.navigationCentered);
-
-          if (this.state.navigating && this.state.navigationCentered) {
-            //this.goToUserLocation();
-            this.map.animateCamera({
-              center: {
-                latitude: location.coords.latitude,
-                longitude: location.coords.longitude,
-              },
-              heading: location.coords.heading,
-              pitch: 70,
-              zoom: 50,
-            });
-          }
-        }
-      );
     } else {
       Alert.alert("Servicios GPS", "Por favor activa los servicios de GPS para continuar.");
+    }
+  };
+
+  startNavigationMode = () => {
+    console.log("Enabling nav mode...");
+
+    if (this.state.navigationSubscription) {
+      console.log("Removing last location subscription...");
+      this.state.navigationSubscription.remove();
+    }
+
+    let navigationSubscription = Location.watchPositionAsync(
+      {
+        accuracy: Location.Accuracy.BestForNavigation,
+        timeInterval: 500,
+        //distanceInterval: 5,
+      },
+
+      async location => {
+        this.setState({
+          driverPosition: {
+            lat: location.coords.latitude,
+            lng: location.coords.longitude,
+          },
+        });
+
+        if (this.state.navigating && this.state.navigationCentered) {
+          this.map.setCamera({
+            center: {
+              latitude: location.coords.latitude,
+              longitude: location.coords.longitude,
+            },
+            heading: location.coords.heading,
+            pitch: 70,
+            zoom: 50,
+          });
+        }
+      }
+    );
+
+    this.setState({ navigating: true, navigationCentered: true, navigationSubscription });
+  };
+
+  stopNavigationMode = () => {
+    console.log("Disabling nav mode...");
+
+    if (this.state.navigationSubscription) {
+      console.log("Removing location subscription...");
+      this.state.navigationSubscription.remove();
+    }
+
+    this.map.animateCamera({
+      center: {
+        latitude: Constants.INITIAL_REGION.latitude,
+        longitude: Constants.INITIAL_REGION.longitude,
+      },
+      heading: 0,
+      pitch: 0,
+      zoom: 12,
+    });
+
+    this.setState({ navigating: false, navigationCentered: false });
+  };
+
+  pauseNavigation = () => {
+    this.setState({ navigationCentered: false });
+    this.goToUserLocation();
+
+    this.map.animateCamera({
+      zoom: 16,
+      heading: 0,
+      pitch: 0,
+    });
+  };
+
+  resumeNavigation = () => {
+    if (!this.state.navigationSubscription) {
+      this.startNavigationMode();
+    } else {
+      this.setState({ navigationCentered: true });
     }
   };
 
@@ -370,6 +420,7 @@ class Home extends Component {
             order={this.state.order}
             onAccept={() => {
               this.map.fitToElements(true);
+
               Alert.alert("Navegación", "Vamos hacia el cliente", [
                 {
                   text: "OK",
@@ -377,14 +428,16 @@ class Home extends Component {
                     this.updateDriverStatus(Constants.DRIVER_STATUS_ON_A_DRIVE);
                     this.updateOrderStatus(Constants.QUOTE_STATUS_DRIVER_GOING_TO_CLIENT);
                     this.updateTimeStamps("acceptedOrder");
+
                     if (!this.state.isManual) {
                       this.getPoly(this.state.driverPosition, this.state.order.origin);
                     }
+
                     this.setState({
                       driverState: Constants.DRIVER_STATE_GOING_TO_CLIENT,
-                      //navigating: true,
-                      //navigationCentered: true,
                     });
+
+                    this.startNavigationMode();
                   },
                 },
               ]);
@@ -397,14 +450,15 @@ class Home extends Component {
                   {
                     text: "OK",
                     onPress: () => {
-                      this.updateOrderStatus(Constants.QUOTE_STATUS_DRIVER_DENNIED);
-
                       this.setState({
                         order: { origin: {}, destination: {}, price: -1 },
                         polyline: [],
                         driverState: Constants.DRIVER_STATE_NONE,
                       });
+
+                      this.updateOrderStatus(Constants.QUOTE_STATUS_DRIVER_DENNIED);
                       this.updateDriverStatus(Constants.DRIVER_STATUS_LOOKING_FOR_DRIVE);
+                      this.stopNavigationMode();
                     },
                   },
                   {
@@ -417,6 +471,7 @@ class Home extends Component {
           />
         );
       }
+
       case Constants.DRIVER_STATE_GOING_TO_CLIENT: {
         this.updateDriverStatus(Constants.DRIVER_STATUS_ON_A_DRIVE);
 
@@ -429,7 +484,7 @@ class Home extends Component {
                 {
                   text: "Sí",
                   onPress: () => {
-                    this.goToUserLocation();
+                    this.pauseNavigation();
 
                     console.log("Confirmando status para orden", this.state.orderuid);
 
@@ -471,7 +526,8 @@ class Home extends Component {
                 {
                   text: "Sí",
                   onPress: () => {
-                    this.map.fitToElements(true);
+                    this.resumeNavigation();
+
                     console.log("Confirmando status para orden", this.state.orderuid);
 
                     Alert.alert(
@@ -518,21 +574,12 @@ class Home extends Component {
                   {
                     text: "Sí",
                     onPress: () => {
+                      this.stopNavigationMode();
+
                       this.setState({
-                        navigating: false,
-                        navigationCentered: false,
                         order: null,
                       });
 
-                      this.map.animateCamera({
-                        center: {
-                          latitude: Constants.INITIAL_REGION.latitude,
-                          longitude: Constants.INITIAL_REGION.longitude,
-                        },
-                        heading: 0,
-                        pitch: 0,
-                        zoom: 12,
-                      });
                       this.updateDriverStatus(Constants.DRIVER_STATUS_LOOKING_FOR_DRIVE);
                       this.updateOrderStatus(Constants.QUOTE_STATUS_FINISHED);
                       this.updateTimeStamps("clientArrived");
@@ -722,6 +769,7 @@ class Home extends Component {
     let originMarker = null;
     let destinationMarker = null;
     let polyline = null;
+
     if (this.state.order) {
       if (this.state.order.origin && this.state.order.destination) {
         //console.log("Preparando componentes para marcadores...", this.state.order);
@@ -757,12 +805,40 @@ class Home extends Component {
         if (originMarker && destinationMarker)
           polyline = (
             <MapView.Polyline
-              strokeWidth={4}
+              strokeWidth={this.state.navigating ? 12 : 5}
               strokeColor="#03A9F4"
               coordinates={this.drawPolyline()}
             />
           );
       }
+    }
+
+    let navIcon = null;
+
+    if (this.state.driverPosition && this.state.navigating) {
+      //console.log("Updating navicon", this.state.driverPosition);
+
+      navIcon = (
+        <MapView.Marker
+          coordinate={{
+            latitude: this.state.driverPosition.lat,
+            longitude: this.state.driverPosition.lng,
+          }}>
+          <Icon
+            name="navigation"
+            color={Constants.COLOR_BLUE}
+            reverse
+            raised
+            size={50}
+            containerStyle={{
+              transform: [
+                { rotateX: "60deg" },
+                { translateY: Dimensions.get("window").height * 0.1 },
+              ],
+            }}
+          />
+        </MapView.Marker>
+      );
     }
 
     return (
@@ -773,19 +849,23 @@ class Home extends Component {
           onMapReady={() => this.goToUserLocation()}
           onPanDrag={() => this.setState({ navigationCentered: false })}
           showsTraffic
-          showsUserLocation
+          showsCompass={false}
+          showsUserLocation={!this.state.navigating}
           loadingBackgroundColor="#FF9800"
           initialRegion={Constants.INITIAL_REGION}
           ref={ref => (this.map = ref)}
           mapPadding={{
             top: Dimensions.get("window").height * 0.1,
-            bottom: Dimensions.get("window").height * 0.4,
-            left: Dimensions.get("window").width * 0.1,
-            right: Dimensions.get("window").width * 0.1,
+            bottom: this.state.navigating
+              ? 0
+              : Dimensions.get("window").height * 0.35,
+            left: Dimensions.get("window").width * 0.04,
+            right: Dimensions.get("window").width * 0.04,
           }}>
           {originMarker}
           {destinationMarker}
           {this.state.polyline.length > 0 ? polyline : null}
+          {navIcon}
         </MapView>
 
         <View
@@ -813,6 +893,7 @@ class Home extends Component {
             console.log("drawer");
           }}
         />
+
         <View style={styles.locationButtonView}>
           <Icon
             name="gps-fixed"
@@ -826,6 +907,7 @@ class Home extends Component {
             }}
           />
         </View>
+
         {/* {Platform.OS === "android" && this.state.user.dev
           ? ToastAndroid.show("Dev mode", ToastAndroid.LONG)
           : null} */}
