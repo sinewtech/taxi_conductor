@@ -74,8 +74,8 @@ class Home extends Component {
     super(props);
 
     this.state = {
-      //driverState: Constants.DRIVER_STATE_NONE,
-      driverState: Constants.DRIVER_STATE_GOING_TO_CLIENT,
+      driverState: Constants.DRIVER_STATE_NONE,
+      // driverState: Constants.DRIVER_STATE_GOING_TO_CLIENT,
       selectedIndex: 0,
       user: {},
       order: { origin: {}, destination: {}, price: -1, manual: true },
@@ -856,9 +856,7 @@ class Home extends Component {
           ref={ref => (this.map = ref)}
           mapPadding={{
             top: Dimensions.get("window").height * 0.1,
-            bottom: this.state.navigating
-              ? 0
-              : Dimensions.get("window").height * 0.35,
+            bottom: this.state.navigating ? 0 : Dimensions.get("window").height * 0.35,
             left: Dimensions.get("window").width * 0.04,
             right: Dimensions.get("window").width * 0.04,
           }}>
