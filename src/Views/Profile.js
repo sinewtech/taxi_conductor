@@ -4,7 +4,7 @@ class Profile extends Component {
   render() {
     return (
       <View>
-        <Text>wenas</Text>
+        <Text>wenas ¿como esta?</Text>
       </View>
     );
   }
