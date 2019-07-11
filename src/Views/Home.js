@@ -307,7 +307,7 @@ class Home extends Component {
 
     if (this.state.navigationSubscription) {
       console.log("Removing location subscription...");
-      this.state.navigationSubscription.remove();
+      if (this.state.navigationSubscription.remove) this.state.navigationSubscription.remove();
     }
 
     this.map.animateCamera({
@@ -398,19 +398,35 @@ class Home extends Component {
         return <Briefing />;
       }
       case Constants.DRIVER_STATE_ASKING: {
-        if (!this.state.order.userName) {
-          console.log("Nombre del cliente no recuperado.");
+        if (!this.state.order.userName && !this.state.clientInfoCaptured) {
+          
+          console.log("Info del cliente no recuperada.");
 
-          firebase
-            .database()
-            .ref()
-            .child("quotes/" + this.state.orderuid + "/")
-            .once("value", async snap => {
-              let data = snap.exportVal();
+          var clientRef = firebase.firestore().collection("clients").doc(this.state.order.userUID);
 
-              await this.setState({
-                order: data,
-              });
+          clientRef
+            .get()
+            .then(doc => {
+              if (doc.exists) {
+                client = doc.data();
+                let order = this.state.order;
+
+                order.userName = client.firstName + " " + client.lastName;
+                order.userPhone = client.phone;
+
+                this.setState({
+                  order,
+                  clientInfoCaptured: true
+                });
+              } else {
+                // doc.data() will be undefined in this case
+                console.log("No se encontró al cliente.");
+                this.setState({clientInfoCaptured: true})
+              }
+            })
+            .catch(function(error) {
+              console.log("Error getting document:", error);
+              this.setState({clientInfoCaptured: true})
             });
         }
 
