@@ -103,11 +103,19 @@ class Home extends Component {
     }
   }
 
-  goToUserLocation = () => {
-    if (this.map && this.state.driverPosition) {
+  goToUserLocation = async () => {
+    if (this.map) {
+      let { status } = await Permissions.askAsync(Permissions.LOCATION);
+
+      if (status !== "granted") {
+        Alert.alert("Error", "Por favor permita que la app use el GPS para continuar");
+      }
+
+      let location = await Location.getCurrentPositionAsync({});
+
       this.map.animateToRegion({
-        latitude: this.state.driverPosition.lat,
-        longitude: this.state.driverPosition.lng,
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
         latitudeDelta: 0.02,
         longitudeDelta: 0.02,
       });
@@ -399,10 +407,12 @@ class Home extends Component {
       }
       case Constants.DRIVER_STATE_ASKING: {
         if (!this.state.order.userName && !this.state.clientInfoCaptured) {
-          
           console.log("Info del cliente no recuperada.");
 
-          var clientRef = firebase.firestore().collection("clients").doc(this.state.order.userUID);
+          var clientRef = firebase
+            .firestore()
+            .collection("clients")
+            .doc(this.state.order.userUID);
 
           clientRef
             .get()
@@ -416,17 +426,17 @@ class Home extends Component {
 
                 this.setState({
                   order,
-                  clientInfoCaptured: true
+                  clientInfoCaptured: true,
                 });
               } else {
                 // doc.data() will be undefined in this case
                 console.log("No se encontró al cliente.");
-                this.setState({clientInfoCaptured: true})
+                this.setState({ clientInfoCaptured: true });
               }
             })
             .catch(function(error) {
               console.log("Error getting document:", error);
-              this.setState({clientInfoCaptured: true})
+              this.setState({ clientInfoCaptured: true });
             });
         }
 
