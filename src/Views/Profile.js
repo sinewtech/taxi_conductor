@@ -1,12 +1,12 @@
 import React, { Component } from "react";
-import { View, Text, BackHandler, FlatList, StyleSheet, Dimensions } from "react-native";
+import { View, Text, BackHandler, FlatList, StyleSheet, Dimensions, Alert } from "react-native";
 import { Avatar, ListItem, Overlay, Input, Button } from "react-native-elements";
 import firebase from "../../firebase";
 import * as Constants from "../Constants";
 class Profile extends Component {
   constructor(props) {
     super(props);
-    this.state = { user: {}, overlayState: 0, overlayVisible: false, nombre: "" };
+    this.state = { user: {}, overlayState: 0, overlayVisible: false, nombre: "", apellido: "" };
     this.list = [];
   }
   getContext = () => {
@@ -20,14 +20,8 @@ class Profile extends Component {
       }
       case 1: {
         return (
-          <View
-            style={{
-              flex: 1,
-              justifyContent: "center",
-              alignItems: "center",
-              backgroundColor: "green",
-            }}>
-            <Text>Cambiar Nombre</Text>
+          <View style={styles.overlayInnerContainer}>
+            <Text style={{ fontSize: 16 }}>Cambiar Nombre</Text>
             <Input
               leftIcon={{ name: "person" }}
               value={this.state.nombre}
@@ -36,8 +30,76 @@ class Profile extends Component {
               }}
               placeholder={this.state.user.firstName}
             />
-            <View style={{ flex: 1, backgroundColor: "red" }}>
-              <Button buttonStyle={{ backgroundColor: Constants.COLOR_GREEN }} title="OK" />
+            <View style={{ flexDirection: "row" }}>
+              <Button
+                onPress={() => {
+                  firebase
+                    .firestore()
+                    .collection("drivers")
+                    .doc(firebase.auth().currentUser.uid)
+                    .update({ firstName: this.state.nombre })
+                    .then(() => {
+                      Alert.alert(
+                        "Cambios",
+                        "Los cambios se mostraran hasta que vuelvas a entrar a la aplicacion",
+                        [
+                          {
+                            text: "OK",
+                            onPress: () => {
+                              this.setState({ overlayVisible: false });
+                            },
+                          },
+                        ],
+                        { cancelable: false }
+                      );
+                    });
+                }}
+                buttonStyle={{ paddingVertical: 2, backgroundColor: Constants.COLOR_GREEN }}
+                title="Actualizar"
+              />
+            </View>
+          </View>
+        );
+      }
+      case 2: {
+        return (
+          <View style={styles.overlayInnerContainer}>
+            <Text style={{ fontSize: 16 }}>Cambiar Apellido</Text>
+            <Input
+              leftIcon={{ name: "person" }}
+              value={this.state.apellido}
+              onChangeText={text => {
+                this.setState({ apellido: text });
+              }}
+              placeholder={this.state.user.firstName}
+            />
+            <View style={{ flexDirection: "row" }}>
+              <Button
+                onPress={() => {
+                  firebase
+                    .firestore()
+                    .collection("drivers")
+                    .doc(firebase.auth().currentUser.uid)
+                    .update({ firstName: this.state.nombre })
+                    .then(() => {
+                      Alert.alert(
+                        "Cambios",
+                        "Los cambios se mostraran hasta que vuelvas a entrar a la aplicacion",
+                        [
+                          {
+                            text: "OK",
+                            onPress: () => {
+                              this.setState({ overlayVisible: false });
+                            },
+                          },
+                        ],
+                        { cancelable: false }
+                      );
+                    });
+                }}
+                buttonStyle={{ paddingVertical: 2, backgroundColor: Constants.COLOR_GREEN }}
+                title="Actualizar"
+              />
             </View>
           </View>
         );
@@ -82,6 +144,9 @@ class Profile extends Component {
               leftIcon: "person",
               rightIcon: "pencil",
               rightIconType: "material-community",
+              rightIconOnPress: () => {
+                this.setState({ overlayVisible: true, overlayState: 2 });
+              },
             },
             {
               name: "Codigo",
@@ -118,7 +183,7 @@ class Profile extends Component {
               rightIconType: "material-community",
             },
           ];
-          await this.setState({ user, nombre: user.firstName });
+          await this.setState({ user, nombre: user.firstName, apellido: user.lastName });
         });
     }
     this.backHandler = BackHandler.addEventListener("hardwareBackPress", () => {
@@ -167,7 +232,8 @@ class Profile extends Component {
           containerStyle={{ flex: 1, alignItems: "center" }}
           animated
           animationType="fade"
-          width="auto"
+          width={Dimensions.get("window").width * 0.75}
+          height="auto"
           onBackdropPress={() => this.setState({ overlayVisible: false })}
           isVisible={this.state.overlayVisible}>
           {this.getContext()}
@@ -198,6 +264,10 @@ const styles = StyleSheet.create({
     flexDirection: "column",
   },
   listContainer: { flex: 5 },
+  overlayInnerContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
 });
 
 export default Profile;
