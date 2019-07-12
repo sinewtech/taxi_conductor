@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import { View, Text, BackHandler, FlatList, StyleSheet, Dimensions, Alert } from "react-native";
-import { Avatar, ListItem, Overlay, Input, Button, CheckBox } from "react-native-elements";
+import { Avatar, ListItem, Overlay, Input, Button, CheckBox, Icon } from "react-native-elements";
 import * as ImagePicker from "expo-image-picker";
 import { TextInputMask } from "react-native-masked-text";
 import firebase from "../../firebase";
@@ -197,13 +197,26 @@ class Profile extends Component {
         return (
           <View style={styles.overlayInnerContainer}>
             <Text style={{ fontSize: 16 }}>Cambiar Codigo</Text>
-            <Input
-              leftIcon={{ name: "directions-car" }}
+
+            <TextInputMask
+              type={"custom"}
+              customTextInput={Input}
+              customTextInputProps={{
+                inputContainerStyle: styles.Input,
+                placeholder: "Código de Unidad (A3)",
+                leftIcon: <Icon name="directions-car" />,
+                leftIconContainerStyle: { marginRight: 15 },
+                autoCapitalize: "characters",
+              }}
+              options={{
+                mask: "A999",
+              }}
               value={this.state.codigo}
               onChangeText={text => {
-                this.setState({ codigo: text });
+                this.setState({
+                  codigo: text,
+                });
               }}
-              placeholder={this.state.user.codigo}
             />
             <View style={{ flexDirection: "row" }}>
               <Button
@@ -241,7 +254,7 @@ class Profile extends Component {
           <View style={styles.overlayInnerContainer}>
             <Text style={{ fontSize: 16 }}>Cambiar Descripcion</Text>
             <Input
-              leftIcon={{ name: "directions-car" }}
+              leftIcon={{ name: "chat-bubble-outline" }}
               value={this.state.descripcion}
               onChangeText={text => {
                 this.setState({ descripcion: text });
@@ -283,13 +296,25 @@ class Profile extends Component {
         return (
           <View style={styles.overlayInnerContainer}>
             <Text style={{ fontSize: 16 }}>Cambiar Placa</Text>
-            <Input
-              leftIcon={{ name: "directions-car" }}
+            <TextInputMask
+              type={"custom"}
+              customTextInput={Input}
+              customTextInputProps={{
+                inputContainerStyle: styles.Input,
+                placeholder: "Placa del Vehículo",
+                leftIcon: <Icon name="directions-car" />,
+                leftIconContainerStyle: { marginRight: 15 },
+                autoCapitalize: "characters",
+              }}
+              options={{
+                mask: "AAA 9999",
+              }}
               value={this.state.placa}
               onChangeText={text => {
-                this.setState({ placa: text });
+                this.setState({
+                  placa: text,
+                });
               }}
-              placeholder={this.state.user.placa}
             />
             <View style={{ flexDirection: "row" }}>
               <Button
@@ -326,13 +351,25 @@ class Profile extends Component {
         return (
           <View style={styles.overlayInnerContainer}>
             <Text style={{ fontSize: 16 }}>Cambiar Telefono</Text>
-            <Input
-              leftIcon={{ name: "phone" }}
-              value={this.state.telefono}
-              onChangeText={text => {
-                this.setState({ telefono: text });
+            <TextInputMask
+              type={"custom"}
+              customTextInput={Input}
+              customTextInputProps={{
+                inputContainerStyle: styles.Input,
+                leftIcon: <Icon name="phone" />,
+                keyboardType: "phone-pad",
+                leftIconContainerStyle: { marginRight: 15 },
               }}
+              options={{
+                mask: "+504 9999-9999",
+              }}
+              value={this.state.telefono}
               placeholder={this.state.user.telefono}
+              onChangeText={text => {
+                this.setState({
+                  telefono: text,
+                });
+              }}
             />
             <View style={{ flexDirection: "row" }}>
               <Button
@@ -490,7 +527,7 @@ class Profile extends Component {
             {
               name: "Descripcion del carro",
               subtitle: user.description,
-              leftIcon: "directions-car",
+              leftIcon: "chat-bubble-outline",
               rightIcon: "pencil",
               rightIconType: "material-community",
               rightIconOnPress: () => {
