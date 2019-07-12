@@ -95,7 +95,6 @@ const AppStack = createDrawerNavigator(
     },
   },
   {
-    initialRouteName: "Profile",
     contentComponent: drawerContent,
   }
 );
