@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import { View, Text, BackHandler, FlatList, StyleSheet, Dimensions, Alert } from "react-native";
-import { Avatar, ListItem, Overlay, Input, Button } from "react-native-elements";
+import { Avatar, ListItem, Overlay, Input, Button, CheckBox } from "react-native-elements";
 import firebase from "../../firebase";
 import * as Constants from "../Constants";
 class Profile extends Component {
@@ -16,6 +16,9 @@ class Profile extends Component {
       descripcion: "",
       placa: "",
       telefono: "",
+      POS: false,
+      efectivo: false,
+      gateway: false,
     };
     this.list = [];
   }
@@ -24,7 +27,78 @@ class Profile extends Component {
       case 0: {
         return (
           <View>
-            <Text>Wenas</Text>
+            <View style={styles.overlayInnerContainer}>
+              <Text style={{ fontSize: 16 }}>Formas de pago</Text>
+            </View>
+            <View style={{ paddingVertical: 5 }}>
+              <CheckBox
+                title="POS"
+                onPress={() => {
+                  this.setState({
+                    POS: !this.state.POS,
+                  });
+                }}
+                checked={this.state.POS}
+              />
+              <CheckBox
+                title="Efectivo"
+                onPress={() => {
+                  this.setState({
+                    efectivo: !this.state.efectivo,
+                  });
+                }}
+                checked={this.state.efectivo}
+              />
+              <CheckBox
+                title="Sine"
+                onPress={() => {
+                  this.setState({
+                    gateway: !this.state.gateway,
+                  });
+                }}
+                checked={this.state.gateway}
+              />
+            </View>
+            <View style={styles.overlayInnerContainer}>
+              <View style={{ flexDirection: "row" }}>
+                <Button
+                  onPress={() => {
+                    let final = [];
+                    if (this.state.POS) {
+                      final.push("POS");
+                    }
+                    if (this.state.efectivo) {
+                      final.push("Efectivo");
+                    }
+                    if (this.state.gateway) {
+                      final.push("Gateway");
+                    }
+                    firebase
+                      .firestore()
+                      .collection("drivers")
+                      .doc(firebase.auth().currentUser.uid)
+                      .update({ payments: final })
+                      .then(() => {
+                        Alert.alert(
+                          "Cambios",
+                          "Los cambios se mostraran hasta que vuelvas a entrar a la aplicacion",
+                          [
+                            {
+                              text: "OK",
+                              onPress: () => {
+                                this.setState({ overlayVisible: false });
+                              },
+                            },
+                          ],
+                          { cancelable: false }
+                        );
+                      });
+                  }}
+                  buttonStyle={{ paddingVertical: 2, backgroundColor: Constants.COLOR_GREEN }}
+                  title="Actualizar"
+                />
+              </View>
+            </View>
           </View>
         );
       }
@@ -407,6 +481,9 @@ class Profile extends Component {
             descripcion: user.description,
             placa: user.plate,
             telefono: user.phone,
+            POS: user.payments.includes("POS"),
+            efectivo: user.payments.includes("Efectivo"),
+            gateway: user.payments.includes("Gateway"),
           });
         });
     }
