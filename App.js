@@ -15,6 +15,7 @@ import firebase from "./firebase";
 import { Icon, Avatar } from "react-native-elements";
 import { View, StyleSheet, Text, ScrollView } from "react-native";
 import LogOut from "./src/Components/LogOut";
+import Profile from "./src/Views/Profile";
 
 // Ignorar los warnings de firebase
 
@@ -67,6 +68,7 @@ const drawerContent = props => (
 
 const homeIcon = <Icon name="home" color="#616161" />;
 const logoutIcon = <Icon name="logout" type="material-community" color="#616161" />;
+const profileIcon = <Icon name="person" color="#616161" />;
 
 const AppStack = createDrawerNavigator(
   {
@@ -75,6 +77,13 @@ const AppStack = createDrawerNavigator(
       navigationOptions: ({ navigation }) => ({
         title: "Inicio",
         drawerIcon: homeIcon,
+      }),
+    },
+    Profile: {
+      screen: Profile,
+      navigationOptions: ({ navigation }) => ({
+        title: "Mi Perfil",
+        drawerIcon: profileIcon,
       }),
     },
     UserValidator: {
@@ -86,6 +95,7 @@ const AppStack = createDrawerNavigator(
     },
   },
   {
+    initialRouteName: "Profile",
     contentComponent: drawerContent,
   }
 );
