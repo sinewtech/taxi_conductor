@@ -20,7 +20,7 @@ class Profile extends Component {
       telefono: "",
       POS: false,
       efectivo: false,
-      gateway: false,
+      // gateway: false,
       perfil: "",
       perfilcarro: "",
       lateralcarro: "",
@@ -54,7 +54,7 @@ class Profile extends Component {
                 }}
                 checked={this.state.efectivo}
               />
-              <CheckBox
+              {/* <CheckBox
                 title="Sine"
                 onPress={() => {
                   this.setState({
@@ -62,7 +62,7 @@ class Profile extends Component {
                   });
                 }}
                 checked={this.state.gateway}
-              />
+              /> */}
             </View>
             <View style={styles.overlayInnerContainer}>
               <View style={{ flexDirection: "row" }}>
@@ -521,7 +521,7 @@ class Profile extends Component {
               isPhoto: true,
               avatar: user.profilecar,
               rightIconOnPress: () => {
-                this._pickImage(2);
+                this._pickImage(0);
               },
             },
             {
@@ -594,7 +594,7 @@ class Profile extends Component {
             telefono: user.phone,
             POS: user.payments.includes("POS"),
             efectivo: user.payments.includes("Efectivo"),
-            gateway: user.payments.includes("Gateway"),
+            // gateway: user.payments.includes("Gateway"),
           });
         });
     }
@@ -637,7 +637,7 @@ class Profile extends Component {
             rounded
             showEditButton
             size="xlarge"
-            onEditPress={() => this._pickImage(3)}
+            onEditPress={() => this._pickImage(2)}
             activeOpacity={0.7}
             source={{ uri: this.state.user.profile }}
             containerStyle={{ padding: 5 }}
