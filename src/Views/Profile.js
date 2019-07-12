@@ -1,15 +1,52 @@
 import React, { Component } from "react";
-import { View, Text, BackHandler, FlatList, StyleSheet } from "react-native";
-import { Avatar, ListItem } from "react-native-elements";
+import { View, Text, BackHandler, FlatList, StyleSheet, Dimensions } from "react-native";
+import { Avatar, ListItem, Overlay, Input, Button } from "react-native-elements";
 import firebase from "../../firebase";
 import * as Constants from "../Constants";
 class Profile extends Component {
   constructor(props) {
     super(props);
-    this.state = { user: {} };
+    this.state = { user: {}, overlayState: 0, overlayVisible: false, nombre: "" };
     this.list = [];
   }
+  getContext = () => {
+    switch (this.state.overlayState) {
+      case 0: {
+        return (
+          <View>
+            <Text>Wenas</Text>
+          </View>
+        );
+      }
+      case 1: {
+        return (
+          <View
+            style={{
+              flex: 1,
+              justifyContent: "center",
+              alignItems: "center",
+              backgroundColor: "green",
+            }}>
+            <Text>Cambiar Nombre</Text>
+            <Input
+              leftIcon={{ name: "person" }}
+              value={this.state.nombre}
+              onChangeText={text => {
+                this.setState({ nombre: text });
+              }}
+              placeholder={this.state.user.firstName}
+            />
+            <View style={{ flex: 1, backgroundColor: "red" }}>
+              <Button buttonStyle={{ backgroundColor: Constants.COLOR_GREEN }} title="OK" />
+            </View>
+          </View>
+        );
+      }
 
+      default:
+        break;
+    }
+  };
   componentDidMount = () => {
     if (firebase.auth().currentUser) {
       firebase
@@ -26,7 +63,7 @@ class Profile extends Component {
               rightIcon: "pencil",
               rightIconType: "material-community",
               rightIconOnPress: () => {
-                console.log("formas");
+                this.setState({ overlayVisible: true, overlayState: 0 });
               },
             },
             {
@@ -35,11 +72,35 @@ class Profile extends Component {
               leftIcon: "person",
               rightIcon: "pencil",
               rightIconType: "material-community",
+              rightIconOnPress: () => {
+                this.setState({ overlayVisible: true, overlayState: 1 });
+              },
             },
             {
               name: "Apellido",
               subtitle: user.lastName,
               leftIcon: "person",
+              rightIcon: "pencil",
+              rightIconType: "material-community",
+            },
+            {
+              name: "Codigo",
+              subtitle: user.username,
+              leftIcon: "directions-car",
+              rightIcon: "pencil",
+              rightIconType: "material-community",
+            },
+            {
+              name: "Descripcion del carro",
+              subtitle: user.description,
+              leftIcon: "directions-car",
+              rightIcon: "pencil",
+              rightIconType: "material-community",
+            },
+            {
+              name: "Placa del carro",
+              subtitle: user.plate,
+              leftIcon: "directions-car",
               rightIcon: "pencil",
               rightIconType: "material-community",
             },
@@ -57,7 +118,7 @@ class Profile extends Component {
               rightIconType: "material-community",
             },
           ];
-          await this.setState({ user });
+          await this.setState({ user, nombre: user.firstName });
         });
     }
     this.backHandler = BackHandler.addEventListener("hardwareBackPress", () => {
@@ -88,12 +149,29 @@ class Profile extends Component {
             source={{ uri: this.state.user.profile }}
             containerStyle={{ padding: 5 }}
           />
-          <Text style={styles.topViewName}>
-            {this.state.user.firstName + " " + this.state.user.lastName + "\n"}
-            {"Unidad " + this.state.user.username}
-          </Text>
+          <View style={styles.textContainer}>
+            <Text style={styles.topViewName}>
+              {this.state.user.firstName + " " + this.state.user.lastName}
+            </Text>
+            <Text style={styles.topViewCode}> {"Codigo " + this.state.user.username}</Text>
+          </View>
         </View>
-        <FlatList keyExtractor={this.keyExtractor} data={this.list} renderItem={this.renderItem} />
+        <View style={styles.listContainer}>
+          <FlatList
+            keyExtractor={this.keyExtractor}
+            data={this.list}
+            renderItem={this.renderItem}
+          />
+        </View>
+        <Overlay
+          containerStyle={{ flex: 1, alignItems: "center" }}
+          animated
+          animationType="fade"
+          width="auto"
+          onBackdropPress={() => this.setState({ overlayVisible: false })}
+          isVisible={this.state.overlayVisible}>
+          {this.getContext()}
+        </Overlay>
       </View>
     );
   }
@@ -101,14 +179,25 @@ class Profile extends Component {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   topView: {
-    flex: 1,
+    paddingVertical: 5,
     flexDirection: "row",
     backgroundColor: Constants.COLOR_ORANGE,
   },
   topViewName: {
     color: "white",
-    fontSize: 25,
+    fontSize: 32,
+    fontWeight: "bold",
   },
+  topViewCode: {
+    color: "white",
+    fontSize: 24,
+    fontWeight: "bold",
+  },
+  textContainer: {
+    flex: 1,
+    flexDirection: "column",
+  },
+  listContainer: { flex: 5 },
 });
 
 export default Profile;
