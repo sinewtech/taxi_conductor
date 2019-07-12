@@ -13,12 +13,8 @@ export class NavigatingToClient extends Component {
           <View style={styles.clientView}>
             <View style={styles.textView}>
               <Text style={styles.tertiaryText}>Recogiendo a</Text>
-              <Text style={styles.primaryText}>
-                {this.props.order.userName}
-              </Text>
-              <Text style={styles.secondaryText}>
-                {this.props.order.userPhone}
-              </Text>
+              <Text style={styles.primaryText}>{this.props.order.userName}</Text>
+              <Text style={styles.secondaryText}>{this.props.order.userPhone}</Text>
             </View>
             <Icon
               name="phone"
@@ -71,12 +67,8 @@ export class WaitingClient extends Component {
           <View style={styles.clientView}>
             <View style={styles.textView}>
               <Text style={styles.tertiaryText}>Esperando a</Text>
-              <Text style={styles.primaryText}>
-                {this.props.order.userName}
-              </Text>
-              <Text style={styles.secondaryText}>
-                {this.props.order.userPhone}
-              </Text>
+              <Text style={styles.primaryText}>{this.props.order.userName}</Text>
+              <Text style={styles.secondaryText}>{this.props.order.userPhone}</Text>
             </View>
             <Icon
               name="phone"
@@ -124,6 +116,10 @@ export class NavigatingToDestination extends Component {
               </Text>
               <Text style={{ ...styles.secondaryText, width: "auto" }}>
                 {this.props.order ? this.props.order.destination.address : "Para acá vamos"}
+              </Text>
+              <Text style={{ ...styles.secondaryText, width: "auto" }}>
+                {"Precio: L. "}
+                {this.props.order ? this.props.order.price.toFixed(2) : "Para acá vamos"}
               </Text>
             </View>
           </View>
