@@ -114,6 +114,7 @@ class Profile extends Component {
             <Input
               leftIcon={{ name: "person" }}
               value={this.state.nombre}
+              autoCapitalize="words"
               onChangeText={text => {
                 this.setState({ nombre: text });
               }}
@@ -157,6 +158,7 @@ class Profile extends Component {
             <Input
               leftIcon={{ name: "person" }}
               value={this.state.apellido}
+              autoCapitalize="words"
               onChangeText={text => {
                 this.setState({ apellido: text });
               }}
@@ -211,6 +213,7 @@ class Profile extends Component {
               options={{
                 mask: "A999",
               }}
+              autoCapitalize="characters"
               value={this.state.codigo}
               onChangeText={text => {
                 this.setState({
