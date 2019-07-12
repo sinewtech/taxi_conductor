@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import { Button, Icon } from "react-native-elements";
+import AlertAsync from "react-native-alert-async";
 import {
   Text,
   View,
@@ -112,6 +113,13 @@ class Home extends Component {
       }
 
       let location = await Location.getCurrentPositionAsync({});
+
+      this.setState({
+        driverPosition: {
+          lat: location.coords.latitude,
+          lng: location.coords.longitude,
+        },
+      });
 
       this.map.animateToRegion({
         latitude: location.coords.latitude,
@@ -509,31 +517,70 @@ class Home extends Component {
                 { text: "No" },
                 {
                   text: "Sí",
-                  onPress: () => {
-                    this.pauseNavigation();
+                  onPress: async () => {
+                    const continua = await new Promise(async (resolve, reject) => {
+                      console.log(
+                        "distancia: " +
+                          Constants.getDistanceBetweenCoordinates(
+                            this.state.origin,
+                            this.state.driverPosition
+                          )
+                      );
+                      if (
+                        Constants.getDistanceBetweenCoordinates(
+                          this.state.origin,
+                          this.state.driverPosition
+                        ) > Constants.DRIVER_MAX_DISTANCE_METERS
+                      ) {
+                        const confirma = await AlertAsync(
+                          "¡No está lo suficientemente cerca del cliente!",
+                          "¿Está seguro que desea confirmar llegada?",
+                          [
+                            {
+                              text: "No",
+                              onPress: () => resolve("No"),
+                            },
+                            {
+                              text: "Sí",
+                              onPress: () => resolve("Si"),
+                            },
+                          ]
+                        );
+                        console.log("resolve: " + confirma);
+                        resolve(confirma);
+                      } else {
+                        resolve("Si");
+                      }
+                    });
 
-                    console.log("Confirmando status para orden", this.state.orderuid);
+                    console.log("continua: " + continua);
 
-                    Alert.alert(
-                      "Notificando al cliente",
-                      this.state.order.manual
-                        ? "Por favor llama al cliente y notificale tu llegada."
-                        : "Le notificaremos tu llegada al cliente.",
-                      [
-                        {
-                          text: "ok",
-                          onPress: () => {
-                            this.updateOrderStatus(Constants.QUOTE_STATUS_WAITING_CLIENT);
-                            this.updateTimeStamps("driverArrived");
-                            this.setState({
-                              driverState: Constants.DRIVER_STATE_CLIENT_IS_WITH_HIM,
-                            });
+                    if (continua === "Si") {
+                      this.pauseNavigation();
+
+                      console.log("Confirmando status para orden", this.state.orderuid);
+
+                      Alert.alert(
+                        "Notificando al cliente",
+                        this.state.order.manual
+                          ? "Por favor llama al cliente y notificale tu llegada."
+                          : "Le notificaremos tu llegada al cliente.",
+                        [
+                          {
+                            text: "ok",
+                            onPress: () => {
+                              this.updateOrderStatus(Constants.QUOTE_STATUS_WAITING_CLIENT);
+                              this.updateTimeStamps("driverArrived");
+                              this.setState({
+                                driverState: Constants.DRIVER_STATE_CLIENT_IS_WITH_HIM,
+                              });
+                            },
                           },
-                        },
-                      ],
-                      { cancelable: false }
-                    );
-                    console.log("destination", this.state.destination);
+                        ],
+                        { cancelable: false }
+                      );
+                      console.log("destination", this.state.destination);
+                    }
                   },
                 },
               ])
