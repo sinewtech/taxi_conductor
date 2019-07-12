@@ -6,7 +6,17 @@ import * as Constants from "../Constants";
 class Profile extends Component {
   constructor(props) {
     super(props);
-    this.state = { user: {}, overlayState: 0, overlayVisible: false, nombre: "", apellido: "" };
+    this.state = {
+      user: {},
+      overlayState: 0,
+      overlayVisible: false,
+      nombre: "",
+      apellido: "",
+      codigo: "",
+      descripcion: "",
+      placa: "",
+      telefono: "",
+    };
     this.list = [];
   }
   getContext = () => {
@@ -80,7 +90,7 @@ class Profile extends Component {
                     .firestore()
                     .collection("drivers")
                     .doc(firebase.auth().currentUser.uid)
-                    .update({ firstName: this.state.nombre })
+                    .update({ lastName: this.state.apellido })
                     .then(() => {
                       Alert.alert(
                         "Cambios",
@@ -104,7 +114,178 @@ class Profile extends Component {
           </View>
         );
       }
-
+      case 3: {
+        return (
+          <View style={styles.overlayInnerContainer}>
+            <Text style={{ fontSize: 16 }}>Cambiar Codigo</Text>
+            <Input
+              leftIcon={{ name: "directions-car" }}
+              value={this.state.codigo}
+              onChangeText={text => {
+                this.setState({ codigo: text });
+              }}
+              placeholder={this.state.user.codigo}
+            />
+            <View style={{ flexDirection: "row" }}>
+              <Button
+                onPress={() => {
+                  firebase
+                    .firestore()
+                    .collection("drivers")
+                    .doc(firebase.auth().currentUser.uid)
+                    .update({ username: this.state.codigo })
+                    .then(() => {
+                      Alert.alert(
+                        "Cambios",
+                        "Los cambios se mostraran hasta que vuelvas a entrar a la aplicacion",
+                        [
+                          {
+                            text: "OK",
+                            onPress: () => {
+                              this.setState({ overlayVisible: false });
+                            },
+                          },
+                        ],
+                        { cancelable: false }
+                      );
+                    });
+                }}
+                buttonStyle={{ paddingVertical: 2, backgroundColor: Constants.COLOR_GREEN }}
+                title="Actualizar"
+              />
+            </View>
+          </View>
+        );
+      }
+      case 4: {
+        return (
+          <View style={styles.overlayInnerContainer}>
+            <Text style={{ fontSize: 16 }}>Cambiar Descripcion</Text>
+            <Input
+              leftIcon={{ name: "directions-car" }}
+              value={this.state.descripcion}
+              onChangeText={text => {
+                this.setState({ descripcion: text });
+              }}
+              placeholder={this.state.user.descripcion}
+            />
+            <View style={{ flexDirection: "row" }}>
+              <Button
+                onPress={() => {
+                  firebase
+                    .firestore()
+                    .collection("drivers")
+                    .doc(firebase.auth().currentUser.uid)
+                    .update({ description: this.state.descripcion })
+                    .then(() => {
+                      Alert.alert(
+                        "Cambios",
+                        "Los cambios se mostraran hasta que vuelvas a entrar a la aplicacion",
+                        [
+                          {
+                            text: "OK",
+                            onPress: () => {
+                              this.setState({ overlayVisible: false });
+                            },
+                          },
+                        ],
+                        { cancelable: false }
+                      );
+                    });
+                }}
+                buttonStyle={{ paddingVertical: 2, backgroundColor: Constants.COLOR_GREEN }}
+                title="Actualizar"
+              />
+            </View>
+          </View>
+        );
+      }
+      case 5: {
+        return (
+          <View style={styles.overlayInnerContainer}>
+            <Text style={{ fontSize: 16 }}>Cambiar Placa</Text>
+            <Input
+              leftIcon={{ name: "directions-car" }}
+              value={this.state.placa}
+              onChangeText={text => {
+                this.setState({ placa: text });
+              }}
+              placeholder={this.state.user.placa}
+            />
+            <View style={{ flexDirection: "row" }}>
+              <Button
+                onPress={() => {
+                  firebase
+                    .firestore()
+                    .collection("drivers")
+                    .doc(firebase.auth().currentUser.uid)
+                    .update({ plate: this.state.placa })
+                    .then(() => {
+                      Alert.alert(
+                        "Cambios",
+                        "Los cambios se mostraran hasta que vuelvas a entrar a la aplicacion",
+                        [
+                          {
+                            text: "OK",
+                            onPress: () => {
+                              this.setState({ overlayVisible: false });
+                            },
+                          },
+                        ],
+                        { cancelable: false }
+                      );
+                    });
+                }}
+                buttonStyle={{ paddingVertical: 2, backgroundColor: Constants.COLOR_GREEN }}
+                title="Actualizar"
+              />
+            </View>
+          </View>
+        );
+      }
+      case 6: {
+        return (
+          <View style={styles.overlayInnerContainer}>
+            <Text style={{ fontSize: 16 }}>Cambiar Telefono</Text>
+            <Input
+              leftIcon={{ name: "phone" }}
+              value={this.state.telefono}
+              onChangeText={text => {
+                this.setState({ telefono: text });
+              }}
+              placeholder={this.state.user.telefono}
+            />
+            <View style={{ flexDirection: "row" }}>
+              <Button
+                onPress={() => {
+                  firebase
+                    .firestore()
+                    .collection("drivers")
+                    .doc(firebase.auth().currentUser.uid)
+                    .update({ phone: this.state.telefono })
+                    .then(() => {
+                      Alert.alert(
+                        "Cambios",
+                        "Los cambios se mostraran hasta que vuelvas a entrar a la aplicacion",
+                        [
+                          {
+                            text: "OK",
+                            onPress: () => {
+                              this.setState({ overlayVisible: false });
+                            },
+                          },
+                        ],
+                        { cancelable: false }
+                      );
+                    });
+                }}
+                buttonStyle={{ paddingVertical: 2, backgroundColor: Constants.COLOR_GREEN }}
+                title="Actualizar"
+              />
+            </View>
+          </View>
+        );
+      }
       default:
         break;
     }
@@ -154,6 +335,9 @@ class Profile extends Component {
               leftIcon: "directions-car",
               rightIcon: "pencil",
               rightIconType: "material-community",
+              rightIconOnPress: () => {
+                this.setState({ overlayVisible: true, overlayState: 3 });
+              },
             },
             {
               name: "Descripcion del carro",
@@ -161,6 +345,9 @@ class Profile extends Component {
               leftIcon: "directions-car",
               rightIcon: "pencil",
               rightIconType: "material-community",
+              rightIconOnPress: () => {
+                this.setState({ overlayVisible: true, overlayState: 4 });
+              },
             },
             {
               name: "Placa del carro",
@@ -168,6 +355,9 @@ class Profile extends Component {
               leftIcon: "directions-car",
               rightIcon: "pencil",
               rightIconType: "material-community",
+              rightIconOnPress: () => {
+                this.setState({ overlayVisible: true, overlayState: 5 });
+              },
             },
             {
               name: "Telefono",
@@ -175,15 +365,49 @@ class Profile extends Component {
               leftIcon: "phone",
               rightIcon: "pencil",
               rightIconType: "material-community",
+              rightIconOnPress: () => {
+                this.setState({ overlayVisible: true, overlayState: 6 });
+              },
             },
             {
               name: "Contraseña",
               leftIcon: "vpn-key",
               rightIcon: "pencil",
               rightIconType: "material-community",
+              rightIconOnPress: () => {
+                Alert.alert(
+                  "Contraseña",
+                  "Quieres que te enviemos un correo para cambiar tu contraseña",
+                  [
+                    {
+                      text: "ENVIAR",
+                      onPress: () => {
+                        firebase
+                          .auth()
+                          .sendPasswordResetEmail(firebase.auth().currentUser.email)
+                          .then(() => {
+                            Alert.alert("Confirmado", "Listo se ha enviado");
+                          });
+                      },
+                    },
+                    {
+                      text: "CANCELAR",
+                    },
+                  ],
+                  { cancelable: false }
+                );
+              },
             },
           ];
-          await this.setState({ user, nombre: user.firstName, apellido: user.lastName });
+          await this.setState({
+            user,
+            nombre: user.firstName,
+            apellido: user.lastName,
+            codigo: user.username,
+            descripcion: user.description,
+            placa: user.plate,
+            telefono: user.phone,
+          });
         });
     }
     this.backHandler = BackHandler.addEventListener("hardwareBackPress", () => {
