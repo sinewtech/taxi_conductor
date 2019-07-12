@@ -1,6 +1,8 @@
 import React, { Component } from "react";
 import { View, Text, BackHandler, FlatList, StyleSheet, Dimensions, Alert } from "react-native";
 import { Avatar, ListItem, Overlay, Input, Button, CheckBox } from "react-native-elements";
+import * as ImagePicker from "expo-image-picker";
+import { TextInputMask } from "react-native-masked-text";
 import firebase from "../../firebase";
 import * as Constants from "../Constants";
 class Profile extends Component {
@@ -19,6 +21,9 @@ class Profile extends Component {
       POS: false,
       efectivo: false,
       gateway: false,
+      perfil: "",
+      perfilcarro: "",
+      lateralcarro: "",
     };
     this.list = [];
   }
@@ -364,6 +369,52 @@ class Profile extends Component {
         break;
     }
   };
+  _pickImage = async id => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      allowsEditing: true,
+      aspect: [4, 3],
+    });
+
+    if (!result.cancelled) {
+      if (id === 0) {
+        await this.setState({ perfilcarro: result.uri });
+        await this.urlToBlob(this.state.perfilcarro).then(value => {
+          firebase
+            .storage()
+            .ref()
+            .child("images/" + firebase.auth().currentUser.uid + "/profilecar")
+            .put(value)
+            .then(() => {
+              Alert.alert("Imagen", "Foto de perfil del carro Actualizada con exito");
+            });
+        });
+      } else if (id === 1) {
+        await this.setState({ lateralcarro: result.uri });
+        await this.urlToBlob(this.state.lateralcarro).then(value => {
+          firebase
+            .storage()
+            .ref()
+            .child("images/" + firebase.auth().currentUser.uid + "/lateralcar")
+            .put(value)
+            .then(() => {
+              Alert.alert("Imagen", "Foto de lateral del carro Actualizada con exito");
+            });
+        });
+      } else {
+        await this.setState({ perfil: result.uri });
+        await this.urlToBlob(this.state.perfil).then(value => {
+          firebase
+            .storage()
+            .ref()
+            .child("images/" + firebase.auth().currentUser.uid + "/profile")
+            .put(value)
+            .then(() => {
+              Alert.alert("Imagen", "Foto de perfil Actualizada con exito");
+            });
+        });
+      }
+    }
+  };
   componentDidMount = () => {
     if (firebase.auth().currentUser) {
       firebase
@@ -411,6 +462,28 @@ class Profile extends Component {
               rightIconType: "material-community",
               rightIconOnPress: () => {
                 this.setState({ overlayVisible: true, overlayState: 3 });
+              },
+            },
+            {
+              name: "Foto lateral del carro",
+              leftIcon: "directions-car",
+              rightIcon: "pencil",
+              rightIconType: "material-community",
+              isPhoto: true,
+              avatar: user.lateralcar,
+              rightIconOnPress: () => {
+                this._pickImage(1);
+              },
+            },
+            {
+              name: "Foto perfil del carro",
+              leftIcon: "directions-car",
+              rightIcon: "pencil",
+              rightIconType: "material-community",
+              isPhoto: true,
+              avatar: user.profilecar,
+              rightIconOnPress: () => {
+                this._pickImage(2);
               },
             },
             {
@@ -493,12 +566,28 @@ class Profile extends Component {
     });
   };
   keyExtractor = (item, index) => index.toString();
+  urlToBlob = url => {
+    return new Promise((resolve, reject) => {
+      var xhr = new XMLHttpRequest();
+      xhr.onerror = reject;
+      xhr.onreadystatechange = () => {
+        if (xhr.readyState === 4) {
+          resolve(xhr.response);
+        }
+      };
+      xhr.open("GET", url);
+      xhr.responseType = "blob"; // convert type
+      xhr.send();
+    });
+  };
 
   renderItem = ({ item }) => (
     <ListItem
       title={item.name}
       subtitle={item.subtitle}
-      leftAvatar={{ icon: { name: item.leftIcon } }}
+      leftAvatar={
+        !item.isPhoto ? { icon: { name: item.leftIcon } } : { source: { uri: item.avatar } }
+      }
       rightIcon={{ name: item.rightIcon, type: item.rightIconType, onPress: item.rightIconOnPress }}
     />
   );
@@ -510,7 +599,7 @@ class Profile extends Component {
             rounded
             showEditButton
             size="xlarge"
-            onEditPress={() => console.log("Works!")}
+            onEditPress={() => this._pickImage(3)}
             activeOpacity={0.7}
             source={{ uri: this.state.user.profile }}
             containerStyle={{ padding: 5 }}
