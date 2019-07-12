@@ -427,6 +427,7 @@ class Profile extends Component {
           this.list = [
             {
               name: "Formas de pago",
+              subtitle: user.payments.join(", "),
               leftIcon: "attach-money",
               rightIcon: "pencil",
               rightIconType: "material-community",
