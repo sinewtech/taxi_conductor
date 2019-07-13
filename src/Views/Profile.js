@@ -73,7 +73,7 @@ class Profile extends Component {
                       final.push("POS");
                     }
                     if (this.state.efectivo) {
-                      final.push("Efectivo");
+                      final.push("CASH");
                     }
                     if (this.state.gateway) {
                       final.push("Gateway");
@@ -464,6 +464,9 @@ class Profile extends Component {
         .get()
         .then(async userdata => {
           let user = userdata.data();
+          if (user.payments.includes("CASH")) {
+            user.payments[user.payments.indexOf("CASH")] = "Efectivo";
+          }
           this.list = [
             {
               name: "Formas de pago",
@@ -596,7 +599,7 @@ class Profile extends Component {
             placa: user.plate,
             telefono: user.phone,
             POS: user.payments.includes("POS"),
-            efectivo: user.payments.includes("Efectivo"),
+            efectivo: user.payments.includes("CASH"),
             // gateway: user.payments.includes("Gateway"),
           });
         });
