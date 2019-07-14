@@ -21,6 +21,7 @@
     "firebase": "6.0.2",
     "react": "16.8.3",
     "react-native": "https://github.com/expo/react-native/archive/sdk-33.0.0.tar.gz",
+    "react-native-alert-async": "^1.0.3",
     "react-native-elements": "^1.1.0",
     "react-native-maps": "^0.24.2",
     "react-native-masked-text": "^1.12.3",
