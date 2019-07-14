@@ -18,11 +18,14 @@ import * as Location from "expo-location";
 import MapView from "react-native-maps";
 import * as TaskManager from "expo-task-manager";
 import * as Permissions from "expo-permissions";
+import { Audio } from "expo-av";
+
 import Driver from "../Components/Driver";
 import Briefing from "../Components/Briefing";
 import Asking from "../Components/Asking";
 import firebase from "../../firebase";
 import * as Constants from "../Constants";
+
 import {
   NavigatingToClient,
   WaitingClient,
@@ -102,6 +105,8 @@ class Home extends Component {
         price: 420.69,
       };
     }
+
+    this.notificationSound = null;
   }
 
   goToUserLocation = async () => {
@@ -154,6 +159,17 @@ class Home extends Component {
   };
 
   componentDidMount = async () => {
+    Audio.setAudioModeAsync({
+      allowsRecordingIOS: false,
+      interruptionModeIOS: Audio.INTERRUPTION_MODE_IOS_DO_NOT_MIX,
+      playsInSilentModeIOS: true,
+      shouldDuckAndroid: true,
+      interruptionModeAndroid: Audio.INTERRUPTION_MODE_ANDROID_DO_NOT_MIX,
+      playThroughEarpieceAndroid: false,
+    });
+
+    this.loadAudio();
+
     firebase.auth().onAuthStateChanged(user => {
       if (user) {
         firebase
@@ -277,6 +293,34 @@ class Home extends Component {
       Alert.alert("Servicios GPS", "Por favor activa los servicios de GPS para continuar.");
     }
   };
+
+  async loadAudio() {
+    if (this.notificationSound != null) {
+      await this.notificationSound.unloadAsync();
+      this.notificationSound.setOnPlaybackStatusUpdate(null);
+      this.notificationSound = null;
+    }
+    const source = require("../../assets/sounds/alert_carrera_recibida.mp3");
+    const initialStatus = {
+      //        Play by default
+      shouldPlay: false,
+      //        Control the speed
+      rate: 1.0,
+      //        Correct the pitch
+      shouldCorrectPitch: true,
+      //        Control the Volume
+      volume: 1.0,
+      //        mute the Audio
+      isMuted: false,
+    };
+    const { sound, status } = await Audio.Sound.createAsync(source, initialStatus);
+    //  Save the response of sound in notificationSound
+    this.notificationSound = sound;
+    //  Make the loop of Audio
+    this.notificationSound.setIsLoopingAsync(true);
+    //  Play the Music
+    //this.notificationSound.playAsync();
+  }
 
   startNavigationMode = () => {
     console.log("Enabling nav mode...");
@@ -497,6 +541,8 @@ class Home extends Component {
             });
         }
 
+        this.notificationSound.playAsync();
+
         return (
           <Asking
             isManual={this.state.isManual}
@@ -508,6 +554,7 @@ class Home extends Component {
                 {
                   text: "OK",
                   onPress: () => {
+                    this.notificationSound.stopAsync();
                     this.updateDriverStatus(Constants.DRIVER_STATUS_ON_A_DRIVE);
                     this.updateOrderStatus(Constants.QUOTE_STATUS_DRIVER_GOING_TO_CLIENT);
                     this.updateTimeStamps("acceptedOrder");
@@ -539,6 +586,7 @@ class Home extends Component {
                         driverState: Constants.DRIVER_STATE_NONE,
                       });
 
+                      this.notificationSound.stopAsync();
                       this.updateOrderStatus(Constants.QUOTE_STATUS_DRIVER_DENNIED);
                       this.updateDriverStatus(Constants.DRIVER_STATUS_LOOKING_FOR_DRIVE);
                       this.stopNavigationMode();
@@ -557,6 +605,7 @@ class Home extends Component {
 
       case Constants.DRIVER_STATE_GOING_TO_CLIENT: {
         this.updateDriverStatus(Constants.DRIVER_STATUS_ON_A_DRIVE);
+        this.notificationSound.stopAsync();
 
         return (
           <NavigatingToClient
@@ -571,13 +620,13 @@ class Home extends Component {
                       // console.log(
                       //   "distancia: " +
                       //     Constants.getDistanceBetweenCoordinates(
-                      //       this.state.origin,
+                      //       this.state.order.origin,
                       //       this.state.driverPosition
                       //     )
                       // );
                       if (
                         Constants.getDistanceBetweenCoordinates(
-                          this.state.origin,
+                          this.state.order.origin,
                           this.state.driverPosition
                         ) > Constants.DRIVER_MAX_DISTANCE_NO_WARNING_METERS
                       ) {
@@ -607,7 +656,7 @@ class Home extends Component {
                     if (continua === "Si") {
                       this.updateOrderRiskCliente(
                         Constants.getDistanceBetweenCoordinates(
-                          this.state.origin,
+                          this.state.order.origin,
                           this.state.driverPosition
                         )
                       );
@@ -705,7 +754,7 @@ class Home extends Component {
                       const continua = await new Promise(async (resolve, reject) => {
                         if (
                           Constants.getDistanceBetweenCoordinates(
-                            this.state.origin,
+                            this.state.order.destination,
                             this.state.driverPosition
                           ) > Constants.DRIVER_MAX_DISTANCE_NO_WARNING_METERS
                         ) {
@@ -735,7 +784,7 @@ class Home extends Component {
                       if (continua === "Si") {
                         this.updateOrderRiskDestination(
                           Constants.getDistanceBetweenCoordinates(
-                            this.state.origin,
+                            this.state.order.destination,
                             this.state.driverPosition
                           )
                         );
