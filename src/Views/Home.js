@@ -400,6 +400,55 @@ class Home extends Component {
       .child("/quotes/" + this.state.orderuid + "/status")
       .set(status);
   };
+
+  updateOrderRiskCliente = distance => {
+    let warning = { distance: distance, risk: "NO" };
+    switch (true) {
+      case Constants.DRIVER_MAX_DISTANCE_NO_WARNING_METERS < distance &&
+        distance <= Constants.DRIVER_MAX_DISTANCE_LOW_WARNING_METERS:
+        warning = { distance: distance, risk: "NO" };
+        break;
+      case distance <= Constants.DRIVER_MAX_DISTANCE_MID_WARNING_METERS:
+        warning = { distance: distance, risk: "LOW" };
+        break;
+      case distance <= Constants.DRIVER_MAX_DISTANCE_HIGH_WARNING_METERS:
+        warning = { distance: distance, risk: "MID" };
+        break;
+      case Constants.DRIVER_MAX_DISTANCE_HIGH_WARNING_METERS < distance:
+        warning = { distance: distance, risk: "HIGH" };
+        break;
+    }
+    firebase
+      .database()
+      .ref()
+      .child("/quotes/" + this.state.orderuid + "/warning/cliente/")
+      .set(warning);
+  };
+
+  updateOrderRiskDestination = distance => {
+    let warning = { distance: distance, risk: "NO" };
+    switch (true) {
+      case Constants.DRIVER_MAX_DISTANCE_NO_WARNING_METERS < distance &&
+        distance <= Constants.DRIVER_MAX_DISTANCE_LOW_WARNING_METERS:
+        warning = { distance: distance, risk: "NO" };
+        break;
+      case distance <= Constants.DRIVER_MAX_DISTANCE_MID_WARNING_METERS:
+        warning = { distance: distance, risk: "LOW" };
+        break;
+      case distance <= Constants.DRIVER_MAX_DISTANCE_HIGH_WARNING_METERS:
+        warning = { distance: distance, risk: "MID" };
+        break;
+      case Constants.DRIVER_MAX_DISTANCE_HIGH_WARNING_METERS < distance:
+        warning = { distance: distance, risk: "HIGH" };
+        break;
+    }
+    firebase
+      .database()
+      .ref()
+      .child("/quotes/" + this.state.orderuid + "/warning/destination/")
+      .set(warning);
+  };
+
   updateTimeStamps = dateTime => {
     firebase
       .database()
@@ -519,18 +568,18 @@ class Home extends Component {
                   text: "Sí",
                   onPress: async () => {
                     const continua = await new Promise(async (resolve, reject) => {
-                      console.log(
-                        "distancia: " +
-                          Constants.getDistanceBetweenCoordinates(
-                            this.state.origin,
-                            this.state.driverPosition
-                          )
-                      );
+                      // console.log(
+                      //   "distancia: " +
+                      //     Constants.getDistanceBetweenCoordinates(
+                      //       this.state.origin,
+                      //       this.state.driverPosition
+                      //     )
+                      // );
                       if (
                         Constants.getDistanceBetweenCoordinates(
                           this.state.origin,
                           this.state.driverPosition
-                        ) > Constants.DRIVER_MAX_DISTANCE_METERS
+                        ) > Constants.DRIVER_MAX_DISTANCE_NO_WARNING_METERS
                       ) {
                         const confirma = await AlertAsync(
                           "¡No está lo suficientemente cerca del cliente!",
@@ -556,6 +605,12 @@ class Home extends Component {
                     console.log("continua: " + continua);
 
                     if (continua === "Si") {
+                      this.updateOrderRiskCliente(
+                        Constants.getDistanceBetweenCoordinates(
+                          this.state.origin,
+                          this.state.driverPosition
+                        )
+                      );
                       this.pauseNavigation();
 
                       console.log("Confirmando status para orden", this.state.orderuid);
@@ -646,22 +701,60 @@ class Home extends Component {
                   },
                   {
                     text: "Sí",
-                    onPress: () => {
-                      this.stopNavigationMode();
-
-                      this.setState({
-                        order: null,
+                    onPress: async () => {
+                      const continua = await new Promise(async (resolve, reject) => {
+                        if (
+                          Constants.getDistanceBetweenCoordinates(
+                            this.state.origin,
+                            this.state.driverPosition
+                          ) > Constants.DRIVER_MAX_DISTANCE_NO_WARNING_METERS
+                        ) {
+                          const confirma = await AlertAsync(
+                            "¡No está lo suficientemente cerca del destino!",
+                            "¿Está seguro que desea finalizar la carrera?",
+                            [
+                              {
+                                text: "No",
+                                onPress: () => resolve("No"),
+                              },
+                              {
+                                text: "Sí",
+                                onPress: () => resolve("Si"),
+                              },
+                            ]
+                          );
+                          console.log("resolve: " + confirma);
+                          resolve(confirma);
+                        } else {
+                          resolve("Si");
+                        }
                       });
 
-                      this.updateDriverStatus(Constants.DRIVER_STATUS_LOOKING_FOR_DRIVE);
-                      this.updateOrderStatus(Constants.QUOTE_STATUS_FINISHED);
-                      this.updateTimeStamps("clientArrived");
+                      console.log("continua: " + continua);
 
-                      this.clear();
+                      if (continua === "Si") {
+                        this.updateOrderRiskDestination(
+                          Constants.getDistanceBetweenCoordinates(
+                            this.state.origin,
+                            this.state.driverPosition
+                          )
+                        );
+                        this.stopNavigationMode();
 
-                      Alert.alert("Carrera terminada", "Gracias por cuidar a nuestro cliente.", [
-                        { text: "Cerrar" },
-                      ]);
+                        this.setState({
+                          order: null,
+                        });
+
+                        this.updateDriverStatus(Constants.DRIVER_STATUS_LOOKING_FOR_DRIVE);
+                        this.updateOrderStatus(Constants.QUOTE_STATUS_FINISHED);
+                        this.updateTimeStamps("clientArrived");
+
+                        this.clear();
+
+                        Alert.alert("Carrera terminada", "Gracias por cuidar a nuestro cliente.", [
+                          { text: "Cerrar" },
+                        ]);
+                      }
                     },
                   },
                 ],

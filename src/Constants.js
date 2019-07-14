@@ -55,7 +55,10 @@ export const QUOTE_STATUS_CLIENT_ABORDED = 6;
 export const QUOTE_STATUS_FINISHED = 7;
 
 //distancia maxima entre conductor y destino/cliente en metros
-export const DRIVER_MAX_DISTANCE_METERS = 40;
+export const DRIVER_MAX_DISTANCE_NO_WARNING_METERS = 100;
+export const DRIVER_MAX_DISTANCE_LOW_WARNING_METERS = 200;
+export const DRIVER_MAX_DISTANCE_MID_WARNING_METERS = 250;
+export const DRIVER_MAX_DISTANCE_HIGH_WARNING_METERS = 300;
 
 const rad = x => {
   return (x * Math.PI) / 180;
