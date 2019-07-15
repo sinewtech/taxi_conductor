@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import { Button, Icon } from "react-native-elements";
+import AlertAsync from "react-native-alert-async";
 import {
   Text,
   View,
@@ -17,11 +18,14 @@ import * as Location from "expo-location";
 import MapView from "react-native-maps";
 import * as TaskManager from "expo-task-manager";
 import * as Permissions from "expo-permissions";
+import { Audio } from "expo-av";
+
 import Driver from "../Components/Driver";
 import Briefing from "../Components/Briefing";
 import Asking from "../Components/Asking";
 import firebase from "../../firebase";
 import * as Constants from "../Constants";
+
 import {
   NavigatingToClient,
   WaitingClient,
@@ -101,6 +105,8 @@ class Home extends Component {
         price: 420.69,
       };
     }
+
+    this.notificationSound = null;
   }
 
   goToUserLocation = async () => {
@@ -112,6 +118,13 @@ class Home extends Component {
       }
 
       let location = await Location.getCurrentPositionAsync({});
+
+      this.setState({
+        driverPosition: {
+          lat: location.coords.latitude,
+          lng: location.coords.longitude,
+        },
+      });
 
       this.map.animateToRegion({
         latitude: location.coords.latitude,
@@ -146,6 +159,18 @@ class Home extends Component {
   };
 
   componentDidMount = async () => {
+    Audio.setAudioModeAsync({
+      allowsRecordingIOS: false,
+      interruptionModeIOS: Audio.INTERRUPTION_MODE_IOS_DO_NOT_MIX,
+      playsInSilentModeIOS: true,
+      shouldDuckAndroid: true,
+      interruptionModeAndroid: Audio.INTERRUPTION_MODE_ANDROID_DO_NOT_MIX,
+      playThroughEarpieceAndroid: false,
+      staysActiveInBackground: true,
+    });
+
+    this.loadAudio();
+
     firebase.auth().onAuthStateChanged(user => {
       if (user) {
         firebase
@@ -270,6 +295,35 @@ class Home extends Component {
     }
   };
 
+  async loadAudio() {
+    if (this.notificationSound != null) {
+      await this.notificationSound.unloadAsync();
+      this.notificationSound.setOnPlaybackStatusUpdate(null);
+      this.notificationSound = null;
+    }
+    const source = require("../../assets/sounds/alert_carrera_recibida.mp3");
+    const initialStatus = {
+      //        Play by default
+      shouldPlay: false,
+      //        Control the speed
+      rate: 1.0,
+      //        Correct the pitch
+      shouldCorrectPitch: true,
+      //        Control the Volume
+      volume: 1.0,
+      //        mute the Audio
+      isMuted: false,
+    };
+    const { sound, status } = await Audio.Sound.createAsync(source, initialStatus);
+    //  Save the response of sound in notificationSound
+    this.notificationSound = sound;
+    //  Make the loop of Audio
+
+    this.notificationSound.setIsLoopingAsync(true);
+    //  Play the Music
+    //this.notificationSound.playAsync();
+  }
+
   startNavigationMode = () => {
     console.log("Enabling nav mode...");
 
@@ -392,6 +446,55 @@ class Home extends Component {
       .child("/quotes/" + this.state.orderuid + "/status")
       .set(status);
   };
+
+  updateOrderRiskCliente = distance => {
+    let warning = { distance: distance, risk: "NO" };
+    switch (true) {
+      case Constants.DRIVER_MAX_DISTANCE_NO_WARNING_METERS < distance &&
+        distance <= Constants.DRIVER_MAX_DISTANCE_LOW_WARNING_METERS:
+        warning = { distance: distance, risk: "NO" };
+        break;
+      case distance <= Constants.DRIVER_MAX_DISTANCE_MID_WARNING_METERS:
+        warning = { distance: distance, risk: "LOW" };
+        break;
+      case distance <= Constants.DRIVER_MAX_DISTANCE_HIGH_WARNING_METERS:
+        warning = { distance: distance, risk: "MID" };
+        break;
+      case Constants.DRIVER_MAX_DISTANCE_HIGH_WARNING_METERS < distance:
+        warning = { distance: distance, risk: "HIGH" };
+        break;
+    }
+    firebase
+      .database()
+      .ref()
+      .child("/quotes/" + this.state.orderuid + "/warning/cliente/")
+      .set(warning);
+  };
+
+  updateOrderRiskDestination = distance => {
+    let warning = { distance: distance, risk: "NO" };
+    switch (true) {
+      case Constants.DRIVER_MAX_DISTANCE_NO_WARNING_METERS < distance &&
+        distance <= Constants.DRIVER_MAX_DISTANCE_LOW_WARNING_METERS:
+        warning = { distance: distance, risk: "NO" };
+        break;
+      case distance <= Constants.DRIVER_MAX_DISTANCE_MID_WARNING_METERS:
+        warning = { distance: distance, risk: "LOW" };
+        break;
+      case distance <= Constants.DRIVER_MAX_DISTANCE_HIGH_WARNING_METERS:
+        warning = { distance: distance, risk: "MID" };
+        break;
+      case Constants.DRIVER_MAX_DISTANCE_HIGH_WARNING_METERS < distance:
+        warning = { distance: distance, risk: "HIGH" };
+        break;
+    }
+    firebase
+      .database()
+      .ref()
+      .child("/quotes/" + this.state.orderuid + "/warning/destination/")
+      .set(warning);
+  };
+
   updateTimeStamps = dateTime => {
     firebase
       .database()
@@ -440,6 +543,8 @@ class Home extends Component {
             });
         }
 
+        this.notificationSound.playAsync();
+
         return (
           <Asking
             isManual={this.state.isManual}
@@ -451,6 +556,7 @@ class Home extends Component {
                 {
                   text: "OK",
                   onPress: () => {
+                    this.notificationSound.stopAsync();
                     this.updateDriverStatus(Constants.DRIVER_STATUS_ON_A_DRIVE);
                     this.updateOrderStatus(Constants.QUOTE_STATUS_DRIVER_GOING_TO_CLIENT);
                     this.updateTimeStamps("acceptedOrder");
@@ -482,6 +588,7 @@ class Home extends Component {
                         driverState: Constants.DRIVER_STATE_NONE,
                       });
 
+                      this.notificationSound.stopAsync();
                       this.updateOrderStatus(Constants.QUOTE_STATUS_DRIVER_DENNIED);
                       this.updateDriverStatus(Constants.DRIVER_STATUS_LOOKING_FOR_DRIVE);
                       this.stopNavigationMode();
@@ -500,6 +607,7 @@ class Home extends Component {
 
       case Constants.DRIVER_STATE_GOING_TO_CLIENT: {
         this.updateDriverStatus(Constants.DRIVER_STATUS_ON_A_DRIVE);
+        this.notificationSound.stopAsync();
 
         return (
           <NavigatingToClient
@@ -509,31 +617,78 @@ class Home extends Component {
                 { text: "No" },
                 {
                   text: "Sí",
-                  onPress: () => {
-                    this.pauseNavigation();
+                  onPress: async () => {
+                    const continua = await new Promise(async (resolve, reject) => {
+                      // console.log(
+                      //   "distancia: " +
+                      //     Constants.getDistanceBetweenCoordinates(
+                      //       this.state.order.origin,
+                      //       this.state.driverPosition
+                      //     )
+                      // );
+                      if (
+                        !this.state.order.manual &&
+                        Constants.getDistanceBetweenCoordinates(
+                          this.state.order.origin,
+                          this.state.driverPosition
+                        ) > Constants.DRIVER_MAX_DISTANCE_NO_WARNING_METERS
+                      ) {
+                        const confirma = await AlertAsync(
+                          "¡No está lo suficientemente cerca del cliente!",
+                          "¿Está seguro que desea confirmar llegada?",
+                          [
+                            {
+                              text: "No",
+                              onPress: () => resolve("No"),
+                            },
+                            {
+                              text: "Sí",
+                              onPress: () => resolve("Si"),
+                            },
+                          ]
+                        );
+                        console.log("resolve: " + confirma);
+                        resolve(confirma);
+                      } else {
+                        resolve("Si");
+                      }
+                    });
 
-                    console.log("Confirmando status para orden", this.state.orderuid);
+                    console.log("continua: " + continua);
 
-                    Alert.alert(
-                      "Notificando al cliente",
-                      this.state.order.manual
-                        ? "Por favor llama al cliente y notificale tu llegada."
-                        : "Le notificaremos tu llegada al cliente.",
-                      [
-                        {
-                          text: "ok",
-                          onPress: () => {
-                            this.updateOrderStatus(Constants.QUOTE_STATUS_WAITING_CLIENT);
-                            this.updateTimeStamps("driverArrived");
-                            this.setState({
-                              driverState: Constants.DRIVER_STATE_CLIENT_IS_WITH_HIM,
-                            });
+                    if (continua === "Si") {
+                      if (!this.state.order.manual)
+                        this.updateOrderRiskCliente(
+                          Constants.getDistanceBetweenCoordinates(
+                            this.state.order.origin,
+                            this.state.driverPosition
+                          )
+                        );
+                      this.pauseNavigation();
+
+                      console.log("Confirmando status para orden", this.state.orderuid);
+
+                      Alert.alert(
+                        "Notificando al cliente",
+                        this.state.order.manual
+                          ? "Por favor llama al cliente y notificale tu llegada."
+                          : "Le notificaremos tu llegada al cliente.",
+                        [
+                          {
+                            text: "ok",
+                            onPress: () => {
+                              this.updateOrderStatus(Constants.QUOTE_STATUS_WAITING_CLIENT);
+                              this.updateTimeStamps("driverArrived");
+                              this.setState({
+                                driverState: Constants.DRIVER_STATE_CLIENT_IS_WITH_HIM,
+                              });
+                            },
                           },
-                        },
-                      ],
-                      { cancelable: false }
-                    );
-                    console.log("destination", this.state.destination);
+                        ],
+                        { cancelable: false }
+                      );
+                      console.log("destination", this.state.destination);
+                    }
                   },
                 },
               ])
@@ -599,22 +754,62 @@ class Home extends Component {
                   },
                   {
                     text: "Sí",
-                    onPress: () => {
-                      this.stopNavigationMode();
-
-                      this.setState({
-                        order: null,
+                    onPress: async () => {
+                      const continua = await new Promise(async (resolve, reject) => {
+                        if (
+                          !this.state.order.manual &&
+                          Constants.getDistanceBetweenCoordinates(
+                            this.state.order.destination,
+                            this.state.driverPosition
+                          ) > Constants.DRIVER_MAX_DISTANCE_NO_WARNING_METERS
+                        ) {
+                          const confirma = await AlertAsync(
+                            "¡No está lo suficientemente cerca del destino!",
+                            "¿Está seguro que desea finalizar la carrera?",
+                            [
+                              {
+                                text: "No",
+                                onPress: () => resolve("No"),
+                              },
+                              {
+                                text: "Sí",
+                                onPress: () => resolve("Si"),
+                              },
+                            ]
+                          );
+                          console.log("resolve: " + confirma);
+                          resolve(confirma);
+                        } else {
+                          resolve("Si");
+                        }
                       });
 
-                      this.updateDriverStatus(Constants.DRIVER_STATUS_LOOKING_FOR_DRIVE);
-                      this.updateOrderStatus(Constants.QUOTE_STATUS_FINISHED);
-                      this.updateTimeStamps("clientArrived");
+                      console.log("continua: " + continua);
 
-                      this.clear();
+                      if (continua === "Si") {
+                        if (!this.state.order.manual)
+                          this.updateOrderRiskDestination(
+                            Constants.getDistanceBetweenCoordinates(
+                              this.state.order.destination,
+                              this.state.driverPosition
+                            )
+                          );
+                        this.stopNavigationMode();
 
-                      Alert.alert("Carrera terminada", "Gracias por cuidar a nuestro cliente.", [
-                        { text: "Cerrar" },
-                      ]);
+                        this.setState({
+                          order: null,
+                        });
+
+                        this.updateDriverStatus(Constants.DRIVER_STATUS_LOOKING_FOR_DRIVE);
+                        this.updateOrderStatus(Constants.QUOTE_STATUS_FINISHED);
+                        this.updateTimeStamps("clientArrived");
+
+                        this.clear();
+
+                        Alert.alert("Carrera terminada", "Gracias por cuidar a nuestro cliente.", [
+                          { text: "Cerrar" },
+                        ]);
+                      }
                     },
                   },
                 ],
