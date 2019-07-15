@@ -166,6 +166,7 @@ class Home extends Component {
       shouldDuckAndroid: true,
       interruptionModeAndroid: Audio.INTERRUPTION_MODE_ANDROID_DO_NOT_MIX,
       playThroughEarpieceAndroid: false,
+      staysActiveInBackground: true,
     });
 
     this.loadAudio();
@@ -317,6 +318,7 @@ class Home extends Component {
     //  Save the response of sound in notificationSound
     this.notificationSound = sound;
     //  Make the loop of Audio
+
     this.notificationSound.setIsLoopingAsync(true);
     //  Play the Music
     //this.notificationSound.playAsync();
@@ -625,6 +627,7 @@ class Home extends Component {
                       //     )
                       // );
                       if (
+                        !this.state.order.manual &&
                         Constants.getDistanceBetweenCoordinates(
                           this.state.order.origin,
                           this.state.driverPosition
@@ -654,12 +657,13 @@ class Home extends Component {
                     console.log("continua: " + continua);
 
                     if (continua === "Si") {
-                      this.updateOrderRiskCliente(
-                        Constants.getDistanceBetweenCoordinates(
-                          this.state.order.origin,
-                          this.state.driverPosition
-                        )
-                      );
+                      if (!this.state.order.manual)
+                        this.updateOrderRiskCliente(
+                          Constants.getDistanceBetweenCoordinates(
+                            this.state.order.origin,
+                            this.state.driverPosition
+                          )
+                        );
                       this.pauseNavigation();
 
                       console.log("Confirmando status para orden", this.state.orderuid);
@@ -753,6 +757,7 @@ class Home extends Component {
                     onPress: async () => {
                       const continua = await new Promise(async (resolve, reject) => {
                         if (
+                          !this.state.order.manual &&
                           Constants.getDistanceBetweenCoordinates(
                             this.state.order.destination,
                             this.state.driverPosition
@@ -782,12 +787,13 @@ class Home extends Component {
                       console.log("continua: " + continua);
 
                       if (continua === "Si") {
-                        this.updateOrderRiskDestination(
-                          Constants.getDistanceBetweenCoordinates(
-                            this.state.order.destination,
-                            this.state.driverPosition
-                          )
-                        );
+                        if (!this.state.order.manual)
+                          this.updateOrderRiskDestination(
+                            Constants.getDistanceBetweenCoordinates(
+                              this.state.order.destination,
+                              this.state.driverPosition
+                            )
+                          );
                         this.stopNavigationMode();
 
                         this.setState({
