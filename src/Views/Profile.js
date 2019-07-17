@@ -464,13 +464,10 @@ class Profile extends Component {
         .get()
         .then(async userdata => {
           let user = userdata.data();
-          if (user.payments.includes("CASH")) {
-            user.payments[user.payments.indexOf("CASH")] = "Efectivo";
-          }
           this.list = [
             {
               name: "Formas de pago",
-              subtitle: user.payments.join(", "),
+              subtitle: user.payments.join(", ").replace("CASH", "Efectivo"),
               leftIcon: "attach-money",
               rightIcon: "pencil",
               rightIconType: "material-community",

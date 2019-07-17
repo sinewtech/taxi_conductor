@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Button, Icon } from "react-native-elements";
+import { Button, Icon, Overlay } from "react-native-elements";
 import AlertAsync from "react-native-alert-async";
 import {
   Text,
@@ -11,6 +11,7 @@ import {
   Dimensions,
   ToastAndroid,
   AppState,
+  Linking,
 } from "react-native";
 import { Notifications } from "expo";
 import KeepAwake from "expo-keep-awake";
@@ -83,6 +84,7 @@ class Home extends Component {
         lat: Constants.INITIAL_REGION.latitude,
         lng: Constants.INITIAL_REGION.longitude,
       },
+      showModal: false,
       // driverState: Constants.DRIVER_STATE_GOING_TO_CLIENT,
       selectedIndex: 0,
       user: {},
@@ -948,7 +950,7 @@ class Home extends Component {
 
   _handleNotification = async notification => {
     console.log("Notificación recibida", notification);
-
+    console.log(notification.data.id === Constants.DRIVER_NOTIFICATION_CALL);
     if (notification.data.order) {
       if (notification.data.order.manual) await this.setState({ order: notification.data.order });
       //await this.setState({ order: notification.data.order });
@@ -1021,6 +1023,9 @@ class Home extends Component {
       } else if (notification.data.id === Constants.QUOTE_STATUS_CLIENT_CANCELED) {
         this.updateDriverStatus(Constants.DRIVER_STATUS_LOOKING_FOR_DRIVE);
       }
+    } else if (notification.data.id === Constants.DRIVER_NOTIFICATION_CALL) {
+      console.log("sexo anal");
+      await this.setState({ showModal: true });
     }
     console.log("se mandaron", AppState.currentState);
     if (Platform.OS === "android" && AppState.currentState === "active") {
@@ -1134,6 +1139,26 @@ class Home extends Component {
     return (
       <View style={{ flex: 1 }}>
         <KeepAwake />
+        <Overlay
+          animated
+          animationType="fade"
+          isVisible={this.state.showModal}
+          onBackdropPress={() => this.setState({ showModal: false })}
+          height="auto"
+          width="auto">
+          <View style={{ flexDirection: "row" }}>
+            <Text>El cliente ocupa que lo llames ahorita</Text>
+            <Icon
+              name="phone"
+              reverse
+              reverseColor="white"
+              onPress={() => {
+                Linking.openURL(`tel:${this.state.order.userPhone}`);
+              }}
+              color={Constants.COLOR_GREEN}
+            />
+          </View>
+        </Overlay>
         <MapView
           style={{ flex: 1 }}
           onMapReady={() => this.goToUserLocation()}
