@@ -79,6 +79,10 @@ class Home extends Component {
 
     this.state = {
       driverState: Constants.DRIVER_STATE_NONE,
+      driverPosition: {
+        lat: Constants.INITIAL_REGION.latitude,
+        lng: Constants.INITIAL_REGION.longitude,
+      },
       // driverState: Constants.DRIVER_STATE_GOING_TO_CLIENT,
       selectedIndex: 0,
       user: {},
@@ -86,6 +90,8 @@ class Home extends Component {
       polyline: [],
       navigating: false,
       navigationCentered: false,
+      heading: 0,
+      locationStale: true,
     };
 
     if (Constants.DEBUG_MODE) {
@@ -159,6 +165,8 @@ class Home extends Component {
   };
 
   componentDidMount = async () => {
+    this.startNavigationMode();
+
     Audio.setAudioModeAsync({
       allowsRecordingIOS: false,
       interruptionModeIOS: Audio.INTERRUPTION_MODE_IOS_DO_NOT_MIX,
@@ -324,44 +332,100 @@ class Home extends Component {
     //this.notificationSound.playAsync();
   }
 
+  updateCamera = () => {
+    //console.log("Attempting to update camera...");
+    //console.log("Navigating:", this.state.navigating);
+    //console.log("Navigation Centered:", this.state.navigationCentered);
+    //console.log("Location Stale:", this.state.locationStale);
+
+    if (this.state.navigating && this.state.navigationCentered && this.state.locationStale) {
+      this.setState({ locationStale: false });
+
+      //console.log("Retrieving location...");
+
+      let loc = {
+        center: {
+          latitude: this.state.driverPosition.lat,
+          longitude: this.state.driverPosition.lng,
+        },
+        heading: this.state.heading,
+        pitch: 70,
+        zoom: 50,
+      };
+
+      //console.log("Location:", loc);
+
+      this.map.animateCamera(loc, 500);
+
+      setTimeout(() => {
+        this.setState({ locationStale: true });
+      }, 500);
+    }
+  };
+
   startNavigationMode = () => {
     console.log("Enabling nav mode...");
 
     if (this.state.navigationSubscription) {
       console.log("Removing last location subscription...");
-      this.state.navigationSubscription.remove();
+      if (this.state.navigationSubscription.remove) this.state.navigationSubscription.remove();
     }
+
+    if (this.state.headingSubscription) {
+      console.log("Removing last heading subscription...");
+      if (this.state.headingSubscription.remove) this.state.headingSubscription.remove();
+    }
+
+    let headingSubscription = Location.watchHeadingAsync(async heading => {
+      if (this.state.navigating && this.state.navigationCentered) {
+        //if (Math.abs(heading.trueHeading - this.state.prevHeading) > 15){
+        //await this.setState({prevHeading: heading.trueHeading});
+
+        //if (this.state.headingStale){
+        await this.setState({ heading: heading.trueHeading });
+        this.updateCamera();
+
+        /*this.map.animateCamera({
+              heading: heading.trueHeading,
+            });*/
+
+        //setTimeout(() => {
+        //this.setState({headingStale: true})
+        ///}, 1500);
+        //}
+        //}
+
+        //console.log("Heading", heading);
+      }
+    });
 
     let navigationSubscription = Location.watchPositionAsync(
       {
         accuracy: Location.Accuracy.BestForNavigation,
         timeInterval: 500,
-        //distanceInterval: 5,
+        distanceInterval: 10,
       },
 
       async location => {
-        this.setState({
-          driverPosition: {
-            lat: location.coords.latitude,
-            lng: location.coords.longitude,
-          },
-        });
-
         if (this.state.navigating && this.state.navigationCentered) {
-          this.map.setCamera({
-            center: {
-              latitude: location.coords.latitude,
-              longitude: location.coords.longitude,
+          await this.setState({
+            driverPosition: {
+              lat: location.coords.latitude,
+              lng: location.coords.longitude,
             },
-            heading: location.coords.heading,
-            pitch: 70,
-            zoom: 50,
           });
+
+          this.updateCamera();
         }
       }
     );
 
-    this.setState({ navigating: true, navigationCentered: true, navigationSubscription });
+    this.setState({
+      navigating: true,
+      navigationCentered: true,
+      navigationSubscription,
+      headingSubscription,
+    });
   };
 
   stopNavigationMode = () => {
@@ -370,6 +434,11 @@ class Home extends Component {
     if (this.state.navigationSubscription) {
       console.log("Removing location subscription...");
       if (this.state.navigationSubscription.remove) this.state.navigationSubscription.remove();
+    }
+
+    if (this.state.headingSubscription) {
+      console.log("Removing heading subscription...");
+      if (this.state.headingSubscription.remove) this.state.headingSubscription.remove();
     }
 
     this.map.animateCamera({
