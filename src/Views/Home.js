@@ -167,7 +167,7 @@ class Home extends Component {
   };
 
   componentDidMount = async () => {
-    this.startNavigationMode();
+    //this.startNavigationMode();
 
     Audio.setAudioModeAsync({
       allowsRecordingIOS: false,
@@ -456,7 +456,7 @@ class Home extends Component {
     this.setState({ navigating: false, navigationCentered: false });
   };
 
-  pauseNavigation = () => {
+  pauseNavigation = () => { 
     this.setState({ navigationCentered: false });
     this.goToUserLocation();
 
