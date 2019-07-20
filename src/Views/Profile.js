@@ -595,10 +595,15 @@ class Profile extends Component {
             descripcion: user.description,
             placa: user.plate,
             telefono: user.phone,
-            POS: user.payments.includes("POS"),
-            efectivo: user.payments.includes("CASH"),
             // gateway: user.payments.includes("Gateway"),
           });
+          
+          if(user.payments){
+            await this.setState({
+              POS: user.payments.includes("POS"),
+              efectivo: user.payments.includes("CASH"),
+            });
+          }
         });
     }
     this.backHandler = BackHandler.addEventListener("hardwareBackPress", () => {
